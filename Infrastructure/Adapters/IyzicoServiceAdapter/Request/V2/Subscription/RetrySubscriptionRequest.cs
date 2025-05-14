@@ -1,0 +1,10 @@
+using Infrastructure.Adapters.IyzicoServiceAdapter.Helper;
+using Newtonsoft.Json;
+
+namespace Infrastructure.Adapters.IyzicoServiceAdapter.Request.V2.Subscription;
+
+public class RetrySubscriptionRequest : BaseRequestV2
+{
+    [JsonProperty(PropertyName = "referenceCode")]
+    public string SubscriptionOrderReferenceCode { get; set; }
+}

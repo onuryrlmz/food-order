@@ -49,3 +49,10 @@ Thumbs.db
 # Docker ve çevre değişkenleri
 .env
 docker-compose.override.yml
+/Base/obj
+/Application/obj
+/Application/obj
+/Domain/obj
+/Infrastructure/obj
+/Persistence/obj
+/WebAPI/obj

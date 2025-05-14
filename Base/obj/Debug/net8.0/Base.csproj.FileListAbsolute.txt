@@ -1,0 +1,13 @@
+/Users/onuryorulmaz/Desktop/Github/FoodOrder.Backend/Base/bin/Debug/net8.0/Base.deps.json
+/Users/onuryorulmaz/Desktop/Github/FoodOrder.Backend/Base/bin/Debug/net8.0/Base.dll
+/Users/onuryorulmaz/Desktop/Github/FoodOrder.Backend/Base/bin/Debug/net8.0/Base.pdb
+/Users/onuryorulmaz/Desktop/Github/FoodOrder.Backend/Base/obj/Debug/net8.0/Base.csproj.AssemblyReference.cache
+/Users/onuryorulmaz/Desktop/Github/FoodOrder.Backend/Base/obj/Debug/net8.0/Base.GeneratedMSBuildEditorConfig.editorconfig
+/Users/onuryorulmaz/Desktop/Github/FoodOrder.Backend/Base/obj/Debug/net8.0/Base.AssemblyInfoInputs.cache
+/Users/onuryorulmaz/Desktop/Github/FoodOrder.Backend/Base/obj/Debug/net8.0/Base.AssemblyInfo.cs
+/Users/onuryorulmaz/Desktop/Github/FoodOrder.Backend/Base/obj/Debug/net8.0/Base.csproj.CoreCompileInputs.cache
+/Users/onuryorulmaz/Desktop/Github/FoodOrder.Backend/Base/obj/Debug/net8.0/Base.sourcelink.json
+/Users/onuryorulmaz/Desktop/Github/FoodOrder.Backend/Base/obj/Debug/net8.0/Base.dll
+/Users/onuryorulmaz/Desktop/Github/FoodOrder.Backend/Base/obj/Debug/net8.0/refint/Base.dll
+/Users/onuryorulmaz/Desktop/Github/FoodOrder.Backend/Base/obj/Debug/net8.0/Base.pdb
+/Users/onuryorulmaz/Desktop/Github/FoodOrder.Backend/Base/obj/Debug/net8.0/ref/Base.dll

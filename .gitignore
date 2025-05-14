@@ -56,3 +56,4 @@ docker-compose.override.yml
 /Infrastructure/obj
 /Persistence/obj
 /WebAPI/obj
+/Application/obj

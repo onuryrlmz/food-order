@@ -13,15 +13,15 @@ using TokenOptions = NArchitecture.Core.Security.JWT.TokenOptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+Global.Configuration = builder.Configuration;
+var tokenOptions = builder.Configuration.GetSection("TokenOptions").Get<TokenOptions>();
+
 builder.Services.AddControllers();
 builder.Services.AddApplicationServices();
 //builder.Services.AddSecurityServices<>();
 builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddInfrastructureServices();
 builder.Services.AddHttpContextAccessor();
-
-Global.Configuration = builder.Configuration;
-var tokenOptions = builder.Configuration.GetSection("TokenOptions").Get<TokenOptions>();
 
 //builder.Services.AddAuthorization();
 builder.Services

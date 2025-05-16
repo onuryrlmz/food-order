@@ -1,4 +1,6 @@
 ﻿using Application.Services.Seller;
+using Application.Services.Seller._2_RestaurantService;
+using Application.Services.Seller._99_RestaurantTransferService;
 using Base.Enums;
 using Domain.Dto.Seller;
 using Domain.Service;
@@ -12,10 +14,12 @@ namespace WebAPI.Controllers;
 public class RestaurantController : BaseController
 {
     private readonly IRestaurantService _restaurantService;
+    private readonly IRestaurantTransferService _restaurantTransferService;
 
-    public RestaurantController(IRestaurantService restaurantService)
+    public RestaurantController(IRestaurantService restaurantService, IRestaurantTransferService restaurantTransferService)
     {
         _restaurantService = restaurantService;
+        _restaurantTransferService = restaurantTransferService;
     }
 
     [HttpPost("add")]
@@ -45,5 +49,12 @@ public class RestaurantController : BaseController
     public async Task<ServiceObjectResult<RestaurantResponseDto>> GetRestaurantInformationByRestaurantId([FromBody] GetRestaurantInformationRequestDto getRestaurantInformationByRestaurantIdQuery)
     {
         return await _restaurantService.GetRestaurantInformationByRestaurantId(getRestaurantInformationByRestaurantIdQuery);
+    }
+
+    [HttpPost("GetRestaurantDataFromGetir")]
+    [AuthorizeAPIRequest(true, false, new[] { AuthorizationServiceEnums.UserRoleEnums.Admin })]
+    public async Task GetRestaurantDataFromGetir([FromQuery] string getirRestaurantId, [FromQuery] Guid restaurantId)
+    {
+        await _restaurantTransferService.SaveData(getirRestaurantId, restaurantId);
     }
 }

@@ -20,7 +20,7 @@ public static class PersistenceServiceRegistration
         services.AddDbContext<BaseDbContext>(options => options.UseMySql(configuration.GetConnectionString("FoodOrderApp"), new MySqlServerVersion(new Version(8, 4, 4)))
         );
 
-
+        //System
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         //Common
@@ -29,13 +29,13 @@ public static class PersistenceServiceRegistration
         services.AddScoped<IScheduledTaskRepository, ScheduledTaskRepository>();
 
         //Seller
+        services.AddScoped<ICuisineRepository, CuisineRepository>();
         services.AddScoped<ISellerRepository, SellerRepository>();
         services.AddScoped<ISellerDetailRepository, SellerDetailRepository>();
+        services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IRestaurantRepository, RestaurantRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ICategoryDetailRepository, CategoryDetailRepository>();
-        services.AddScoped<ICuisineRepository, CuisineRepository>();
-        services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IMenuRepository, MenuRepository>();
         services.AddScoped<IMenuOptionRepository, MenuOptionRepository>();
         services.AddScoped<IMenuOptionValueRepository, MenuOptionValueRepository>();

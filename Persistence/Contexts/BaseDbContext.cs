@@ -24,6 +24,7 @@ public sealed class BaseDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Seller> Sellers { get; set; }
     public DbSet<Address> Addresses { get; set; }
+    public DbSet<Restaurant> Restaurants { get; set; }
     public DbSet<SellerDetail> SellerDetails { get; set; }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())

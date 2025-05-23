@@ -3,7 +3,6 @@ using Base.Constant;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using NArchitecture.Core.CrossCuttingConcerns.Exception.WebApi.Extensions;
 using NArchitecture.Core.Security.Encryption;
 using Persistence;
@@ -15,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 Global.Configuration = builder.Configuration;
 var tokenOptions = builder.Configuration.GetSection("TokenOptions").Get<TokenOptions>();
+System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
 builder.Services.AddControllers();
 builder.Services.AddApplicationServices();

@@ -1,8 +1,6 @@
-﻿using Application.Services.Buyer;
-using Application.Services.Buyer.BasketService;
+﻿using Application.Services.Buyer.BasketService;
 using Base.Enums;
 using Domain.Dto.Buyer;
-using Domain.Entities.Buyer;
 using Domain.Service;
 using Microsoft.AspNetCore.Mvc;
 using WebAPI.Helpers;

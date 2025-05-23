@@ -11,23 +11,23 @@ public class UpdateBasketDto : IDto
     public Guid UserInvoiceAddressId { get; set; }
     public int PaymentOptionId { get; set; }
     public int TotalQuantity { get; set; }
-    public List<BasketItemDto> BasketItems { get; set; }
+    public List<UpdateBasketItemDto> BasketItems { get; set; }
 
-    public class BasketItemDto
+    public class UpdateBasketItemDto
     {
         public Guid MenuId { get; set; }
         public double Quantity { get; set; }
-        public List<BasketItemValueDto> BasketItemValues { get; set; }
+        public List<UpdateBasketItemValueDto> BasketItemValues { get; set; }
 
-        public class BasketItemValueDto
+        public class UpdateBasketItemValueDto
         {
             public Guid MenuOptionId { get; set; }
             public Guid MenuOptionValueId { get; set; }
             public Guid ProductId { get; set; }
             public double Quantity { get; set; }
-            public List<BasketItemValueItemValueDto> BasketItemValueItemValues { get; set; }
+            public List<UpdateBasketItemValueItemValueDto> BasketItemValueItemValues { get; set; }
 
-            public class BasketItemValueItemValueDto
+            public class UpdateBasketItemValueItemValueDto
             {
                 public Guid MenuOptionValueOptionId { get; set; }
                 public Guid MenuOptionValueOptionValueId { get; set; }

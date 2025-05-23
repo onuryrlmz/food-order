@@ -1,5 +1,4 @@
-﻿using Application.Services.Seller;
-using Application.Services.Seller._3_ProductService;
+﻿using Application.Services.Seller._3_ProductService;
 using Base.Enums;
 using Domain.Dto.Seller;
 using Domain.Service;

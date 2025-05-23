@@ -1,9 +1,7 @@
 ﻿using System.Reflection;
 using System.Security.Authentication;
-using Application.Services.Buyer;
 using Application.Services.Buyer.BasketService;
 using Application.Services.Common;
-using Application.Services.Seller;
 using Application.Services.Seller._0_CuisineService;
 using Application.Services.Seller._1_SellerService;
 using Application.Services.Seller._2_RestaurantService;
@@ -15,7 +13,6 @@ using Application.Services.Seller._7_MenuOptionValueOptionService;
 using Application.Services.Seller._8_MenuOptionValueOptionValueService;
 using Application.Services.Seller._99_RestaurantTransferService;
 using Base.Constant;
-using Base.Entities;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using NArchitecture.Core.Application.Pipelines.Authorization;

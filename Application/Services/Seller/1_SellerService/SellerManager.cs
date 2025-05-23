@@ -42,10 +42,14 @@ public class SellerManager : ISellerService
             }
             else
             {
+                var companyType = requestDto.CompanyType == (short)AuthorizationServiceEnums.CompanyTypeEnums.Company
+                    ? AuthorizationServiceEnums.CompanyTypeEnums.Company
+                    : AuthorizationServiceEnums.CompanyTypeEnums.Individual;
+
                 seller = await _sellerRepository.AddAsync(new Domain.Entities.Seller.Seller
                 {
                     Id = Guid.NewGuid(),
-                    CompanyType = requestDto.CompanyType,
+                    CompanyType = (short)companyType,
                     CompanyStatus = (short)AuthorizationServiceEnums.CompanyStatusEnums.Pending,
                     Name = requestDto.Name,
                     LegalName = requestDto.LegalName,

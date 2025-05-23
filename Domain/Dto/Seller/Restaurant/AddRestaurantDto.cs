@@ -1,4 +1,4 @@
-namespace Domain.Dto.Seller;
+namespace Domain.Dto.Seller.Restaurant;
 
 public class AddRestaurantDto
 {

@@ -7,6 +7,7 @@ using Domain.Dto.Seller.MenuOption;
 using Domain.Dto.Seller.MenuOptionValue;
 using Domain.Dto.Seller.MenuOptionValueOption;
 using Domain.Dto.Seller.MenuOptionValueOptionValue;
+using Domain.Dto.Seller.Restaurant;
 using Domain.Entities.Buyer;
 using Domain.Entities.Common;
 using Domain.Entities.Seller;
@@ -33,9 +34,9 @@ public class MappingProfiles : Profile
         CreateMap<MenuOptionValueOptionValue, MenuOptionValueOptionValueResponseDto>().ReverseMap();
         CreateMap<MenuOptionValueOptionValue, CreateMenuOptionValueOptionValueRequestDto>().ReverseMap();
 
-        CreateMap<BasketItemValueItemValue, GetBasketDto.BasketItemDto.BasketItemValueDto.BasketItemValueItemValueDto>().ReverseMap();
-        CreateMap<BasketItemValue, GetBasketDto.BasketItemDto.BasketItemValueDto>().ReverseMap();
-        CreateMap<BasketItem, GetBasketDto.BasketItemDto>().ReverseMap();
+        CreateMap<BasketItemValueItemValue, GetBasketDto.GetBasketItemDto.GetBasketItemValueDto.GetBasketItemValueItemValueDto>().ReverseMap();
+        CreateMap<BasketItemValue, GetBasketDto.GetBasketItemDto.GetBasketItemValueDto>().ReverseMap();
+        CreateMap<BasketItem, GetBasketDto.GetBasketItemDto>().ReverseMap();
         CreateMap<Basket, GetBasketDto>().ReverseMap();
     }
 }

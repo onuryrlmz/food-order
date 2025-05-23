@@ -1,4 +1,4 @@
-using Domain.Dto.Seller;
+using Domain.Dto.Seller.Restaurant;
 using Domain.Service;
 
 namespace Application.Services.Seller._2_RestaurantService;
@@ -6,6 +6,5 @@ namespace Application.Services.Seller._2_RestaurantService;
 public interface IRestaurantService
 {
     Task<ServiceObjectResult<Guid>> AddRestaurant(AddRestaurantDto requestDto);
-    Task<ServiceObjectResult<bool>> CreateRestaurantInformationJsonFile(CreateRestaurantInformationJsonFileRequestDto requestDto);
-    Task<ServiceObjectResult<RestaurantResponseDto>> GetRestaurantInformationByRestaurantId(GetRestaurantInformationRequestDto requestDto);
+    Task<ServiceObjectResult<string>> GetRestaurantInfo(GetRestaurantInformationRequestDto requestDto);
 }

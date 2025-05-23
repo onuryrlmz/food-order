@@ -1,5 +1,4 @@
-﻿using Application.Services.Seller;
-using Application.Services.Seller._6_MenuOptionValueService;
+﻿using Application.Services.Seller._6_MenuOptionValueService;
 using Domain.Dto.Seller.MenuOptionValue;
 using Domain.Service;
 using Microsoft.AspNetCore.Mvc;

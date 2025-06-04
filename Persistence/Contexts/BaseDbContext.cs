@@ -13,19 +13,11 @@ public sealed class BaseDbContext : DbContext
     public BaseDbContext(DbContextOptions dbContextOptions, IConfiguration configuration) : base(dbContextOptions)
     {
         Configuration = configuration;
-
-        //Database?.EnsureDeleted();
         Database?.EnsureCreated();
         Database?.Migrate();
     }
 
     private IConfiguration Configuration { get; set; }
-
-    public DbSet<User> Users { get; set; }
-    public DbSet<Seller> Sellers { get; set; }
-    public DbSet<Address> Addresses { get; set; }
-    public DbSet<Restaurant> Restaurants { get; set; }
-    public DbSet<SellerDetail> SellerDetails { get; set; }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())
     {

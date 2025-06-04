@@ -7,4 +7,6 @@ public interface IRestaurantService
 {
     Task<ServiceObjectResult<Guid>> AddRestaurant(AddRestaurantDto requestDto);
     Task<ServiceObjectResult<string>> GetRestaurantInfo(GetRestaurantInformationRequestDto requestDto);
+    Task<ServiceCollectionResult<GetRestaurantListForSellerResponseDto>> GetRestaurantListForSeller();
+    Task<ServiceObjectResult<string>> GetRestaurantInfoForSeller(GetRestaurantInformationRequestDto requestDto);
 }

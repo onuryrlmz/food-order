@@ -1,12 +1,12 @@
 using AutoMapper;
 using Domain.Dto.Buyer;
 using Domain.Dto.Common;
-using Domain.Dto.Seller;
 using Domain.Dto.Seller.Menu;
 using Domain.Dto.Seller.MenuOption;
 using Domain.Dto.Seller.MenuOptionValue;
 using Domain.Dto.Seller.MenuOptionValueOption;
 using Domain.Dto.Seller.MenuOptionValueOptionValue;
+using Domain.Dto.Seller.Product;
 using Domain.Dto.Seller.Restaurant;
 using Domain.Entities.Buyer;
 using Domain.Entities.Common;
@@ -21,7 +21,7 @@ public class MappingProfiles : Profile
         CreateMap<User, UserRegisterDto>().ReverseMap();
         CreateMap<Address, AddAddressDto>().ReverseMap();
         CreateMap<Restaurant, AddRestaurantDto>().ReverseMap();
-        CreateMap<Product, CreateProductDto>().ReverseMap();
+        CreateMap<Product, AddProductDto>().ReverseMap();
         CreateMap<Product, UpdateProductDto>().ReverseMap();
         CreateMap<Menu, MenuResponseDto>().ReverseMap();
         CreateMap<Menu, CreateMenuRequestDto>().ReverseMap();

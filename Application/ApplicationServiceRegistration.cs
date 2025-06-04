@@ -1,16 +1,23 @@
 ﻿using System.Reflection;
 using System.Security.Authentication;
 using Application.Services.Buyer.BasketService;
-using Application.Services.Common;
+using Application.Services.Common.AddressService;
+using Application.Services.Common.RedisService;
+using Application.Services.Common.TokenService;
+using Application.Services.Common.UserService;
 using Application.Services.Seller._0_CuisineService;
 using Application.Services.Seller._1_SellerService;
+using Application.Services.Seller._10_CategoryDetailService;
 using Application.Services.Seller._2_RestaurantService;
 using Application.Services.Seller._3_ProductService;
-using Application.Services.Seller._4_MenuService;
-using Application.Services.Seller._5_MenuOptionService;
+using Application.Services.Seller._4_ProductAttributeService;
+using Application.Services.Seller._5_ProductAttributeValueService;
 using Application.Services.Seller._6_MenuOptionValueService;
+using Application.Services.Seller._6_MenuService;
+using Application.Services.Seller._7_MenuOptionService;
 using Application.Services.Seller._7_MenuOptionValueOptionService;
 using Application.Services.Seller._8_MenuOptionValueOptionValueService;
+using Application.Services.Seller._9_CategoryService;
 using Application.Services.Seller._99_RestaurantTransferService;
 using Base.Constant;
 using FluentValidation;
@@ -67,23 +74,30 @@ public static class ApplicationServiceRegistration
         //Common
         services.AddScoped<IUserService, UserManager>();
         services.AddScoped<IAddressService, AddressManager>();
+        services.AddScoped<ICuisineService, CuisineManager>();
 
         //Seller
         services.AddScoped<ISellerService, SellerManager>();
         services.AddScoped<IRestaurantService, RestaurantManager>();
         services.AddScoped<IRestaurantTransferService, RestaurantTransferService>();
+        services.AddScoped<IRestaurantTransferServiceV2, RestaurantTransferServiceV2>();
+
         services.AddScoped<IProductService, ProductManager>();
-        services.AddScoped<ICuisineService, CuisineManager>();
+        services.AddScoped<IProductAttributeService, ProductAttributeManager>();
+        services.AddScoped<IProductAttributeValueService, ProductAttributeValueManager>();
+
         services.AddScoped<IMenuService, MenuManager>();
         services.AddScoped<IMenuOptionService, MenuOptionManager>();
         services.AddScoped<IMenuOptionValueService, MenuOptionValueManager>();
         services.AddScoped<IMenuOptionValueOptionService, MenuOptionValueOptionManager>();
         services.AddScoped<IMenuOptionValueOptionValueService, MenuOptionValueOptionValueManager>();
+        services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<ICategoryDetailService, CategoryDetailService>();
 
         //Buyer
         services.AddScoped<IBasketService, BasketManager>();
 
-
+        //Global
         services.AddScoped<ITokenAccessor, TokenAccessor>();
         services.AddScoped<IRedisService, RedisManager>();
 

@@ -4,7 +4,7 @@ public class Menu
 {
     public Menu()
     {
-        MenuOptions = new List<MenuOption>();
+        MenuOptions = [];
     }
 
     public Guid Id { get; set; }
@@ -21,7 +21,7 @@ public class MenuOption
 {
     public MenuOption()
     {
-        MenuOptionValues = new List<MenuOptionValue>();
+        MenuOptionValues = [];
     }
 
     public Guid Id { get; set; }
@@ -39,7 +39,7 @@ public class MenuOptionValue
 {
     public MenuOptionValue()
     {
-        MenuOptionValueOptions = new List<MenuOptionValueOption>();
+        MenuOptionValueOptions = [];
     }
 
     public Guid Id { get; set; }
@@ -55,7 +55,7 @@ public class MenuOptionValueOption
 {
     public MenuOptionValueOption()
     {
-        MenuOptionValueOptionValues = new List<MenuOptionValueOptionValue>();
+        MenuOptionValueOptionValues = [];
     }
 
     public Guid Id { get; set; }

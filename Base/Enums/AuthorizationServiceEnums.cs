@@ -8,7 +8,8 @@ public class AuthorizationServiceEnums
     {
         Invoice = 1,
         Shipping = 2,
-        Return = 3
+        Return = 3,
+        Delivery = 4
     }
 
     public enum CompanyStatusEnums : short

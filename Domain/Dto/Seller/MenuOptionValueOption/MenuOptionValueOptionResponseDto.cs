@@ -8,7 +8,7 @@ public class MenuOptionValueOptionResponseDto : IDto
 {
     public MenuOptionValueOptionResponseDto()
     {
-        MenuOptionValueOptionValues = new List<MenuOptionValueOptionValueResponseDto>();
+        MenuOptionValueOptionValues = [];
     }
 
     [JsonProperty(Order = 1)]

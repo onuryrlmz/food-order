@@ -64,7 +64,7 @@ public class GetirServiceAdapter : IGetirServiceAdapter
                 {
                     ReferenceId = getirCategory.id,
                     Name = getirCategory.name,
-                    Menus = new List<Menu>()
+                    Menus = []
                 };
 
                 foreach (var getirProduct in getirCategory.products)

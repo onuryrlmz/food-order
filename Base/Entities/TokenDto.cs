@@ -8,4 +8,8 @@ public class TokenDto : IDto
     public Guid Token { get; set; }
     public DateTime Expiration { get; set; }
     public AuthorizationServiceEnums.UserRoleEnums Role { get; set; }
+
+    // For Seller Properties
+    public Guid? SellerId { get; set; }
+    public List<Guid>? RestaurantIds { get; set; }
 }

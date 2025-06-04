@@ -1,5 +1,6 @@
 using System.Data;
-using Application.Services.Common;
+using Application.Services.Common.RedisService;
+using Application.Services.Common.TokenService;
 using AutoMapper;
 using Dapper;
 using Domain.Dto.Seller.Restaurant;
@@ -17,20 +18,26 @@ namespace Application.Services.Seller._2_RestaurantService;
 
 public class RestaurantManager : IRestaurantService
 {
-    private const double GridSizeDegree = 0.005;
+    private const double GridSizeDegree = 0.00225;
     private readonly IMapper _mapper;
+    private readonly ITokenAccessor _tokenAccessor;
     private readonly BaseDbContext _context;
     private readonly IRedisService _redisService;
     private readonly IRestaurantRepository _restaurantRepository;
     private readonly IAddressRepository _addressRepository;
+    private readonly ISellerRepository _sellerRepository;
+    private readonly IUserRepository _userRepository;
 
-    public RestaurantManager(BaseDbContext context, IRestaurantRepository restaurantRepository, IMapper mapper, IRedisService redisService, IAddressRepository addressRepository)
+    public RestaurantManager(BaseDbContext context, IRestaurantRepository restaurantRepository, IMapper mapper, IRedisService redisService, IAddressRepository addressRepository, ISellerRepository sellerRepository, IUserRepository userRepository, ITokenAccessor tokenAccessor)
     {
         _context = context;
         _restaurantRepository = restaurantRepository;
         _mapper = mapper;
         _redisService = redisService;
         _addressRepository = addressRepository;
+        _sellerRepository = sellerRepository;
+        _userRepository = userRepository;
+        _tokenAccessor = tokenAccessor;
     }
 
     public async Task<ServiceObjectResult<Guid>> AddRestaurant(AddRestaurantDto requestDto)
@@ -40,7 +47,6 @@ public class RestaurantManager : IRestaurantService
         {
             var restaurant = _mapper.Map<Restaurant>(requestDto);
             restaurant.Id = Guid.NewGuid();
-            restaurant.OrderIndex = requestDto.OrderIndex;
             await _restaurantRepository.AddAsync(restaurant);
             result.SetData(restaurant.Id);
         }
@@ -324,6 +330,191 @@ FROM (SELECT JSON_OBJECT(
             await _redisService.SetValueAsync(cacheKey, url, TimeSpan.FromMinutes(30));
 
             result.SetData(url);
+        }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
+        return result;
+    }
+
+    public async Task<ServiceCollectionResult<GetRestaurantListForSellerResponseDto>> GetRestaurantListForSeller()
+    {
+        var result = new ServiceCollectionResult<GetRestaurantListForSellerResponseDto>();
+        try
+        {
+            var user = await _userRepository.GetAsync(x => x.Id == _tokenAccessor.GetToken().UserId);
+            if (user == null)
+            {
+                result.Fail("User not found");
+                return result;
+            }
+
+            var seller = await _sellerRepository.GetAsync(x => x.Id == user.SellerId);
+            if (seller == null)
+            {
+                result.Fail("Seller not found");
+                return result;
+            }
+
+            var restaurants = await _restaurantRepository.GetListAsync(x => x.SellerId == user.SellerId, enableTracking: false, size: 999);
+            if (restaurants.Count == 0)
+            {
+                result.Fail("Restaurant not found");
+                return result;
+            }
+
+            var restaurantList = restaurants.Items.Select(x => new GetRestaurantListForSellerResponseDto
+            {
+                Id = x.Id,
+                Name = x.Name,
+            }).ToList();
+
+            result.SetData(restaurantList);
+        }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
+        return result;
+    }
+
+    public async Task<ServiceObjectResult<string>> GetRestaurantInfoForSeller(GetRestaurantInformationRequestDto requestDto)
+    {
+        var result = new ServiceObjectResult<string>();
+        try
+        {
+            var query = $@"
+SELECT JSON_ARRAYAGG(cat.obj)
+FROM (SELECT JSON_OBJECT(
+                     'id', c.Id,
+                     'name', c.Name,
+                     'orderIndex', c.OrderIndex,
+                     'categoriesDetail', (SELECT JSON_ARRAYAGG(ordered_cd.obj)
+                                          FROM (SELECT JSON_OBJECT(
+                                                               'id', cd.Id,
+                                                               'orderIndex', cd.OrderIndex,
+                                                               'menuId', cd.MenuId,
+                                                               'menus', (SELECT JSON_ARRAYAGG(ordered_m.obj)
+                                                                         FROM (SELECT JSON_OBJECT(
+                                                                                              'id', m.Id,
+                                                                                              'name', m.Name,
+                                                                                              'price', m.Price,
+                                                                                              'orderIndex',
+                                                                                              m.OrderIndex,
+                                                                                              'menuOptions',
+                                                                                              (SELECT JSON_ARRAYAGG(ordered_mo.obj)
+                                                                                               FROM (SELECT JSON_OBJECT(
+                                                                                                                    'id',
+                                                                                                                    mo.Id,
+                                                                                                                    'name',
+                                                                                                                    mo.Name,
+                                                                                                                    'minCount',
+                                                                                                                    mo.MinCount,
+                                                                                                                    'maxCount',
+                                                                                                                    mo.MaxCount,
+                                                                                                                    'orderIndex',
+                                                                                                                    mo.OrderIndex,
+                                                                                                                    'menuOptionValues',
+                                                                                                                    (SELECT JSON_ARRAYAGG(ordered_mov.obj)
+                                                                                                                     FROM (SELECT JSON_OBJECT(
+                                                                                                                                          'id',
+                                                                                                                                          mov.Id,
+                                                                                                                                          'productId',
+                                                                                                                                          mov.ProductId,
+                                                                                                                                          'name',
+                                                                                                                                          (SELECT p.Name
+                                                                                                                                           FROM Product AS p
+                                                                                                                                           WHERE p.Id = mov.ProductId
+                                                                                                                                             AND p.DeletedDate IS NULL),
+                                                                                                                                          'price',
+                                                                                                                                          mov.Price,
+                                                                                                                                          'orderIndex',
+                                                                                                                                          mov.OrderIndex,
+                                                                                                                                          'menuOptionValueOptions',
+                                                                                                                                          (SELECT JSON_ARRAYAGG(ordered_movo.obj)
+                                                                                                                                           FROM (SELECT JSON_OBJECT(
+                                                                                                                                                                'id',
+                                                                                                                                                                movo.Id,
+                                                                                                                                                                'name',
+                                                                                                                                                                movo.Name,
+                                                                                                                                                                'minCount',
+                                                                                                                                                                movo.MinCount,
+                                                                                                                                                                'maxCount',
+                                                                                                                                                                movo.MaxCount,
+                                                                                                                                                                'orderIndex',
+                                                                                                                                                                movo.OrderIndex,
+                                                                                                                                                                'menuOptionValueOptionValues',
+                                                                                                                                                                (SELECT JSON_ARRAYAGG(ordered_movov.obj)
+                                                                                                                                                                 FROM (SELECT JSON_OBJECT(
+                                                                                                                                                                                      'id',
+                                                                                                                                                                                      movov.Id,
+                                                                                                                                                                                      'productId',
+                                                                                                                                                                                      movov.ProductId,
+                                                                                                                                                                                      'name',
+                                                                                                                                                                                      (SELECT p.Name
+                                                                                                                                                                                       FROM Product AS p
+                                                                                                                                                                                       WHERE p.Id = movov.ProductId
+                                                                                                                                                                                         AND p.DeletedDate IS NULL),
+                                                                                                                                                                                      'price',
+                                                                                                                                                                                      movov.Price,
+                                                                                                                                                                                      'orderIndex',
+                                                                                                                                                                                      movov.OrderIndex
+                                                                                                                                                                              ) AS obj
+                                                                                                                                                                       FROM MenuOptionValueOptionValue AS movov
+                                                                                                                                                                       WHERE movov.MenuOptionValueOptionId = movo.Id
+                                                                                                                                                                         AND movov.DeletedDate IS NULL
+                                                                                                                                                                       ORDER BY movov.OrderIndex
+                                                                                                                                                                           ASC) AS ordered_movov)
+                                                                                                                                                        ) AS obj
+                                                                                                                                                 FROM MenuOptionValueOption AS movo
+                                                                                                                                                 WHERE movo.MenuOptionValueId = mov.Id
+                                                                                                                                                   AND movo.DeletedDate IS NULL
+                                                                                                                                                 ORDER BY movo.OrderIndex
+                                                                                                                                                     ASC) AS ordered_movo)
+                                                                                                                                  ) AS obj
+                                                                                                                           FROM MenuOptionValue AS mov
+                                                                                                                           WHERE mov.MenuOptionId = mo.Id
+                                                                                                                             AND mov.DeletedDate IS NULL
+                                                                                                                           ORDER BY mov.OrderIndex
+                                                                                                                               ASC) AS ordered_mov)
+                                                                                                            ) AS obj
+                                                                                                     FROM MenuOption AS mo
+                                                                                                     WHERE mo.MenuId = m.Id
+                                                                                                       AND mo.DeletedDate IS NULL
+                                                                                                     ORDER BY mo.OrderIndex
+                                                                                                         ASC) AS ordered_mo)
+                                                                                      ) AS obj
+                                                                               FROM Menu AS m
+                                                                               WHERE m.Id = cd.MenuId
+                                                                                 AND m.DeletedDate IS NULL
+                                                                               ORDER BY m.OrderIndex ASC) AS ordered_m)
+                                                       ) AS obj
+                                                FROM CategoryDetail AS cd
+                                                WHERE cd.CategoryId = c.Id
+                                                  AND cd.DeletedDate IS NULL
+                                                ORDER BY cd.OrderIndex ASC) AS ordered_cd)
+             ) AS obj
+      FROM Category AS c
+      WHERE c.RestaurantId = '{requestDto.Id}'
+        AND c.DeletedDate IS NULL
+      ORDER BY c.OrderIndex ASC) AS cat;
+";
+
+            var conn = _context.Database.GetDbConnection();
+            if (conn.State != ConnectionState.Open)
+                await conn.OpenAsync();
+            var jsonData = await conn.QueryFirstAsync<string>(query);
+
+            if (string.IsNullOrEmpty(jsonData))
+            {
+                result.Fail("Restaurant not found");
+                return result;
+            }
+
+            result.SetData(jsonData);
         }
         catch (Exception e)
         {

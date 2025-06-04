@@ -1,8 +1,9 @@
 using AutoMapper;
 using Base.Enums;
-using Domain.Dto.Seller;
+using Domain.Dto.Seller.Product;
 using Domain.Entities.Seller;
 using Domain.Service;
+using Microsoft.EntityFrameworkCore;
 using Persistence.IRepositories.Seller;
 
 namespace Application.Services.Seller._3_ProductService;
@@ -32,7 +33,7 @@ public class ProductManager : IProductService
                 return result;
             }
 
-            var pgProduct = await _productRepository.GetListAsync(x => x.RestaurantId == requestDto.RestaurantId);
+            var pgProduct = await _productRepository.GetListAsync(x => x.RestaurantId == requestDto.RestaurantId, size: int.MaxValue, include: x => x.Include(a => a.ProductAttributes).ThenInclude(b => b.ProductAttributeValues).ThenInclude(c => c.Product));
             var products = pgProduct.Items.OrderBy(x => x.OrderIndex).ToList();
 
             if (requestDto.ProductIds != null && requestDto.ProductIds.Count != 0)
@@ -43,7 +44,8 @@ public class ProductManager : IProductService
                 Id = product.Id,
                 Name = product.Name,
                 Description = product.Description,
-                ProductType = product.ProductType
+                ProductType = product.ProductType,
+                Price = product.Price,
             }).ToList();
 
             result.SetData(productDtos);
@@ -56,7 +58,7 @@ public class ProductManager : IProductService
         return result;
     }
 
-    public async Task<ServiceObjectResult<Guid>> CreateProduct(CreateProductDto request)
+    public async Task<ServiceObjectResult<Guid>> CreateProduct(AddProductDto request)
     {
         var response = new ServiceObjectResult<Guid>();
         try
@@ -71,6 +73,7 @@ public class ProductManager : IProductService
             var product = _mapper.Map<Product>(request);
             product.Id = Guid.NewGuid();
             product.OrderIndex = request.OrderIndex;
+            product.Price = request.Price;
 
             var productType = (FoodCatalogServiceEnums.ProductTypeEnums)product.ProductType;
             if (!Enum.IsDefined(typeof(FoodCatalogServiceEnums.ProductTypeEnums), productType))
@@ -113,6 +116,7 @@ public class ProductManager : IProductService
 
             product.Name = productRequest.Name;
             product.Description = productRequest.Description;
+            product.Price = productRequest.Price;
             product.OrderIndex = productRequest.OrderIndex;
 
             await _productRepository.UpdateAsync(product);

@@ -6,7 +6,7 @@ public class GetRestaurantsResponseDto : IDto
 {
     public GetRestaurantsResponseDto()
     {
-        Categories = new List<string>();
+        Categories = [];
     }
 
     public string Id { get; set; }

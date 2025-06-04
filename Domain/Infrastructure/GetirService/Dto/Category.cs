@@ -4,7 +4,7 @@ public class Category
 {
     public Category()
     {
-        Menus = new List<Menu>();
+        Menus = [];
     }
 
     public Guid Id { get; set; }

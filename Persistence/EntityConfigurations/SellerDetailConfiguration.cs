@@ -8,6 +8,6 @@ public class SellerDetailConfiguration : IEntityTypeConfiguration<SellerDetail>
 {
     public void Configure(EntityTypeBuilder<SellerDetail> builder)
     {
-        builder.ToTable("SellerDetails").HasKey(c => c.Id);
+        builder.ToTable("SellerDetail").HasKey(c => c.Id);
     }
 }

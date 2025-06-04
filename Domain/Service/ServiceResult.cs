@@ -7,7 +7,7 @@ public class ServiceResult : IDisposable
 {
     public ServiceResult()
     {
-        Messages = new List<ServiceResultMessage>();
+        Messages = [];
     }
 
     private static bool KeepRawException { get; set; } = true;

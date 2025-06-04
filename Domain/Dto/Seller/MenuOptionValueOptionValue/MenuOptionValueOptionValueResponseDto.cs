@@ -1,3 +1,4 @@
+using Domain.Dto.Seller.Product;
 using NArchitecture.Core.Application.Dtos;
 using Newtonsoft.Json;
 

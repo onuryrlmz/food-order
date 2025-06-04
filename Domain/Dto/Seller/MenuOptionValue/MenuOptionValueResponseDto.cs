@@ -1,4 +1,5 @@
 using Domain.Dto.Seller.MenuOptionValueOption;
+using Domain.Dto.Seller.Product;
 using NArchitecture.Core.Application.Dtos;
 using Newtonsoft.Json;
 
@@ -8,7 +9,7 @@ public class MenuOptionValueResponseDto : IDto
 {
     public MenuOptionValueResponseDto()
     {
-        MenuOptionValueOptions = new List<MenuOptionValueOptionResponseDto>();
+        MenuOptionValueOptions = [];
     }
 
     [JsonProperty(Order = 1)]

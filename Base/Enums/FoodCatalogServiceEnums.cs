@@ -16,19 +16,4 @@ public static class FoodCatalogServiceEnums
     }
 
     #endregion
-
-    #region ScheduleJobEnums
-
-    public enum ScheduleJobEnums
-    {
-        RenewRestaurantInformation = 1,
-        RenewMenuInformation = 2
-    }
-
-    public static int GetScheduleJobEnumId(ScheduleJobEnums scheduleJobEnums)
-    {
-        return (int)scheduleJobEnums;
-    }
-
-    #endregion
 }

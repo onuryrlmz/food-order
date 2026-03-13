@@ -23,6 +23,8 @@ public class MappingProfiles : Profile
     {
         CreateMap<User, UserRegisterDto>().ReverseMap();
         CreateMap<Address, AddAddressDto>().ReverseMap();
+        CreateMap<Address, GetAddressDto>().ReverseMap();
+        CreateMap<Address, UpdateAddressDto>().ReverseMap();
         CreateMap<Restaurant, AddRestaurantDto>().ReverseMap();
         CreateMap<Product, AddProductDto>().ReverseMap();
         CreateMap<Product, UpdateProductDto>().ReverseMap();

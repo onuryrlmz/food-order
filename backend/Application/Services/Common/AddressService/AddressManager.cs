@@ -31,13 +31,21 @@ public class AddressManager : IAddressService
             if (requestDto.IsDefault)
             {
                 var existing = await _addressRepository.GetListAsync(x => x.UserId == address.UserId && x.IsDefault, enableTracking: true, size: 999);
-                foreach (var a in existing.Items) { a.IsDefault = false; _addressRepository.Update(a); }
+                foreach (var a in existing.Items)
+                {
+                    a.IsDefault = false;
+                    _addressRepository.Update(a);
+                }
             }
 
             await _addressRepository.AddAsync(address);
             response.SetData(true);
         }
-        catch (Exception e) { response.Fail(e); }
+        catch (Exception e)
+        {
+            response.Fail(e);
+        }
+
         return response;
     }
 
@@ -47,10 +55,14 @@ public class AddressManager : IAddressService
         try
         {
             var userId = _tokenAccessor.GetToken()?.UserId;
-            var list = await _addressRepository.GetListAsync(x => x.UserId == userId, enableTracking: false, size: 999);
+            var list = await _addressRepository.GetListAsync(x => x.UserId == userId && x.DeletedDate == null, enableTracking: false, withDeleted: false, size: 999);
             response.SetData(_mapper.Map<List<GetAddressDto>>(list.Items));
         }
-        catch (Exception e) { response.Fail(e); }
+        catch (Exception e)
+        {
+            response.Fail(e);
+        }
+
         return response;
     }
 
@@ -61,19 +73,31 @@ public class AddressManager : IAddressService
         {
             var userId = _tokenAccessor.GetToken()?.UserId;
             var address = await _addressRepository.GetAsync(x => x.Id == requestDto.Id && x.UserId == userId, enableTracking: true);
-            if (address == null) { response.Fail("Adres bulunamadı."); return response; }
+            if (address == null)
+            {
+                response.Fail("Adres bulunamadı.");
+                return response;
+            }
 
             if (requestDto.IsDefault && !address.IsDefault)
             {
                 var existing = await _addressRepository.GetListAsync(x => x.UserId == userId && x.IsDefault && x.Id != requestDto.Id, enableTracking: true, size: 999);
-                foreach (var a in existing.Items) { a.IsDefault = false; _addressRepository.Update(a); }
+                foreach (var a in existing.Items)
+                {
+                    a.IsDefault = false;
+                    _addressRepository.Update(a);
+                }
             }
 
             _mapper.Map(requestDto, address);
             _addressRepository.Update(address);
             response.SetData(true);
         }
-        catch (Exception e) { response.Fail(e); }
+        catch (Exception e)
+        {
+            response.Fail(e);
+        }
+
         return response;
     }
 
@@ -84,11 +108,20 @@ public class AddressManager : IAddressService
         {
             var userId = _tokenAccessor.GetToken()?.UserId;
             var address = await _addressRepository.GetAsync(x => x.Id == id && x.UserId == userId, enableTracking: true);
-            if (address == null) { response.Fail("Adres bulunamadı."); return response; }
+            if (address == null)
+            {
+                response.Fail("Adres bulunamadı.");
+                return response;
+            }
+
             await _addressRepository.DeleteAsync(address);
             response.SetData(true);
         }
-        catch (Exception e) { response.Fail(e); }
+        catch (Exception e)
+        {
+            response.Fail(e);
+        }
+
         return response;
     }
 
@@ -99,15 +132,28 @@ public class AddressManager : IAddressService
         {
             var userId = _tokenAccessor.GetToken()?.UserId;
             var existing = await _addressRepository.GetListAsync(x => x.UserId == userId && x.IsDefault, enableTracking: true, size: 999);
-            foreach (var a in existing.Items) { a.IsDefault = false; _addressRepository.Update(a); }
+            foreach (var a in existing.Items)
+            {
+                a.IsDefault = false;
+                _addressRepository.Update(a);
+            }
 
             var address = await _addressRepository.GetAsync(x => x.Id == id && x.UserId == userId, enableTracking: true);
-            if (address == null) { response.Fail("Adres bulunamadı."); return response; }
+            if (address == null)
+            {
+                response.Fail("Adres bulunamadı.");
+                return response;
+            }
+
             address.IsDefault = true;
             _addressRepository.Update(address);
             response.SetData(true);
         }
-        catch (Exception e) { response.Fail(e); }
+        catch (Exception e)
+        {
+            response.Fail(e);
+        }
+
         return response;
     }
 }

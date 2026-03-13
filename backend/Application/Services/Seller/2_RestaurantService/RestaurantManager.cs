@@ -75,7 +75,22 @@ public class RestaurantManager : IRestaurantService
                 return result;
             }
 
-            var gridId = GetGridId(Convert.ToDouble(address.Latitude), Convert.ToDouble(address.Longitude));
+            if (string.IsNullOrEmpty(address.Latitude) || string.IsNullOrEmpty(address.Longitude))
+            {
+                result.SetData(new List<GetRestaurantsResponseDto>());
+                return result;
+            }
+
+            var lat = double.Parse(address.Latitude, System.Globalization.CultureInfo.InvariantCulture);
+            var lng = double.Parse(address.Longitude, System.Globalization.CultureInfo.InvariantCulture);
+
+            if (lat < 36.0 || lat > 42.0 || lng < 26.0 || lng > 45.0)
+            {
+                result.SetData(new List<GetRestaurantsResponseDto>());
+                return result;
+            }
+
+            var gridId = GetGridId(lat, lng);
 
             var cachedJson = await _redisService.GetValueAsync<string>(gridId);
             var restaurantList = new List<GetRestaurantsResponseDto>();
@@ -86,7 +101,7 @@ public class RestaurantManager : IRestaurantService
             }
             else
             {
-                var resultPolygon = await GetRestaurantsByPolygon(Convert.ToDouble(address.Latitude), Convert.ToDouble(address.Longitude));
+                var resultPolygon = await GetRestaurantsByPolygon(lat, lng);
                 if (resultPolygon.HasFailed)
                 {
                     result.Fail(resultPolygon.Messages);
@@ -124,31 +139,61 @@ public class RestaurantManager : IRestaurantService
         {
             const string query = @"
         SELECT 
-            id, 
-            name, 
-            description,
-            cover_photo as CoverPhoto,
-            min_basket as MinBasket,
-            estimated_delivery_time as DeliveryTime,
-            categories,
-            is_open as IsOpen,
-            ST_Distance_Sphere(servis_alani_polygon, POINT(@lng, @lat)) as Distance
-        FROM restaurants
+            r.`Id`,
+            r.`Name`,
+            r.`Description`,
+            r.`CoverImage` AS ImageUrl,
+            r.`MinimumOrderPrice` AS MinBasketPrice,
+            0 AS DeliveryPrice,
+            r.`MinDeliveryTime`,
+            r.`MaxDeliveryTime`
+        FROM `Restaurant` r
         WHERE 
-            ST_Contains(servis_alani_polygon, POINT(@lng, @lat))
-            AND is_active = 1
+            r.`ServiceAreaPolygonWkt` IS NOT NULL
+            AND ST_Contains(
+                ST_GeomFromText(r.`ServiceAreaPolygonWkt`),
+                ST_GeomFromText(CONCAT('POINT(', @lng, ' ', @lat, ')'))
+            )
+            AND r.`IsActive` = 1
+            AND r.`DeletedDate` IS NULL
     ";
 
-            await using var conn = _context.Database.GetDbConnection();
+            var conn = _context.Database.GetDbConnection();
             if (conn.State != ConnectionState.Open)
                 await conn.OpenAsync();
 
-            var data = await conn.QueryAsync<GetRestaurantsResponseDto>(
+            var restaurants = (await conn.QueryAsync<GetRestaurantsResponseDto>(
                 query,
                 new { lat, lng }
-            );
+            )).ToList();
 
-            result.SetData(data.ToList());
+            if (restaurants.Count > 0)
+            {
+                var categoryQuery = @"
+        SELECT c.`RestaurantId`, c.`Name`
+        FROM `Category` c
+        WHERE c.`RestaurantId` IN (@RestaurantIds) AND c.`DeletedDate` IS NULL
+        ORDER BY c.`OrderIndex`
+    ";
+
+                var ids = restaurants.Select(x => x.Id.ToString()).ToList();
+                categoryQuery = categoryQuery.Replace("@RestaurantIds", string.Join(", ", ids.Select(id => $"'{id}'")));
+                var categories = await conn.QueryAsync<(Guid RestaurantId, string Name)>(categoryQuery);
+                var catMap = categories.GroupBy(c => c.RestaurantId)
+                    .ToDictionary(g => g.Key, g => g.Select(c => c.Name).ToList());
+                foreach (var r in restaurants)
+                {
+                    if (catMap.TryGetValue(r.Id, out var cats))
+                        r.Categories = cats;
+                }
+            }
+            else
+            {
+                result.SetData(new List<GetRestaurantsResponseDto>());
+                return result;
+            }
+
+            result.SetData(restaurants);
         }
         catch (Exception e)
         {
@@ -175,9 +220,8 @@ public class RestaurantManager : IRestaurantService
             }
 
             // CDN URL henüz hazır değil — worker kuyruğuna ekle
-            var alreadyQueued = await _cdnQueueRepository.GetAsync(
-                x => x.RestaurantId == requestDto.Id
-                     && x.StatusId == (short)RestaurantCdnUpdateQueue.CdnUpdateStatus.Pending);
+            var alreadyQueued = await _cdnQueueRepository.GetAsync(x => x.RestaurantId == requestDto.Id
+                                                                        && x.StatusId == (short)RestaurantCdnUpdateQueue.CdnUpdateStatus.Pending);
 
             if (alreadyQueued == null)
             {
@@ -259,7 +303,11 @@ public class RestaurantManager : IRestaurantService
             var token = _tokenAccessor.GetToken();
             var restaurant = await _restaurantRepository.GetAsync(
                 x => x.Id == requestDto.Id && x.SellerId == token!.SellerId, enableTracking: true);
-            if (restaurant == null) { result.Fail("Restoran bulunamadı."); return result; }
+            if (restaurant == null)
+            {
+                result.Fail("Restoran bulunamadı.");
+                return result;
+            }
 
             restaurant.Name = requestDto.Name;
             restaurant.Phone = requestDto.Phone;
@@ -272,14 +320,17 @@ public class RestaurantManager : IRestaurantService
 
             await _restaurantRepository.UpdateAsync(restaurant);
 
-            var alreadyQueued = await _cdnQueueRepository.GetAsync(
-                x => x.RestaurantId == requestDto.Id && x.StatusId == (short)RestaurantCdnUpdateQueue.CdnUpdateStatus.Pending);
+            var alreadyQueued = await _cdnQueueRepository.GetAsync(x => x.RestaurantId == requestDto.Id && x.StatusId == (short)RestaurantCdnUpdateQueue.CdnUpdateStatus.Pending);
             if (alreadyQueued == null)
                 await _cdnQueueRepository.AddAsync(new RestaurantCdnUpdateQueue { Id = Guid.NewGuid(), RestaurantId = requestDto.Id });
 
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -291,12 +342,21 @@ public class RestaurantManager : IRestaurantService
             var token = _tokenAccessor.GetToken();
             var restaurant = await _restaurantRepository.GetAsync(
                 x => x.Id == restaurantId && x.SellerId == token!.SellerId, enableTracking: true);
-            if (restaurant == null) { result.Fail("Restoran bulunamadı."); return result; }
+            if (restaurant == null)
+            {
+                result.Fail("Restoran bulunamadı.");
+                return result;
+            }
+
             restaurant.IsOpen = !restaurant.IsOpen;
             await _restaurantRepository.UpdateAsync(restaurant);
             result.SetData(restaurant.IsOpen);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -306,12 +366,21 @@ public class RestaurantManager : IRestaurantService
         try
         {
             var restaurant = await _restaurantRepository.GetAsync(x => x.Id == restaurantId, enableTracking: true);
-            if (restaurant == null) { result.Fail("Restoran bulunamadı."); return result; }
+            if (restaurant == null)
+            {
+                result.Fail("Restoran bulunamadı.");
+                return result;
+            }
+
             restaurant.IsActive = !restaurant.IsActive;
             await _restaurantRepository.UpdateAsync(restaurant);
             result.SetData(restaurant.IsActive);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -498,6 +567,7 @@ FROM (SELECT JSON_OBJECT(
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -507,7 +577,12 @@ FROM (SELECT JSON_OBJECT(
         try
         {
             var r = await _restaurantRepository.GetAsync(x => x.Id == id);
-            if (r == null) { result.Fail("Restoran bulunamadı."); return result; }
+            if (r == null)
+            {
+                result.Fail("Restoran bulunamadı.");
+                return result;
+            }
+
             result.SetData(new GetAdminRestaurantListResponseDto
             {
                 Id = r.Id,
@@ -530,7 +605,11 @@ FROM (SELECT JSON_OBJECT(
                 CreatedDate = r.CreatedDate
             });
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -540,7 +619,11 @@ FROM (SELECT JSON_OBJECT(
         try
         {
             var restaurant = await _restaurantRepository.GetAsync(x => x.Id == requestDto.Id, enableTracking: true);
-            if (restaurant == null) { result.Fail("Restoran bulunamadı."); return result; }
+            if (restaurant == null)
+            {
+                result.Fail("Restoran bulunamadı.");
+                return result;
+            }
 
             restaurant.Name = requestDto.Name;
             restaurant.Phone = requestDto.Phone;
@@ -556,14 +639,17 @@ FROM (SELECT JSON_OBJECT(
             await _restaurantRepository.UpdateAsync(restaurant);
 
             // CDN kuyruğuna ekle (menü bilgisi değişti)
-            var alreadyQueued = await _cdnQueueRepository.GetAsync(
-                x => x.RestaurantId == requestDto.Id && x.StatusId == (short)RestaurantCdnUpdateQueue.CdnUpdateStatus.Pending);
+            var alreadyQueued = await _cdnQueueRepository.GetAsync(x => x.RestaurantId == requestDto.Id && x.StatusId == (short)RestaurantCdnUpdateQueue.CdnUpdateStatus.Pending);
             if (alreadyQueued == null)
                 await _cdnQueueRepository.AddAsync(new RestaurantCdnUpdateQueue { Id = Guid.NewGuid(), RestaurantId = requestDto.Id });
 
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -574,7 +660,11 @@ FROM (SELECT JSON_OBJECT(
         {
             var token = _tokenAccessor.GetToken();
             var restaurant = await _restaurantRepository.GetAsync(x => x.Id == restaurantId && x.SellerId == token!.SellerId);
-            if (restaurant == null) { result.Fail("Restoran bulunamadı."); return result; }
+            if (restaurant == null)
+            {
+                result.Fail("Restoran bulunamadı.");
+                return result;
+            }
 
             var hours = await _workingHourRepository.GetListAsync(x => x.RestaurantId == restaurantId, size: 7);
             var dtos = hours.Items.Select(h => new WorkingHourDto
@@ -588,7 +678,11 @@ FROM (SELECT JSON_OBJECT(
             }).ToList();
             result.SetData(dtos);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -599,7 +693,11 @@ FROM (SELECT JSON_OBJECT(
         {
             var token = _tokenAccessor.GetToken();
             var restaurant = await _restaurantRepository.GetAsync(x => x.Id == requestDto.RestaurantId && x.SellerId == token!.SellerId);
-            if (restaurant == null) { result.Fail("Restoran bulunamadı."); return result; }
+            if (restaurant == null)
+            {
+                result.Fail("Restoran bulunamadı.");
+                return result;
+            }
 
             var existing = await _workingHourRepository.GetAsync(x => x.RestaurantId == requestDto.RestaurantId && x.DayOfWeek == requestDto.DayOfWeek, enableTracking: true);
             if (existing != null)
@@ -621,9 +719,14 @@ FROM (SELECT JSON_OBJECT(
                     IsClosed = requestDto.IsClosed
                 });
             }
+
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 }

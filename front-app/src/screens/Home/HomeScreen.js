@@ -1,0 +1,311 @@
+import React, {useState, useEffect, useCallback} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  RefreshControl,
+  TouchableOpacity,
+  StatusBar,
+} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {Colors, Fonts, Spacing} from '../../theme';
+import {restaurantService, cuisineService, addressService} from '../../api';
+import {useAuth} from '../../context/AuthContext';
+import {useCart} from '../../context/CartContext';
+import RestaurantCard from '../../components/RestaurantCard';
+import SearchBar from '../../components/SearchBar';
+import CuisineFilter from '../../components/CuisineFilter';
+import CartFloatingButton from '../../components/CartFloatingButton';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import EmptyState from '../../components/EmptyState';
+
+const HomeScreen = ({navigation}) => {
+  const {user} = useAuth();
+  const {itemCount} = useCart();
+  const insets = useSafeAreaInsets();
+  const [restaurants, setRestaurants] = useState([]);
+  const [filteredRestaurants, setFilteredRestaurants] = useState([]);
+  const [cuisines, setCuisines] = useState([]);
+  const [selectedCuisine, setSelectedCuisine] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [defaultAddress, setDefaultAddress] = useState(null);
+
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      refreshAddress();
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  useEffect(() => {
+    filterRestaurants();
+  }, [searchQuery, selectedCuisine, restaurants]);
+
+  const refreshAddress = async () => {
+    try {
+      const res = await addressService.getList();
+      const list = res.data?.data || res.data?.rawData || [];
+      const addresses = Array.isArray(list) ? list : [];
+      const def = addresses.find(a => a.isDefault) || addresses[0];
+      if (def) {
+        setDefaultAddress(def);
+      }
+    } catch (e) {
+      console.log('Refresh address error:', e);
+    }
+  };
+
+  const loadInitialData = async () => {
+    setLoading(true);
+    try {
+      const [cuisineRes, addressRes] = await Promise.all([
+        cuisineService.getList().catch(() => null),
+        addressService.getList().catch(() => null),
+      ]);
+
+      const cuisineList = cuisineRes?.data?.data || cuisineRes?.data?.rawData || [];
+      if (Array.isArray(cuisineList)) {
+        setCuisines(cuisineList);
+      }
+
+      let addrId = null;
+      const addrList = addressRes?.data?.data || addressRes?.data?.rawData || [];
+      const addresses = Array.isArray(addrList) ? addrList : [];
+      const def = addresses.find(a => a.isDefault) || addresses[0];
+      if (def) {
+        setDefaultAddress(def);
+        addrId = def.id;
+      }
+
+      await loadRestaurants(addrId);
+    } catch (e) {
+      console.log('Initial data error:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadRestaurants = async (addressId) => {
+    try {
+      const res = await restaurantService.getRestaurants(addressId);
+      if (res.data?.data) {
+        setRestaurants(res.data.data);
+      }
+    } catch (e) {
+      console.log('Restaurant fetch error:', e);
+    }
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadRestaurants(defaultAddress?.id);
+    setRefreshing(false);
+  }, [defaultAddress]);
+
+  const filterRestaurants = () => {
+    let filtered = [...restaurants];
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        r =>
+          r.name?.toLowerCase().includes(q) ||
+          r.description?.toLowerCase().includes(q) ||
+          r.categories?.some(c => c.toLowerCase().includes(q)),
+      );
+    }
+    if (selectedCuisine) {
+      const cuisine = cuisines.find(c => c.id === selectedCuisine);
+      if (cuisine) {
+        filtered = filtered.filter(r =>
+          r.categories?.some(c => c.toLowerCase().includes(cuisine.name.toLowerCase())),
+        );
+      }
+    }
+    setFilteredRestaurants(filtered);
+  };
+
+  const renderHeader = () => (
+    <View>
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.locationButton} onPress={() => navigation.navigate('AddressList')}>
+          <Icon name="map-marker" size={22} color={Colors.primary} />
+          <View style={styles.locationTextContainer}>
+            <Text style={styles.locationLabel}>Teslimat Adresi</Text>
+            <Text style={styles.locationAddress} numberOfLines={1}>
+              {defaultAddress ? defaultAddress.addressName : 'Adres seçiniz'}
+            </Text>
+          </View>
+          <Icon name="chevron-down" size={22} color={Colors.textSecondary} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.notificationButton}
+          onPress={() => navigation.navigate('OrderHistory')}
+        >
+          <Icon name="bell-outline" size={24} color={Colors.text} />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.greetingContainer}>
+        <Text style={styles.greeting}>
+          Merhaba, {user?.firstName || 'Hoş geldiniz'} 👋
+        </Text>
+        <Text style={styles.greetingSub}>Ne yemek istersiniz?</Text>
+      </View>
+
+      <SearchBar
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        onClear={() => setSearchQuery('')}
+      />
+
+      {cuisines.length > 0 && (
+        <CuisineFilter
+          cuisines={cuisines}
+          selectedCuisine={selectedCuisine}
+          onSelect={setSelectedCuisine}
+        />
+      )}
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>
+          {selectedCuisine
+            ? cuisines.find(c => c.id === selectedCuisine)?.name || 'Restoranlar'
+            : 'Yakınındaki Restoranlar'}
+        </Text>
+        <Text style={styles.resultCount}>
+          {filteredRestaurants.length} restoran
+        </Text>
+      </View>
+    </View>
+  );
+
+  if (loading) {
+    return <LoadingSpinner message="Restoranlar yükleniyor..." />;
+  }
+
+  return (
+    <View style={[styles.container, {paddingTop: insets.top}]}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+      <FlatList
+        data={filteredRestaurants}
+        keyExtractor={item => item.id}
+        renderItem={({item}) => (
+          <RestaurantCard
+            restaurant={item}
+            onPress={() => navigation.navigate('RestaurantDetail', {restaurantId: item.id, restaurantName: item.name})}
+          />
+        )}
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={
+          <EmptyState
+            icon="food-off"
+            title="Restoran bulunamadı"
+            message={searchQuery ? 'Arama kriterlerinize uygun restoran bulunamadı' : 'Yakınızda aktif restoran bulunmuyor'}
+            actionLabel={searchQuery ? 'Aramayı Temizle' : null}
+            onAction={searchQuery ? () => setSearchQuery('') : null}
+          />
+        }
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
+        }
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      />
+      <CartFloatingButton onPress={() => navigation.navigate('Cart')} />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  listContent: {
+    paddingBottom: 100,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.sm,
+  },
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: Spacing.md,
+  },
+  locationTextContainer: {
+    flex: 1,
+    marginLeft: 8,
+    marginRight: 4,
+  },
+  locationLabel: {
+    fontSize: Fonts.sizes.xs,
+    color: Colors.textSecondary,
+    fontWeight: Fonts.weights.medium,
+  },
+  locationAddress: {
+    fontSize: Fonts.sizes.md,
+    color: Colors.text,
+    fontWeight: Fonts.weights.bold,
+  },
+  notificationButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  greetingContainer: {
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
+  },
+  greeting: {
+    fontSize: Fonts.sizes.xxl,
+    fontWeight: Fonts.weights.heavy,
+    color: Colors.text,
+  },
+  greetingSub: {
+    fontSize: Fonts.sizes.base,
+    color: Colors.textSecondary,
+    marginTop: 4,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.base,
+    marginBottom: Spacing.md,
+  },
+  sectionTitle: {
+    fontSize: Fonts.sizes.lg,
+    fontWeight: Fonts.weights.bold,
+    color: Colors.text,
+  },
+  resultCount: {
+    fontSize: Fonts.sizes.sm,
+    color: Colors.textSecondary,
+    fontWeight: Fonts.weights.medium,
+  },
+});
+
+export default HomeScreen;

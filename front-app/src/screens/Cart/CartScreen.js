@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -6,25 +6,103 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Alert,
+  TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {useCart} from '../../context/CartContext';
+import {useAppData} from '../../context/AppDataContext';
 import EmptyState from '../../components/EmptyState';
+import {couponService} from '../../api/couponService';
+import {useToast} from '../../context/ToastContext';
 
 const CartScreen = ({navigation}) => {
-  const {cart, updateItemQuantity, removeItem, clearCart} = useCart();
+  const {cart, updateItemQuantity, removeItem, clearCart, appliedCoupon, discountAmount, applyCoupon, removeCoupon, getFinalTotal, orderNote, setOrderNote} = useCart();
+  const {selectRestaurant} = useAppData();
+  const {showConfirm} = useToast();
+  const [couponCode, setCouponCode] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState('');
+  const [expandedItems, setExpandedItems] = useState({});
+
+  // Format selected options into readable summary
+  const formatOptionsSummary = (values) => {
+    if (!values || values.length === 0) return null;
+
+    const parts = [];
+
+    values.forEach(val => {
+      // Add main value name
+      parts.push(val.valueName);
+
+      // Add nested value option values
+      if (val.valueOptionValues && val.valueOptionValues.length > 0) {
+        val.valueOptionValues.forEach(voov => {
+          parts.push(voov.name);
+        });
+      }
+    });
+
+    return parts.join('\n');
+  };
 
   const handleClearCart = () => {
-    Alert.alert(
-      'Sepeti Temizle',
-      'Sepetinizdeki tüm ürünler silinecek. Emin misiniz?',
-      [
-        {text: 'İptal', style: 'cancel'},
-        {text: 'Temizle', style: 'destructive', onPress: clearCart},
-      ],
-    );
+    showConfirm({
+      title: 'Sepeti Temizle',
+      message: 'Sepetinizdeki tüm ürünler silinecek. Emin misiniz?',
+      confirmText: 'Temizle',
+      cancelText: 'İptal',
+      confirmStyle: 'destructive',
+      onConfirm: clearCart,
+    });
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Kupon kodu giriniz');
+      return;
+    }
+
+    setCouponLoading(true);
+    setCouponError('');
+
+    try {
+      const items = cart.items.map(item => ({
+        menuId: item.menuId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      }));
+
+      const res = await couponService.validateCoupon(
+        couponCode.trim().toUpperCase(),
+        cart.restaurantId,
+        cart.totalPrice,
+        items,
+      );
+
+      if (res.data && !res.data.hasFailed) {
+        const result = res.data.data;
+        if (result.isValid) {
+          applyCoupon({
+            id: result.couponId,
+            code: result.couponCode,
+            name: result.couponName,
+            description: result.discountDescription,
+          }, result.discountAmount);
+          setCouponCode('');
+        } else {
+          setCouponError(result.errorMessage || 'Kupon geçersiz');
+        }
+      } else {
+        setCouponError(res.data?.messages?.[0]?.description || 'Kupon doğrulanamadı');
+      }
+    } catch (err) {
+      setCouponError('Kupon doğrulanırken bir hata oluştu');
+      console.error(err);
+    } finally {
+      setCouponLoading(false);
+    }
   };
 
   if (!cart || cart.items.length === 0) {
@@ -50,7 +128,8 @@ const CartScreen = ({navigation}) => {
 
   const deliveryFee = 9.99;
   const subtotal = cart.totalPrice;
-  const total = subtotal + deliveryFee;
+  const finalDiscount = discountAmount;
+  const finalTotal = Math.max(0, subtotal - finalDiscount + deliveryFee);
 
   return (
     <View style={styles.container}>
@@ -75,7 +154,10 @@ const CartScreen = ({navigation}) => {
           </View>
           <TouchableOpacity
             style={styles.addMoreButton}
-            onPress={() => navigation.navigate('RestaurantDetail', {restaurantId: cart.restaurantId})}
+            onPress={() => {
+              selectRestaurant(cart.restaurantId);
+              navigation.navigate('HomeTab', {screen: 'RestaurantDetail', params: {restaurantId: cart.restaurantId}});
+            }}
           >
             <Icon name="plus" size={16} color={Colors.primary} />
             <Text style={styles.addMoreText}>Ekle</Text>
@@ -95,6 +177,26 @@ const CartScreen = ({navigation}) => {
                 )}
                 <View style={styles.itemDetails}>
                   <Text style={styles.itemName} numberOfLines={2}>{item.menuName}</Text>
+                  {item.values && item.values.length > 0 && (
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => setExpandedItems(prev => ({...prev, [item.cartItemId]: !prev[item.cartItemId]}))}
+                      style={styles.itemOptionsRow}
+                    >
+                      <Text
+                        style={styles.itemOptions}
+                        numberOfLines={expandedItems[item.cartItemId] ? undefined : 1}
+                      >
+                        {formatOptionsSummary(item.values)}
+                      </Text>
+                      <Icon
+                        name={expandedItems[item.cartItemId] ? 'chevron-up' : 'chevron-down'}
+                        size={14}
+                        color={Colors.textSecondary}
+                        style={styles.expandIcon}
+                      />
+                    </TouchableOpacity>
+                  )}
                   <Text style={styles.itemPrice}>₺{item.unitPrice.toFixed(2)}</Text>
                 </View>
               </View>
@@ -103,10 +205,14 @@ const CartScreen = ({navigation}) => {
                   style={styles.quantityButton}
                   onPress={() => {
                     if (item.quantity === 1) {
-                      Alert.alert('Ürünü Kaldır', 'Bu ürünü sepetten kaldırmak istiyor musunuz?', [
-                        {text: 'İptal', style: 'cancel'},
-                        {text: 'Kaldır', style: 'destructive', onPress: () => removeItem(item.cartItemId)},
-                      ]);
+                      showConfirm({
+                        title: 'Ürünü Kaldır',
+                        message: 'Bu ürünü sepetten kaldırmak istiyor musunuz?',
+                        confirmText: 'Kaldır',
+                        cancelText: 'İptal',
+                        confirmStyle: 'destructive',
+                        onConfirm: () => removeItem(item.cartItemId),
+                      });
                     } else {
                       updateItemQuantity(item.cartItemId, item.quantity - 1);
                     }
@@ -131,8 +237,62 @@ const CartScreen = ({navigation}) => {
         </View>
 
         <View style={styles.noteContainer}>
-          <Icon name="note-text-outline" size={20} color={Colors.textSecondary} />
-          <Text style={styles.noteText}>Sipariş notu ekleyebilirsiniz...</Text>
+          <Icon name="note-text-outline" size={20} color={Colors.textSecondary} style={styles.noteIcon} />
+          <TextInput
+            style={styles.noteInput}
+            placeholder="Sipariş notu ekleyebilirsiniz..."
+            placeholderTextColor={Colors.textLight}
+            value={orderNote}
+            onChangeText={setOrderNote}
+            multiline
+            maxLength={200}
+          />
+        </View>
+
+        {/* Coupon Section */}
+        <View style={styles.couponSection}>
+          <Text style={styles.couponTitle}>Kupon Kodu</Text>
+          
+          {appliedCoupon ? (
+            <View style={styles.appliedCouponContainer}>
+              <View style={styles.appliedCouponInfo}>
+                <Icon name="ticket-percent" size={20} color={Colors.success} />
+                <View style={styles.appliedCouponText}>
+                  <Text style={styles.appliedCouponCode}>{appliedCoupon.code}</Text>
+                  <Text style={styles.appliedCouponDesc}>{appliedCoupon.description}</Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={removeCoupon} style={styles.removeCouponButton}>
+                <Icon name="close" size={20} color={Colors.error} />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.couponInputContainer}>
+              <TextInput
+                style={styles.couponInput}
+                placeholder="Kupon kodunu girin"
+                value={couponCode}
+                onChangeText={setCouponCode}
+                autoCapitalize="characters"
+                placeholderTextColor={Colors.textLight}
+              />
+              <TouchableOpacity 
+                style={[styles.applyButton, couponLoading && styles.applyButtonDisabled]}
+                onPress={handleApplyCoupon}
+                disabled={couponLoading}
+              >
+                {couponLoading ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <Text style={styles.applyButtonText}>Uygula</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+          
+          {couponError ? (
+            <Text style={styles.couponError}>{couponError}</Text>
+          ) : null}
         </View>
 
         <View style={styles.summaryContainer}>
@@ -141,6 +301,12 @@ const CartScreen = ({navigation}) => {
             <Text style={styles.summaryLabel}>Ara Toplam</Text>
             <Text style={styles.summaryValue}>₺{subtotal.toFixed(2)}</Text>
           </View>
+          {finalDiscount > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryLabel, styles.discountLabel]}>İndirim</Text>
+              <Text style={[styles.summaryValue, styles.discountValue]}>-₺{finalDiscount.toFixed(2)}</Text>
+            </View>
+          )}
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Teslimat Ücreti</Text>
             <Text style={styles.summaryValue}>₺{deliveryFee.toFixed(2)}</Text>
@@ -148,14 +314,14 @@ const CartScreen = ({navigation}) => {
           <View style={styles.summaryDivider} />
           <View style={styles.summaryRow}>
             <Text style={styles.totalLabel}>Toplam</Text>
-            <Text style={styles.totalValue}>₺{total.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>₺{finalTotal.toFixed(2)}</Text>
           </View>
         </View>
       </ScrollView>
 
       <View style={styles.bottomBar}>
         <View style={styles.bottomInfo}>
-          <Text style={styles.bottomTotal}>₺{total.toFixed(2)}</Text>
+          <Text style={styles.bottomTotal}>₺{finalTotal.toFixed(2)}</Text>
           <Text style={styles.bottomTotalLabel}>{cart.totalQuantity} ürün</Text>
         </View>
         <TouchableOpacity
@@ -308,7 +474,21 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sizes.md,
     fontWeight: Fonts.weights.semibold,
     color: Colors.text,
+    marginBottom: 2,
+  },
+  itemOptionsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     marginBottom: 4,
+  },
+  itemOptions: {
+    fontSize: Fonts.sizes.xs,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  expandIcon: {
+    marginLeft: 2,
+    marginTop: 1,
   },
   itemPrice: {
     fontSize: Fonts.sizes.md,
@@ -343,7 +523,7 @@ const styles = StyleSheet.create({
   },
   noteContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: Colors.surface,
     marginHorizontal: Spacing.base,
     marginTop: Spacing.md,
@@ -353,10 +533,17 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderStyle: 'dashed',
   },
-  noteText: {
+  noteIcon: {
+    marginTop: 4,
+    marginRight: Spacing.sm,
+  },
+  noteInput: {
+    flex: 1,
     fontSize: Fonts.sizes.md,
-    color: Colors.textTertiary,
-    marginLeft: Spacing.sm,
+    color: Colors.text,
+    padding: 0,
+    minHeight: 40,
+    textAlignVertical: 'top',
   },
   summaryContainer: {
     backgroundColor: Colors.surface,
@@ -458,6 +645,96 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sizes.base,
     fontWeight: Fonts.weights.bold,
     marginRight: 8,
+  },
+  // Coupon styles
+  couponSection: {
+    backgroundColor: Colors.surface,
+    marginHorizontal: Spacing.base,
+    marginTop: Spacing.md,
+    padding: Spacing.base,
+    borderRadius: BorderRadius.lg,
+  },
+  couponTitle: {
+    fontSize: Fonts.sizes.base,
+    fontWeight: Fonts.weights.bold,
+    color: Colors.text,
+    marginBottom: Spacing.sm,
+  },
+  couponInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  couponInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 10,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    fontSize: Fonts.sizes.md,
+    color: Colors.text,
+    backgroundColor: Colors.background,
+  },
+  applyButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    borderRadius: 10,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  applyButtonDisabled: {
+    opacity: 0.6,
+  },
+  applyButtonText: {
+    color: '#FFF',
+    fontSize: Fonts.sizes.sm,
+    fontWeight: Fonts.weights.bold,
+  },
+  couponError: {
+    color: Colors.error,
+    fontSize: Fonts.sizes.xs,
+    marginTop: Spacing.xs,
+  },
+  appliedCouponContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.success + '10',
+    padding: Spacing.sm,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.success + '30',
+  },
+  appliedCouponInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  appliedCouponText: {
+    marginLeft: Spacing.sm,
+    flex: 1,
+  },
+  appliedCouponCode: {
+    fontSize: Fonts.sizes.md,
+    fontWeight: Fonts.weights.bold,
+    color: Colors.success,
+  },
+  appliedCouponDesc: {
+    fontSize: Fonts.sizes.xs,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  removeCouponButton: {
+    padding: 4,
+  },
+  discountLabel: {
+    color: Colors.success,
+  },
+  discountValue: {
+    color: Colors.success,
+    fontWeight: Fonts.weights.bold,
   },
 });
 

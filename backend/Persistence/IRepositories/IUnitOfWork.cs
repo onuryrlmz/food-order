@@ -25,6 +25,8 @@ public interface IUnitOfWork : IDisposable
     IBasketItemValueItemValueRepository BasketItemValueItemValueRepository { get; }
     IOrderRepository OrderRepository { get; }
     IOrderItemRepository OrderItemRepository { get; }
+    IPaymentRepository PaymentRepository { get; }
+    IOrderStatusHistoryRepository OrderStatusHistoryRepository { get; }
     IOptionTemplateRepository OptionTemplateRepository { get; }
     IOptionTemplateValueRepository OptionTemplateValueRepository { get; }
     IOptionTemplateValueOptionRepository OptionTemplateValueOptionRepository { get; }

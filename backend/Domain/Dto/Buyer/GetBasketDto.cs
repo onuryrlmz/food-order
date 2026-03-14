@@ -5,10 +5,13 @@ namespace Domain.Dto.Buyer;
 public class GetBasketDto : IDto
 {
     public Guid Id { get; set; }
+    public Guid UserId { get; set; }
     public Guid RestaurantId { get; set; }
+    public string? RestaurantName { get; set; }
     public Guid SellerId { get; set; }
     public Guid UserShippingAddressId { get; set; }
     public Guid UserInvoiceAddressId { get; set; }
+    public int StatusId { get; set; }
     public int PaymentOptionId { get; set; }
     public int TotalQuantity { get; set; }
     public decimal TotalProductPrice { get; set; }
@@ -22,6 +25,7 @@ public class GetBasketDto : IDto
     {
         public Guid Id { get; set; }
         public Guid MenuId { get; set; }
+        public string? MenuName { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal TotalPrice { get; set; }

@@ -1,6 +1,6 @@
 using Application.Services.Buyer.OrderService;
 using Base.Enums;
-using Domain.Dto.Buyer.Order;
+using Domain.Dto.Admin.Order;
 using Domain.Service;
 using Microsoft.AspNetCore.Mvc;
 using WebAPI.Helpers;
@@ -17,11 +17,16 @@ public class AdminOrderController : BaseController
 
     [HttpGet("list")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
-    public async Task<ServiceCollectionResult<GetOrderResponseDto>> GetAll(
+    public async Task<ServiceCollectionResult<AdminGetOrderResponseDto>> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] short? statusId = null)
         => await _orderService.GetAllOrdersForAdmin(page, pageSize, statusId);
+
+    [HttpGet("{orderId}")]
+    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    public async Task<ServiceObjectResult<AdminGetOrderResponseDto>> GetDetail(Guid orderId)
+        => await _orderService.GetOrderDetailForAdmin(orderId);
 
     [HttpPut("{orderId}/status")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]

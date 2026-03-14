@@ -1,4 +1,5 @@
-using Domain.Infrastructure.GetirService.DtoV2;
+using Base.Helpers;
+using Domain.Infrastructure.GetirService.Dto;
 using Domain.Infrastructure.YemekSepetiService.Dto;
 using Newtonsoft.Json;
 using RestSharp;
@@ -9,8 +10,8 @@ public class YemekSepetiAdapter : IYemekSepetiAdapter
 {
     private string _ysRestaurantId;
     private YemekSepetiDto _yemekSepetiDto;
-    private List<Product>? lstProduct = [];
-    private List<Category>? lstCategory = [];
+    private readonly Dictionary<string, Product> _productByName = new();
+    private List<Category> _categories = [];
 
     public void TransferRestaurant(string ysRestaurantId)
     {
@@ -41,13 +42,39 @@ public class YemekSepetiAdapter : IYemekSepetiAdapter
 
             GetCategoriesAndProducts();
 
-            File.WriteAllText($@"{_ysRestaurantId}-YemekSepetiProduct.json", JsonConvert.SerializeObject(lstProduct, Formatting.Indented));
-            File.WriteAllText($@"{_ysRestaurantId}-YemekSepetiCategory.json", JsonConvert.SerializeObject(lstCategory, Formatting.Indented));
+            File.WriteAllText($@"{_ysRestaurantId}-YemekSepetiProduct.json", JsonConvert.SerializeObject(_productByName.Values.ToList(), Formatting.Indented));
+            File.WriteAllText($@"{_ysRestaurantId}-YemekSepetiCategory.json", JsonConvert.SerializeObject(_categories, Formatting.Indented));
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            Console.WriteLine($"[YemekSepetiAdapter] TransferRestaurant error: {e.Message}");
         }
+    }
+
+    private Product GetOrAddProduct(string name, string referenceId, double price, int productType)
+    {
+        var cleanName = name.Replace("Promosyon", "").Replace("İstemiyorum", "").Trim();
+        if (_productByName.TryGetValue(cleanName, out var existing))
+        {
+            if (existing.Price < price)
+            {
+                existing.Price = price;
+                existing.Hash = ExtHelper.CreateMD5(JsonConvert.SerializeObject(new { existing.Name, existing.Price, existing.ProductType }));
+            }
+            return existing;
+        }
+
+        var product = new Product
+        {
+            Id = Guid.NewGuid(),
+            ReferenceId = referenceId,
+            Name = cleanName,
+            Price = price,
+            ProductType = productType,
+        };
+        product.Hash = ExtHelper.CreateMD5(JsonConvert.SerializeObject(new { product.Name, product.Price, product.ProductType }));
+        _productByName[cleanName] = product;
+        return product;
     }
 
     private void GetCategoriesAndProducts()
@@ -58,7 +85,6 @@ public class YemekSepetiAdapter : IYemekSepetiAdapter
             {
                 var category = new Category
                 {
-                    Id = Guid.NewGuid(),
                     ReferenceId = ysCategory.id.ToString(),
                     Name = ysCategory.name,
                 };
@@ -67,7 +93,6 @@ public class YemekSepetiAdapter : IYemekSepetiAdapter
                 {
                     var menu = new Menu
                     {
-                        Id = Guid.NewGuid(),
                         ReferenceId = ysMenu.id.ToString(),
                         Name = ysMenu.name,
                         Description = ysMenu.description,
@@ -83,7 +108,6 @@ public class YemekSepetiAdapter : IYemekSepetiAdapter
                         var ysMenuOptionDto = _yemekSepetiDto.data.menus[0].toppings[ysMenuOption.ToString()];
                         var menuOption = new MenuOption
                         {
-                            Id = Guid.NewGuid(),
                             ReferenceId = ysMenuOptionDto.id.ToString(),
                             Name = ysMenuOptionDto.name,
                             Description = string.Empty,
@@ -99,113 +123,73 @@ public class YemekSepetiAdapter : IYemekSepetiAdapter
                                 continue; // Skip the first option if it is a promotion
                             }
 
+                            var product = GetOrAddProduct(
+                                ysMenuOptionValue.product.name,
+                                ysMenuOptionValue.product_id.ToString(),
+                                0,
+                                1);
+
                             var menuOptionValue = new MenuOptionValue
                             {
-                                Id = Guid.NewGuid(),
                                 ReferenceId = ysMenuOptionValue.id.ToString(),
-                                ProductReferenceId = ysMenuOptionValue.product_id.ToString(),
+                                Name = product.Name,
+                                ProductReferenceId = product.Hash,
                                 Price = Convert.ToDouble(ysMenuOptionValue?.product?.product_variations?.FirstOrDefault()?.price ?? 0),
                                 OrderIndex = ysMenuOptionDto.options.IndexOf(ysMenuOptionValue),
                             };
 
-                            var product = new Product
+                            // Nested options (option2 level) → MenuOptionValueOption
+                            foreach (var ysNestedOption in ysMenuOptionValue.product.product_variations[0].topping_ids)
                             {
-                                Id = Guid.NewGuid(),
-                                ReferenceId = ysMenuOptionValue.product_id.ToString(),
-                                Name = ysMenuOptionValue.product.name.Replace("Promosyon", "").Replace("İstemiyorum", "").Trim(),
-                                Price = 0,
-                                ProductType = 1,
-                                Hash = string.Empty
-                            };
+                                var ysNestedOptionDto = _yemekSepetiDto.data.menus[0].toppings[ysNestedOption.ToString()];
 
-                            foreach (var ysProductAttribute in ysMenuOptionValue.product.product_variations[0].topping_ids)
-                            {
-                                var ysProductAttributeDto = _yemekSepetiDto.data.menus[0].toppings[ysProductAttribute.ToString()];
-
-                                var type = -1;
-                                var includePrice = ysProductAttributeDto.options.Any(x => x.price > 0);
-
-                                if (ysProductAttributeDto.quantity_minimum > 0 && includePrice) type = 1;
-                                else if (ysProductAttributeDto.quantity_minimum > 0 && !includePrice) type = 2;
-                                else if (ysProductAttributeDto.quantity_minimum == 0 && includePrice) type = 3;
-                                else if (ysProductAttributeDto.quantity_minimum == 0 && !includePrice) type = 4;
-
-                                var productAttribute = new ProductAttribute
+                                var menuOptionValueOption = new MenuOptionValueOption
                                 {
-                                    Id = Guid.NewGuid(),
-                                    MasterProductId = product.Id,
-                                    Name = ysProductAttributeDto.name,
-                                    Type = type,
-                                    Description = null,
-                                    MinCount = ysProductAttributeDto.quantity_minimum,
-                                    MaxCount = ysProductAttributeDto.quantity_maximum,
+                                    ReferenceId = ysNestedOptionDto.id.ToString(),
+                                    Name = ysNestedOptionDto.name,
+                                    Description = string.Empty,
+                                    MinCount = ysNestedOptionDto.quantity_minimum,
+                                    MaxCount = ysNestedOptionDto.quantity_maximum,
+                                    OrderIndex = ysMenuOptionValue.product.product_variations[0].topping_ids.IndexOf(ysNestedOption),
                                 };
 
-                                foreach (var ysProductAttributeValue in ysProductAttributeDto.options)
+                                foreach (var ysNestedOptionValue in ysNestedOptionDto.options)
                                 {
-                                    var subProduct = new Product
+                                    var subProduct = GetOrAddProduct(
+                                        ysNestedOptionValue.name,
+                                        ysNestedOptionValue.product_id.ToString(),
+                                        ysNestedOptionValue.price,
+                                        2);
+
+                                    var menuOptionValueOptionValue = new MenuOptionValueOptionValue
                                     {
-                                        Id = Guid.NewGuid(),
-                                        ReferenceId = ysProductAttributeValue.product_id.ToString(),
-                                        Name = ysProductAttributeValue.name.Replace("Promosyon", "").Replace("İstemiyorum", "").Trim(),
-                                        Price = ysProductAttributeValue.price,
-                                        ProductType = 2,
-                                        Hash = string.Empty
+                                        ReferenceId = ysNestedOptionValue.id.ToString(),
+                                        Name = subProduct.Name,
+                                        ProductReferenceId = subProduct.Hash,
+                                        Price = ysNestedOptionValue.price,
+                                        OrderIndex = ysNestedOptionDto.options.IndexOf(ysNestedOptionValue),
                                     };
-
-                                    var addedSubProduct = lstProduct.FirstOrDefault(x => x.Name == subProduct.Name);
-                                    if (addedSubProduct == null)
-                                    {
-                                        lstProduct.Add(subProduct);
-                                    }
-                                    else
-                                    {
-                                        if (addedSubProduct.Price < subProduct.Price)
-                                        {
-                                            lstProduct.Remove(addedSubProduct);
-                                            subProduct.Id = addedSubProduct.Id;
-                                            lstProduct.Add(subProduct);
-                                        }
-                                        else
-                                        {
-                                            subProduct = addedSubProduct;
-                                        }
-                                    }
-
-                                    var productAttributeValue = new ProductAttributeValue
-                                    {
-                                        Id = Guid.NewGuid(),
-                                        MasterProductId = product.Id,
-                                        ProductAttributeId = productAttribute.Id,
-                                        SubProductId = subProduct.Id,
-                                    };
-
-                                    productAttribute.ProductAttributeValues.Add(productAttributeValue);
+                                    menuOptionValueOption.MenuOptionValueOptionValues.Add(menuOptionValueOptionValue);
                                 }
 
-                                product.ProductAttributes.Add(productAttribute);
+                                menuOptionValue.MenuOptionValueOptions.Add(menuOptionValueOption);
                             }
 
                             menuOption.MenuOptionValues.Add(menuOptionValue);
-
-                            if (lstProduct.FirstOrDefault(x => x.ReferenceId == product.ReferenceId) == null) lstProduct.Add(product);
                         }
 
                         menu.MenuOptions.Add(menuOption);
                     }
 
                     category.Menus.Add(menu);
-
-
-                    break;
                 }
 
-                lstCategory.Add(category);
-                break;
+                _categories.Add(category);
             }
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[YemekSepetiAdapter] GetCategoriesAndProducts error: {e.Message}");
         }
     }
 }

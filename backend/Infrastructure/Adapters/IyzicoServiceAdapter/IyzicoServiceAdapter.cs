@@ -112,15 +112,21 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
                 PaymentChannel = "WEB",
                 PaymentGroup = "PRODUCT",
                 CallbackUrl = requestDto.CallbackUrl,
-                PaymentCard = new PaymentCard
-                {
-                    CardHolderName = requestDto.CardHolderName,
-                    CardNumber = requestDto.CardNumber,
-                    ExpireMonth = requestDto.ExpireMonth,
-                    ExpireYear = requestDto.ExpireYear,
-                    Cvc = requestDto.Cvc,
-                    RegisterCard = 0
-                },
+                PaymentCard = !string.IsNullOrEmpty(requestDto.CardToken)
+                    ? new PaymentCard
+                    {
+                        CardToken = requestDto.CardToken,
+                        CardUserKey = requestDto.CardUserKey
+                    }
+                    : new PaymentCard
+                    {
+                        CardHolderName = requestDto.CardHolderName,
+                        CardNumber = requestDto.CardNumber,
+                        ExpireMonth = requestDto.ExpireMonth,
+                        ExpireYear = requestDto.ExpireYear,
+                        Cvc = requestDto.Cvc,
+                        RegisterCard = requestDto.SaveCard ? 1 : 0
+                    },
                 Buyer = new Buyer
                 {
                     Id = requestDto.BuyerId,
@@ -188,9 +194,9 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
         return await Task.FromResult(result);
     }
 
-    public async Task<ServiceObjectResult<bool>> CompleteThreeDsPayment(string conversationId, string paymentId, string conversationData)
+    public async Task<ServiceObjectResult<ThreeDsCompleteResultDto>> CompleteThreeDsPayment(string conversationId, string paymentId, string conversationData)
     {
-        var result = new ServiceObjectResult<bool>();
+        var result = new ServiceObjectResult<ThreeDsCompleteResultDto>();
         try
         {
             var request = new CreateThreedsPaymentRequest
@@ -203,8 +209,26 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
 
             var payment = ThreedsPayment.Create(request, options);
 
-            if (payment.Status == "success" && payment.PaymentStatus == "SUCCESS")
-                result.SetData(true);
+            if (payment.Status == "success")
+            {
+                var dto = new ThreeDsCompleteResultDto
+                {
+                    Success = true,
+                    CardUserKey = payment.CardUserKey
+                };
+
+                // Kart kaydetme yapıldıysa kart detaylarını da doldur
+                if (!string.IsNullOrEmpty(payment.CardUserKey) && !string.IsNullOrEmpty(payment.BinNumber))
+                {
+                    dto.CardToken = payment.CardToken;
+                    dto.BinNumber = payment.BinNumber;
+                    dto.LastFourDigits = payment.LastFourDigits;
+                    dto.CardType = payment.CardType;
+                    dto.CardAssociation = payment.CardAssociation;
+                }
+
+                result.SetData(dto);
+            }
             else
             {
                 result.AddErrorMessage(payment.ErrorMessage ?? "Ödeme tamamlanamadı.");
@@ -212,5 +236,119 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
         }
         catch (Exception e) { result.Fail(e); }
         return await Task.FromResult(result);
+    }
+
+    public ServiceObjectResult<CardStorageResultDto> CreateCard(string externalId, string email, string? cardUserKey, string cardAlias, string cardNumber, string expireYear, string expireMonth, string cardHolderName)
+    {
+        var result = new ServiceObjectResult<CardStorageResultDto>();
+        try
+        {
+            var request = new CreateCardRequest
+            {
+                Locale = Locale.TR.ToString(),
+                ConversationId = Guid.NewGuid().ToString(),
+                ExternalId = externalId,
+                Email = email,
+                CardUserKey = cardUserKey,
+                Card = new CardInformation
+                {
+                    CardAlias = cardAlias,
+                    CardNumber = cardNumber,
+                    ExpireYear = expireYear,
+                    ExpireMonth = expireMonth,
+                    CardHolderName = cardHolderName
+                }
+            };
+
+            var card = Card.Create(request, options);
+
+            if (card.Status == Status.SUCCESS.ToString())
+            {
+                result.SetData(new CardStorageResultDto
+                {
+                    CardUserKey = card.CardUserKey,
+                    CardToken = card.CardToken,
+                    BinNumber = card.BinNumber,
+                    LastFourDigits = card.LastFourDigits,
+                    CardType = card.CardType,
+                    CardAssociation = card.CardAssociation,
+                    CardFamily = card.CardFamily,
+                    CardAlias = card.CardAlias,
+                    CardBankName = card.CardBankName
+                });
+            }
+            else
+            {
+                result.AddErrorMessage(card.ErrorMessage ?? "Kart kaydedilemedi.");
+            }
+        }
+        catch (Exception e) { result.Fail(e); }
+        return result;
+    }
+
+    public ServiceObjectResult<List<CardDetailDto>> GetCards(string cardUserKey)
+    {
+        var result = new ServiceObjectResult<List<CardDetailDto>>();
+        try
+        {
+            var request = new RetrieveCardListRequest
+            {
+                Locale = Locale.TR.ToString(),
+                ConversationId = Guid.NewGuid().ToString(),
+                CardUserKey = cardUserKey
+            };
+
+            var cardList = CardList.Retrieve(request, options);
+
+            if (cardList.Status == Status.SUCCESS.ToString())
+            {
+                var cards = cardList.CardDetails?.Select(c => new CardDetailDto
+                {
+                    CardToken = c.CardToken,
+                    CardAlias = c.CardAlias,
+                    BinNumber = c.BinNumber,
+                    LastFourDigits = c.LastFourDigits,
+                    CardType = c.CardType,
+                    CardAssociation = c.CardAssociation,
+                    CardFamily = c.CardFamily,
+                    CardBankName = c.CardBankName,
+                    CardBankCode = c.CardBankCode,
+                    ExpireMonth = c.ExpireMonth,
+                    ExpireYear = c.ExpireYear
+                }).ToList() ?? new List<CardDetailDto>();
+
+                result.SetData(cards);
+            }
+            else
+            {
+                result.SetData(new List<CardDetailDto>());
+            }
+        }
+        catch (Exception e) { result.Fail(e); }
+        return result;
+    }
+
+    public ServiceObjectResult<bool> DeleteCard(string cardUserKey, string cardToken)
+    {
+        var result = new ServiceObjectResult<bool>();
+        try
+        {
+            var request = new DeleteCardRequest
+            {
+                Locale = Locale.TR.ToString(),
+                ConversationId = Guid.NewGuid().ToString(),
+                CardUserKey = cardUserKey,
+                CardToken = cardToken
+            };
+
+            var deleteResult = Card.Delete(request, options);
+
+            if (deleteResult.Status == Status.SUCCESS.ToString())
+                result.SetData(true);
+            else
+                result.AddErrorMessage(deleteResult.ErrorMessage ?? "Kart silinemedi.");
+        }
+        catch (Exception e) { result.Fail(e); }
+        return result;
     }
 }

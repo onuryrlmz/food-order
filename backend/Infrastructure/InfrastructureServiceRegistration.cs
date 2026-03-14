@@ -13,7 +13,6 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IAwsS3ServiceAdapter, AwsS3ServiceAdapter>();
         services.AddScoped<IIyzicoServiceAdapter, IyzicoServiceAdapter>();
         services.AddScoped<IGetirServiceAdapter, GetirServiceAdapter>();
-        services.AddScoped<IGetirServiceAdapterV2, GetirServiceAdapterV2>();
         services.AddScoped<IYemekSepetiAdapter, YemekSepetiAdapter>();
 
         return services;

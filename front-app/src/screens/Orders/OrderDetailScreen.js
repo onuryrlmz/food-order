@@ -5,17 +5,18 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {orderService} from '../../api';
+import {useToast} from '../../context/ToastContext';
 import {ORDER_STATUS, PAYMENT_OPTIONS} from '../../utils/constants';
 import OrderStatusBadge from '../../components/OrderStatusBadge';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
 const OrderDetailScreen = ({route, navigation}) => {
+  const {showToast, showConfirm} = useToast();
   const {orderId} = route.params;
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,33 +40,29 @@ const OrderDetailScreen = ({route, navigation}) => {
   };
 
   const handleCancel = () => {
-    Alert.alert(
-      'Siparişi İptal Et',
-      'Bu siparişi iptal etmek istediğinize emin misiniz?',
-      [
-        {text: 'Vazgeç', style: 'cancel'},
-        {
-          text: 'İptal Et',
-          style: 'destructive',
-          onPress: async () => {
-            setCancelling(true);
-            try {
-              const res = await orderService.cancelOrder(orderId, 'Müşteri iptal etti');
-              if (!res.data.hasFailed) {
-                Alert.alert('Başarılı', 'Siparişiniz iptal edildi');
-                loadOrder();
-              } else {
-                Alert.alert('Hata', res.data.messages?.[0]?.description || 'İptal edilemedi');
-              }
-            } catch (e) {
-              Alert.alert('Hata', 'Sipariş iptal edilemedi');
-            } finally {
-              setCancelling(false);
-            }
-          },
-        },
-      ],
-    );
+    showConfirm({
+      title: 'Siparişi İptal Et',
+      message: 'Bu siparişi iptal etmek istediğinize emin misiniz?',
+      confirmText: 'İptal Et',
+      cancelText: 'Vazgeç',
+      confirmStyle: 'destructive',
+      onConfirm: async () => {
+        setCancelling(true);
+        try {
+          const res = await orderService.cancelOrder(orderId, 'Müşteri iptal etti');
+          if (!res.data.hasFailed) {
+            showToast('Siparişiniz iptal edildi', 'success');
+            loadOrder();
+          } else {
+            showToast(res.data.messages?.[0]?.description || 'İptal edilemedi', 'error');
+          }
+        } catch (e) {
+          showToast('Sipariş iptal edilemedi', 'error');
+        } finally {
+          setCancelling(false);
+        }
+      },
+    });
   };
 
   const formatDate = (dateStr) => {
@@ -159,12 +156,40 @@ const OrderDetailScreen = ({route, navigation}) => {
             <Text style={styles.sectionTitle}>Sipariş Kalemleri</Text>
           </View>
           {order.items?.map((item, index) => (
-            <View key={item.id || index} style={styles.orderItemRow}>
-              <View style={styles.orderItemQtyBadge}>
-                <Text style={styles.orderItemQtyText}>{item.quantity}x</Text>
+            <View key={item.id || index} style={styles.orderItemCard}>
+              <View style={styles.orderItemTop}>
+                <View style={styles.orderItemQtyBadge}>
+                  <Text style={styles.orderItemQtyText}>{item.quantity}x</Text>
+                </View>
+                <View style={{flex: 1}}>
+                  <Text style={styles.orderItemName} numberOfLines={2}>{item.menuName}</Text>
+                  {item.description ? (
+                    <Text style={styles.orderItemDesc} numberOfLines={2}>{item.description}</Text>
+                  ) : null}
+                </View>
+                <Text style={styles.orderItemPrice}>₺{item.totalPrice?.toFixed(2)}</Text>
               </View>
-              <Text style={styles.orderItemName} numberOfLines={1}>{item.menuName}</Text>
-              <Text style={styles.orderItemPrice}>₺{item.totalPrice?.toFixed(2)}</Text>
+              {item.unitPrice ? (
+                <Text style={styles.orderItemUnitPrice}>Birim: ₺{Number(item.unitPrice).toFixed(2)}</Text>
+              ) : null}
+              {item.values?.length > 0 ? (
+                <View style={styles.orderItemValues}>
+                  {item.values.map((val, vi) => (
+                    <View key={vi}>
+                      <View style={styles.valueRow}>
+                        <Text style={styles.valueName}>{val.optionName}: {val.valueName}{val.quantity > 1 ? ` x${val.quantity}` : ''}</Text>
+                        {val.unitPrice > 0 ? <Text style={styles.valuePrice}>+₺{Number(val.totalPrice).toFixed(2)}</Text> : null}
+                      </View>
+                      {val.options?.length > 0 ? val.options.map((opt, oi) => (
+                        <View key={oi} style={styles.subValueRow}>
+                          <Text style={styles.subValueName}>{opt.optionName}: {opt.valueName}{opt.quantity > 1 ? ` x${opt.quantity}` : ''}</Text>
+                          {opt.unitPrice > 0 ? <Text style={styles.subValuePrice}>+₺{Number(opt.totalPrice).toFixed(2)}</Text> : null}
+                        </View>
+                      )) : null}
+                    </View>
+                  ))}
+                </View>
+              ) : null}
             </View>
           ))}
         </View>
@@ -189,7 +214,7 @@ const OrderDetailScreen = ({route, navigation}) => {
             </View>
             {order.discountAmount > 0 && (
               <View style={styles.priceRow}>
-                <Text style={styles.priceLabel}>İndirim</Text>
+                <Text style={styles.priceLabel}>İndirim{order.couponCode ? ` (${order.couponCode})` : ''}</Text>
                 <Text style={[styles.priceValue, {color: Colors.success}]}>-₺{order.discountAmount?.toFixed(2)}</Text>
               </View>
             )}
@@ -392,12 +417,15 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weights.semibold,
     color: Colors.text,
   },
-  orderItemRow: {
+  orderItemCard: {
+    backgroundColor: Colors.borderLight + '60',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  orderItemTop: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+    alignItems: 'flex-start',
   },
   orderItemQtyBadge: {
     backgroundColor: Colors.primary + '15',
@@ -405,6 +433,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 6,
     marginRight: 10,
+    marginTop: 2,
   },
   orderItemQtyText: {
     fontSize: Fonts.sizes.sm,
@@ -412,14 +441,66 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   orderItemName: {
-    flex: 1,
-    fontSize: Fonts.sizes.md,
-    color: Colors.text,
-  },
-  orderItemPrice: {
     fontSize: Fonts.sizes.md,
     fontWeight: Fonts.weights.semibold,
     color: Colors.text,
+  },
+  orderItemDesc: {
+    fontSize: Fonts.sizes.sm,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  orderItemPrice: {
+    fontSize: Fonts.sizes.md,
+    fontWeight: Fonts.weights.bold,
+    color: Colors.text,
+    marginLeft: 8,
+  },
+  orderItemUnitPrice: {
+    fontSize: Fonts.sizes.xs,
+    color: Colors.textSecondary,
+    marginTop: 4,
+    marginLeft: 42,
+  },
+  orderItemValues: {
+    marginTop: 8,
+    marginLeft: 42,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
+    paddingTop: 8,
+  },
+  valueRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  valueName: {
+    fontSize: Fonts.sizes.sm,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  valuePrice: {
+    fontSize: Fonts.sizes.sm,
+    color: Colors.textSecondary,
+    fontWeight: Fonts.weights.medium,
+    marginLeft: 8,
+  },
+  subValueRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 3,
+    marginLeft: 12,
+  },
+  subValueName: {
+    fontSize: Fonts.sizes.xs,
+    color: Colors.textTertiary || '#999',
+    flex: 1,
+  },
+  subValuePrice: {
+    fontSize: Fonts.sizes.xs,
+    color: Colors.textTertiary || '#999',
     marginLeft: 8,
   },
   paymentRow: {

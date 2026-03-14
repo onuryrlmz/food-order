@@ -49,6 +49,7 @@ public static class PersistenceServiceRegistration
         services.AddScoped<IOptionTemplateValueRepository, OptionTemplateValueRepository>();
         services.AddScoped<IOptionTemplateValueOptionRepository, OptionTemplateValueOptionRepository>();
         services.AddScoped<IOptionTemplateValueOptionValueRepository, OptionTemplateValueOptionValueRepository>();
+        services.AddScoped<ICouponRepository, CouponRepository>();
 
         //Buyer
         services.AddScoped<IBasketRepository, BasketRepository>();
@@ -57,6 +58,8 @@ public static class PersistenceServiceRegistration
         services.AddScoped<IBasketItemValueItemValueRepository, BasketItemValueItemValueRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IOrderStatusHistoryRepository, OrderStatusHistoryRepository>();
         services.AddScoped<IRestaurantCdnUpdateQueueRepository, RestaurantCdnUpdateQueueRepository>();
         services.AddScoped<IRestaurantWorkingHourRepository, RestaurantWorkingHourRepository>();
 

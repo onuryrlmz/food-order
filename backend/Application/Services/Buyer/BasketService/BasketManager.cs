@@ -108,36 +108,28 @@ public class BasketManager : IBasketService
                 return result;
             }
 
-            Start:
-            var basket = await _redisService.GetValueAsync<Basket>("basket_" + _tokenAccessor.GetToken().UserId);
+            var redisKey = $"basket_{_tokenAccessor.GetToken().UserId}";
+            var basket = await _redisService.GetValueAsync<GetBasketDto>(redisKey);
             if (basket == null)
             {
-                basket = new Basket
-                {
-                    Id = Guid.NewGuid(),
-                    UserId = _tokenAccessor.GetToken()
-                        .UserId,
-                    UserShippingAddressId = Guid.Empty,
-                    UserInvoiceAddressId = Guid.Empty,
-                    SellerId = Guid.Empty,
-                    RestaurantId = Guid.Empty,
-                    StatusId = (int)BasketServiceEnums.BasketStatusEnums.Waiting,
-                    PaymentOptionId = (int)BasketServiceEnums.PaymentOptionEnums.CreditCard,
-                    TotalQuantity = 0,
-                    TotalProductPrice = 0,
-                    TotalShipmentPrice = 0,
-                    TotalShipmentDiscount = 0,
-                    TotalDiscount = 0,
-                    TotalPrice = 0
-                };
-
-                await _redisService.SetValueAsync("basket_" + _tokenAccessor.GetToken().UserId, basket);
-
-                goto Start;
+                basket = CreateEmptyBasketDto();
+                await _redisService.SetValueAsync(redisKey, basket);
             }
 
-            var basketDto = _mapper.Map<GetBasketDto>(basket);
-            result.SetData(basketDto);
+            // Enrich from restaurant JSON (CDN) — güncel fiyat, menü adı, kaldırılan menüler
+            if (basket.RestaurantId != Guid.Empty && basket.BasketItems != null && basket.BasketItems.Count > 0)
+            {
+                await EnrichBasketFromRestaurantJson(basket);
+            }
+
+            // Enrich with restaurant name
+            if (basket.RestaurantId != Guid.Empty)
+            {
+                var rest = await _unitOfWork.RestaurantRepository.GetAsync(x => x.Id == basket.RestaurantId);
+                if (rest != null) basket.RestaurantName = rest.Name;
+            }
+
+            result.SetData(basket);
         }
         catch (Exception e)
         {
@@ -295,22 +287,96 @@ public class BasketManager : IBasketService
                 return result;
             }
 
-            var basket = await _redisService.GetValueAsync<Basket>($"basket_{_tokenAccessor.GetToken().UserId}");
-            if (basket == null)
+            var redisKey = $"basket_{_tokenAccessor.GetToken().UserId}";
+            var existing = await _redisService.GetValueAsync<GetBasketDto>(redisKey);
+
+            var basketDto = new GetBasketDto
             {
-                result.AddErrorMessage("Sepet bulunamadı.");
-                return result;
+                Id = existing?.Id ?? Guid.NewGuid(),
+                UserId = _tokenAccessor.GetToken().UserId,
+                RestaurantId = dto.RestaurantId,
+                SellerId = dto.SellerId,
+                UserShippingAddressId = dto.UserShippingAddressId,
+                UserInvoiceAddressId = dto.UserInvoiceAddressId,
+                StatusId = existing?.StatusId ?? (int)BasketServiceEnums.BasketStatusEnums.Waiting,
+                PaymentOptionId = dto.PaymentOptionId,
+                TotalQuantity = 0,
+                TotalProductPrice = 0,
+                TotalShipmentPrice = 0,
+                TotalShipmentDiscount = 0,
+                TotalDiscount = 0,
+                TotalPrice = 0,
+                BasketItems = new List<GetBasketDto.GetBasketItemDto>()
+            };
+
+            foreach (var item in dto.BasketItems)
+            {
+                var menu = await _menuRepository.GetAsync(x => x.Id == item.MenuId);
+                if (menu == null) continue; // Kaldırılmış menüyü atla
+
+                var basketItem = new GetBasketDto.GetBasketItemDto
+                {
+                    Id = Guid.NewGuid(),
+                    MenuId = item.MenuId,
+                    Quantity = item.Quantity,
+                    UnitPrice = menu.Price,
+                    TotalPrice = menu.Price * item.Quantity,
+                    BasketItemValues = new List<GetBasketDto.GetBasketItemDto.GetBasketItemValueDto>()
+                };
+
+                basketDto.TotalQuantity += item.Quantity;
+                basketDto.TotalProductPrice += menu.Price * item.Quantity;
+                basketDto.TotalPrice += menu.Price * item.Quantity;
+
+                foreach (var value in item.BasketItemValues)
+                {
+                    var menuOptionValue = await _menuOptionValueRepository.GetAsync(x => x.Id == value.MenuOptionValueId);
+                    if (menuOptionValue == null) continue;
+
+                    var basketItemValue = new GetBasketDto.GetBasketItemDto.GetBasketItemValueDto
+                    {
+                        Id = Guid.NewGuid(),
+                        MenuOptionId = value.MenuOptionId,
+                        MenuOptionValueId = value.MenuOptionValueId,
+                        ProductId = value.ProductId,
+                        Quantity = value.Quantity,
+                        UnitPrice = menuOptionValue.Price,
+                        TotalPrice = menuOptionValue.Price * value.Quantity,
+                        BasketItemValueItemValues = new List<GetBasketDto.GetBasketItemDto.GetBasketItemValueDto.GetBasketItemValueItemValueDto>()
+                    };
+
+                    basketDto.TotalProductPrice += menuOptionValue.Price * value.Quantity;
+                    basketDto.TotalPrice += menuOptionValue.Price * value.Quantity;
+
+                    foreach (var itemValue in value.BasketItemValueItemValues)
+                    {
+                        var movov = await _menuOptionValueOptionValueRepository.GetAsync(x => x.Id == itemValue.MenuOptionValueOptionValueId);
+                        if (movov == null) continue;
+
+                        var biviv = new GetBasketDto.GetBasketItemDto.GetBasketItemValueDto.GetBasketItemValueItemValueDto
+                        {
+                            Id = Guid.NewGuid(),
+                            MenuOptionValueOptionId = itemValue.MenuOptionValueOptionId,
+                            MenuOptionValueOptionValueId = itemValue.MenuOptionValueOptionValueId,
+                            ProductId = itemValue.ProductId,
+                            Quantity = itemValue.Quantity,
+                            UnitPrice = movov.Price,
+                            TotalPrice = movov.Price * itemValue.Quantity
+                        };
+
+                        basketDto.TotalProductPrice += movov.Price * itemValue.Quantity;
+                        basketDto.TotalPrice += movov.Price * itemValue.Quantity;
+
+                        basketItemValue.BasketItemValueItemValues.Add(biviv);
+                    }
+
+                    basketItem.BasketItemValues.Add(basketItemValue);
+                }
+
+                basketDto.BasketItems.Add(basketItem);
             }
 
-            var newBasket = await ConvertDtoToBasketEntitiy(dto, basket);
-            if (newBasket?.Data == null)
-            {
-                result.AddErrorMessage("Sepet güncellenemedi.");
-                return result;
-            }
-
-            await _redisService.SetValueAsync($"basket_{_tokenAccessor.GetToken().UserId}", newBasket.Data);
-
+            await _redisService.SetValueAsync(redisKey, basketDto);
             result.SetData(true);
         }
         catch (Exception e)
@@ -321,125 +387,149 @@ public class BasketManager : IBasketService
         return result;
     }
 
-    private async Task<ServiceObjectResult<Basket>?> ConvertDtoToBasketEntitiy(UpdateBasketDto dto, Basket oldBasket)
+    public async Task<ServiceObjectResult<bool>> ClearBasketForRedis()
     {
-        var result = new ServiceObjectResult<Basket>();
+        var result = new ServiceObjectResult<bool>();
         try
         {
-            var basket = new Basket
+            if (_tokenAccessor.GetToken() == null)
             {
-                Id = oldBasket.Id,
-                CreatedDate = oldBasket.CreatedDate,
-                UpdatedDate = oldBasket.UpdatedDate,
-                UserId = oldBasket.UserId,
-                UserShippingAddressId = dto.UserShippingAddressId,
-                UserInvoiceAddressId = dto.UserInvoiceAddressId,
-                RestaurantId = dto.RestaurantId,
-                StatusId = oldBasket.StatusId,
-                SellerId = dto.SellerId,
-                PaymentOptionId = dto.PaymentOptionId,
-                TotalQuantity = 0,
-                TotalProductPrice = 0,
-                TotalShipmentPrice = 0,
-                TotalShipmentDiscount = 0,
-                TotalDiscount = 0,
-                TotalPrice = 0,
-                BasketItems = new List<BasketItem>()
-            };
-
-            foreach (var item in dto.BasketItems)
-            {
-                var menu = await _menuRepository.GetAsync(x => x.Id == item.MenuId);
-                if (menu == null)
-                {
-                    result.AddErrorMessage("Menu bulunamadı.");
-                    return result;
-                }
-
-                var basketItem = new BasketItem
-                {
-                    Id = Guid.NewGuid(),
-                    CreatedDate = DateTime.Now,
-                    BasketId = basket.Id,
-                    MenuId = item.MenuId,
-                    Quantity = item.Quantity,
-                    UnitPrice = menu.Price,
-                    TotalPrice = menu.Price * item.Quantity,
-                    BasketItemValues = new List<BasketItemValue>()
-                };
-
-                basket.TotalQuantity += item.Quantity;
-                basket.TotalProductPrice += menu.Price * item.Quantity;
-                basket.TotalPrice += menu.Price * item.Quantity;
-
-                foreach (var value in item.BasketItemValues)
-                {
-                    var menuOptionValue = await _menuOptionValueRepository.GetAsync(x => x.Id == value.MenuOptionValueId);
-                    if (menuOptionValue == null)
-                    {
-                        result.AddErrorMessage("Menu option value bulunamadı.");
-                        return result;
-                    }
-
-                    var basketItemValue = new BasketItemValue
-                    {
-                        Id = Guid.NewGuid(),
-                        CreatedDate = DateTime.Now,
-                        BasketItemId = basketItem.Id,
-                        MenuOptionId = value.MenuOptionId,
-                        MenuOptionValueId = value.MenuOptionValueId,
-                        ProductId = value.ProductId,
-                        Quantity = value.Quantity,
-                        UnitPrice = menuOptionValue.Price,
-                        TotalPrice = menuOptionValue.Price * value.Quantity,
-                        BasketItemValueItemValues = new List<BasketItemValueItemValue>()
-                    };
-
-                    basket.TotalProductPrice += menuOptionValue.Price * value.Quantity;
-                    basket.TotalPrice += menuOptionValue.Price * value.Quantity;
-
-                    foreach (var itemValue in value.BasketItemValueItemValues)
-                    {
-                        var menuOptionValueOptionValue = await _menuOptionValueOptionValueRepository
-                            .GetAsync(x => x.Id == itemValue.MenuOptionValueOptionValueId);
-                        if (menuOptionValueOptionValue == null)
-                        {
-                            result.AddErrorMessage("Menu option value option value bulunamadı.");
-                            return result;
-                        }
-
-                        var basketItemValueItemValue = new BasketItemValueItemValue
-                        {
-                            Id = Guid.NewGuid(),
-                            CreatedDate = DateTime.Now,
-                            BasketItemValueId = basketItemValue.Id,
-                            MenuOptionValueOptionId = itemValue.MenuOptionValueOptionId,
-                            MenuOptionValueOptionValueId = itemValue.MenuOptionValueOptionValueId,
-                            ProductId = itemValue.ProductId,
-                            Quantity = itemValue.Quantity,
-                            UnitPrice = menuOptionValueOptionValue.Price,
-                            TotalPrice = menuOptionValueOptionValue.Price * itemValue.Quantity
-                        };
-
-                        basket.TotalProductPrice += menuOptionValueOptionValue.Price * itemValue.Quantity;
-                        basket.TotalPrice += menuOptionValueOptionValue.Price * itemValue.Quantity;
-
-                        basketItemValue.BasketItemValueItemValues.Add(basketItemValueItemValue);
-                    }
-
-                    basketItem.BasketItemValues.Add(basketItemValue);
-                }
-
-                basket.BasketItems.Add(basketItem);
+                result.SetData(false);
+                return result;
             }
 
-            result.SetData(basket);
-            return result;
+            var redisKey = $"basket_{_tokenAccessor.GetToken().UserId}";
+            await _redisService.DeleteKeyAsync(redisKey);
+            result.SetData(true);
         }
         catch (Exception e)
         {
-            result.AddErrorMessage(e.Message);
-            return result;
+            result.SetData(false);
         }
+
+        return result;
+    }
+
+    private GetBasketDto CreateEmptyBasketDto()
+    {
+        return new GetBasketDto
+        {
+            Id = Guid.NewGuid(),
+            UserId = _tokenAccessor.GetToken().UserId,
+            RestaurantId = Guid.Empty,
+            SellerId = Guid.Empty,
+            UserShippingAddressId = Guid.Empty,
+            UserInvoiceAddressId = Guid.Empty,
+            StatusId = (int)BasketServiceEnums.BasketStatusEnums.Waiting,
+            PaymentOptionId = (int)BasketServiceEnums.PaymentOptionEnums.CreditCard,
+            TotalQuantity = 0,
+            TotalProductPrice = 0,
+            TotalShipmentPrice = 0,
+            TotalShipmentDiscount = 0,
+            TotalDiscount = 0,
+            TotalPrice = 0,
+            BasketItems = new List<GetBasketDto.GetBasketItemDto>()
+        };
+    }
+
+    private async Task EnrichBasketFromRestaurantJson(GetBasketDto basket)
+    {
+        try
+        {
+            // CDN URL'yi Redis cache'den al
+            var cdnUrl = await _redisService.GetValueAsync<string>($"RestaurantInfo_{basket.RestaurantId}");
+            if (string.IsNullOrEmpty(cdnUrl)) return;
+
+            using var httpClient = new HttpClient();
+            var json = await httpClient.GetStringAsync(cdnUrl);
+            var categories = Newtonsoft.Json.JsonConvert.DeserializeObject<List<CdnCategory>>(json);
+            if (categories == null) return;
+
+            // Tüm menüleri düzleştir: menuId -> (name, price)
+            var menuMap = new Dictionary<Guid, (string Name, decimal Price)>();
+            foreach (var cat in categories)
+            {
+                if (cat.CategoriesDetail == null) continue;
+                foreach (var cd in cat.CategoriesDetail)
+                {
+                    if (cd.Menus == null) continue;
+                    foreach (var m in cd.Menus)
+                    {
+                        menuMap[m.Id] = (m.Name, m.Price);
+                    }
+                }
+            }
+
+            // Kaldırılan menüleri sepetten çıkar, fiyatları güncelle
+            var itemsToRemove = new List<GetBasketDto.GetBasketItemDto>();
+            basket.TotalQuantity = 0;
+            basket.TotalProductPrice = 0;
+            basket.TotalPrice = 0;
+
+            foreach (var item in basket.BasketItems)
+            {
+                if (!menuMap.TryGetValue(item.MenuId, out var menuInfo))
+                {
+                    itemsToRemove.Add(item);
+                    continue;
+                }
+
+                item.MenuName = menuInfo.Name;
+                item.UnitPrice = menuInfo.Price;
+                item.TotalPrice = menuInfo.Price * item.Quantity;
+
+                basket.TotalQuantity += item.Quantity;
+                basket.TotalProductPrice += item.TotalPrice;
+                basket.TotalPrice += item.TotalPrice;
+
+                // Value fiyatları da topla
+                if (item.BasketItemValues != null)
+                {
+                    foreach (var v in item.BasketItemValues)
+                    {
+                        basket.TotalProductPrice += v.TotalPrice;
+                        basket.TotalPrice += v.TotalPrice;
+
+                        if (v.BasketItemValueItemValues != null)
+                        {
+                            foreach (var viv in v.BasketItemValueItemValues)
+                            {
+                                basket.TotalProductPrice += viv.TotalPrice;
+                                basket.TotalPrice += viv.TotalPrice;
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach (var item in itemsToRemove)
+                basket.BasketItems.Remove(item);
+        }
+        catch
+        {
+            // CDN erişilemezse mevcut veriyle devam et
+        }
+    }
+
+    // CDN JSON deserialization modelleri
+    private class CdnCategory
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public List<CdnCategoryDetail> CategoriesDetail { get; set; }
+    }
+
+    private class CdnCategoryDetail
+    {
+        public Guid Id { get; set; }
+        public Guid MenuId { get; set; }
+        public List<CdnMenu> Menus { get; set; }
+    }
+
+    private class CdnMenu
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public decimal Price { get; set; }
     }
 }

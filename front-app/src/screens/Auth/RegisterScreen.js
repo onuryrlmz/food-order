@@ -8,15 +8,16 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {useAuth} from '../../context/AuthContext';
+import {useToast} from '../../context/ToastContext';
 
 const RegisterScreen = ({navigation}) => {
   const {register} = useAuth();
+  const {showToast} = useToast();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -28,15 +29,15 @@ const RegisterScreen = ({navigation}) => {
 
   const handleRegister = async () => {
     if (!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim() || !password) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun');
+      showToast('Lütfen tüm alanları doldurun', 'warning');
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Hata', 'Şifreler eşleşmiyor');
+      showToast('Şifreler eşleşmiyor', 'warning');
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Hata', 'Şifre en az 6 karakter olmalıdır');
+      showToast('Şifre en az 6 karakter olmalıdır', 'warning');
       return;
     }
 
@@ -51,11 +52,10 @@ const RegisterScreen = ({navigation}) => {
     setLoading(false);
 
     if (result.success) {
-      Alert.alert('Başarılı', 'Hesabınız oluşturuldu. Giriş yapabilirsiniz.', [
-        {text: 'Giriş Yap', onPress: () => navigation.goBack()},
-      ]);
+      showToast('Hesabınız oluşturuldu. Giriş yapabilirsiniz.', 'success');
+      navigation.goBack();
     } else {
-      Alert.alert('Kayıt Başarısız', result.error);
+      showToast(result.error || 'Kayıt başarısız', 'error');
     }
   };
 

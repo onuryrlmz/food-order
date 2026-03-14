@@ -215,7 +215,7 @@ FROM (SELECT JSON_OBJECT(
   ORDER BY c.OrderIndex ASC) AS cat;
 ";
 
-        await using var conn = dbContext.Database.GetDbConnection();
+        var conn = dbContext.Database.GetDbConnection();
         if (conn.State != ConnectionState.Open)
             await conn.OpenAsync();
 

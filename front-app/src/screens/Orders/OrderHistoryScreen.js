@@ -10,11 +10,13 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {orderService} from '../../api';
+import {useAuth} from '../../context/AuthContext';
 import OrderStatusBadge from '../../components/OrderStatusBadge';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import EmptyState from '../../components/EmptyState';
 
 const OrderHistoryScreen = ({navigation}) => {
+  const {isAuthenticated} = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -22,14 +24,18 @@ const OrderHistoryScreen = ({navigation}) => {
   const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
-    loadOrders(1);
-  }, []);
+    if (isAuthenticated) {
+      loadOrders(1);
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
 
   const loadOrders = async (pageNum) => {
     try {
       const res = await orderService.getHistory(pageNum, 20);
-      if (res.data?.rawData) {
-        const data = res.data.rawData;
+      if (res.data?.data) {
+        const data = res.data.data;
         if (pageNum === 1) {
           setOrders(data);
         } else {
@@ -89,9 +95,16 @@ const OrderHistoryScreen = ({navigation}) => {
 
       <View style={styles.orderItems}>
         {item.items?.slice(0, 3).map((orderItem, index) => (
-          <Text key={orderItem.id || index} style={styles.orderItemText} numberOfLines={1}>
-            {orderItem.quantity}x {orderItem.menuName}
-          </Text>
+          <View key={orderItem.id || index} style={styles.orderItemRow}>
+            <Text style={styles.orderItemText} numberOfLines={1}>
+              {orderItem.quantity}x {orderItem.menuName}
+            </Text>
+            {orderItem.values?.length > 0 ? (
+              <Text style={styles.orderItemOptions} numberOfLines={1}>
+                {orderItem.values.map(v => v.valueName).join(', ')}
+              </Text>
+            ) : null}
+          </View>
         ))}
         {item.items?.length > 3 && (
           <Text style={styles.moreItemsText}>+{item.items.length - 3} ürün daha</Text>
@@ -213,10 +226,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
+  orderItemRow: {
+    marginBottom: 4,
+  },
   orderItemText: {
     fontSize: Fonts.sizes.sm,
     color: Colors.textSecondary,
-    marginBottom: 3,
+  },
+  orderItemOptions: {
+    fontSize: Fonts.sizes.xs,
+    color: Colors.textTertiary || '#999',
+    marginTop: 1,
+    marginLeft: 20,
   },
   moreItemsText: {
     fontSize: Fonts.sizes.xs,

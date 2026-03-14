@@ -12,10 +12,18 @@ public class IyzicoPaymentRequestDto
     public string BuyerId { get; set; }
     public string DeliveryCity { get; set; }
     public string DeliveryAddress { get; set; }
-    public string CardHolderName { get; set; }
-    public string CardNumber { get; set; }
-    public string ExpireMonth { get; set; }
-    public string ExpireYear { get; set; }
-    public string Cvc { get; set; }
     public string CallbackUrl { get; set; }
+
+    // Yeni kart ile ödeme
+    public string? CardHolderName { get; set; }
+    public string? CardNumber { get; set; }
+    public string? ExpireMonth { get; set; }
+    public string? ExpireYear { get; set; }
+    public string? Cvc { get; set; }
+    public bool SaveCard { get; set; }
+    public string? CardAlias { get; set; }
+
+    // Kayıtlı kart ile ödeme
+    public string? CardToken { get; set; }
+    public string? CardUserKey { get; set; }
 }

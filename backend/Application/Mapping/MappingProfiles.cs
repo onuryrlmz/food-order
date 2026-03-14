@@ -1,8 +1,10 @@
 using AutoMapper;
+using Domain.Dto.Admin.Coupon;
 using Domain.Dto.Buyer;
 using Domain.Dto.Common;
 using Domain.Dto.Seller.Category;
 using Domain.Dto.Seller.CategoryDetail;
+using Domain.Dto.Seller.Coupon;
 using Domain.Dto.Seller.Menu;
 using Domain.Dto.Seller.MenuOption;
 using Domain.Dto.Seller.MenuOptionValue;
@@ -55,5 +57,11 @@ public class MappingProfiles : Profile
         CreateMap<BasketItemValue, GetBasketDto.GetBasketItemDto.GetBasketItemValueDto>().ReverseMap();
         CreateMap<BasketItem, GetBasketDto.GetBasketItemDto>().ReverseMap();
         CreateMap<Basket, GetBasketDto>().ReverseMap();
+
+        // Coupon mappings
+        CreateMap<Coupon, CreateCouponDto>().ReverseMap();
+        CreateMap<Coupon, UpdateCouponDto>().ReverseMap();
+        CreateMap<Coupon, AdminCreateCouponDto>().ReverseMap();
+        CreateMap<Coupon, AdminUpdateCouponDto>().ReverseMap();
     }
 }

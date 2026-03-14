@@ -6,4 +6,7 @@ export const basketService = {
 
   updateBasket: (data) =>
     apiClient.put('/customer/basket', data),
+
+  clearBasket: () =>
+    apiClient.delete('/customer/basket'),
 };

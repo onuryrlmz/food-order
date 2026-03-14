@@ -24,9 +24,9 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.DiscountAmount).HasColumnName("DiscountAmount").HasPrecision(18, 2).IsRequired();
         builder.Property(o => o.TotalPrice).HasColumnName("TotalPrice").HasPrecision(18, 2).IsRequired();
         builder.Property(o => o.Notes).HasColumnName("Notes").HasMaxLength(500);
+        builder.Property(o => o.CouponId).HasColumnName("CouponId");
+        builder.Property(o => o.CouponCode).HasColumnName("CouponCode").HasMaxLength(50);
         builder.Property(o => o.CancellationReason).HasColumnName("CancellationReason").HasMaxLength(500);
-        builder.Property(o => o.ConfirmedAt).HasColumnName("ConfirmedAt");
-        builder.Property(o => o.DeliveredAt).HasColumnName("DeliveredAt");
         builder.Property(o => o.CreatedDate).HasColumnName("CreatedDate").IsRequired();
         builder.Property(o => o.UpdatedDate).HasColumnName("UpdatedDate");
         builder.Property(o => o.DeletedDate).HasColumnName("DeletedDate");

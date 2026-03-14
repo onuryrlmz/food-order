@@ -1,5 +1,6 @@
 using Domain.Entities.Seller;
 using Infrastructure.Adapters.GetirAdapter;
+using Infrastructure.Adapters.YemekSepetiAdapter;
 using Newtonsoft.Json;
 using Persistence.IRepositories.Seller;
 
@@ -8,6 +9,7 @@ namespace Application.Services.Seller._99_RestaurantTransferService;
 public class RestaurantTransferService : IRestaurantTransferService
 {
     private readonly IGetirServiceAdapter _getirServiceAdapter;
+    private readonly IYemekSepetiAdapter _yemekSepetiAdapter;
     private readonly ICategoryRepository _categoryRepository;
     private readonly ICategoryDetailRepository _categoryDetailRepository;
     private readonly IMenuRepository _menuRepository;
@@ -19,6 +21,7 @@ public class RestaurantTransferService : IRestaurantTransferService
 
     public RestaurantTransferService(
         IGetirServiceAdapter getirServiceAdapter,
+        IYemekSepetiAdapter yemekSepetiAdapter,
         ICategoryRepository categoryRepository,
         ICategoryDetailRepository categoryDetailRepository,
         IMenuRepository menuRepository,
@@ -29,6 +32,7 @@ public class RestaurantTransferService : IRestaurantTransferService
         IProductRepository productRepository)
     {
         _getirServiceAdapter = getirServiceAdapter;
+        _yemekSepetiAdapter = yemekSepetiAdapter;
         _categoryRepository = categoryRepository;
         _categoryDetailRepository = categoryDetailRepository;
         _menuRepository = menuRepository;
@@ -39,151 +43,221 @@ public class RestaurantTransferService : IRestaurantTransferService
         _productRepository = productRepository;
     }
 
-    public async Task SaveData(string getirRestaurantId, Guid restaurantId)
+    public async Task TransferDataFromGetir(string getirRestaurantId, Guid restaurantId)
     {
         try
         {
-            _getirServiceAdapter.TransferRestaurant(getirRestaurantId);
-
-            var getirProductFilePath = Path.Combine(Directory.GetCurrentDirectory(), $"{getirRestaurantId}-GetirProduct.json");
-            var getirCategoryFilePath = Path.Combine(Directory.GetCurrentDirectory(), $"{getirRestaurantId}-GetirCategory.json");
-            if (!File.Exists(getirProductFilePath) || !File.Exists(getirCategoryFilePath))
+            var productFilePath = Path.Combine(Directory.GetCurrentDirectory(), $"{getirRestaurantId}-GetirProduct.json");
+            var categoryFilePath = Path.Combine(Directory.GetCurrentDirectory(), $"{getirRestaurantId}-GetirCategory.json");
+            if (!File.Exists(productFilePath) || !File.Exists(categoryFilePath))
             {
-                throw new FileNotFoundException("Getir product or category file not found.");
+                _getirServiceAdapter.TransferRestaurant(getirRestaurantId);
             }
 
-            var lstProduct = JsonConvert.DeserializeObject<List<Domain.Infrastructure.GetirService.Dto.Product>>(File.ReadAllText($@"{getirRestaurantId}-GetirProduct.json"));
-            var lstCategory = JsonConvert.DeserializeObject<List<Domain.Infrastructure.GetirService.Dto.Category>>(File.ReadAllText($@"{getirRestaurantId}-GetirCategory.json"));
-
-            foreach (var getirProduct in lstProduct)
+            if (!File.Exists(productFilePath) || !File.Exists(categoryFilePath))
             {
-                var product = new Product
-                {
-                    Id = Guid.NewGuid(),
-                    RestaurantId = restaurantId,
-                    Name = getirProduct.Name,
-                    ProductType = getirProduct.ProductType,
-                    OrderIndex = 0
-                };
-
-                await _productRepository.AddAsync(product);
-                getirProduct.Id = product.Id;
+                throw new FileNotFoundException("Getir product or category file not found after transfer attempt.");
             }
 
-            foreach (var getirCategory in lstCategory)
-            {
-                var category = new Category
-                {
-                    Id = Guid.NewGuid(),
-                    RestaurantId = restaurantId,
-                    Name = getirCategory.Name,
-                    OrderIndex = lstCategory.IndexOf(getirCategory)
-                };
+            var lstProduct = JsonConvert.DeserializeObject<List<Domain.Infrastructure.GetirService.Dto.Product>>(File.ReadAllText(productFilePath));
+            var lstCategory = JsonConvert.DeserializeObject<List<Domain.Infrastructure.GetirService.Dto.Category>>(File.ReadAllText(categoryFilePath));
 
-                await _categoryRepository.AddAsync(category);
-                getirCategory.Id = category.Id;
-
-                foreach (var getirMenu in getirCategory.Menus)
-                {
-                    var menu = new Menu
-                    {
-                        Id = Guid.NewGuid(),
-                        RestaurantId = restaurantId,
-                        Name = getirMenu.Name,
-                        Description = getirMenu.Description,
-                        Price = (decimal)getirMenu.Price,
-                        OrderIndex = getirCategory.Menus.IndexOf(getirMenu)
-                    };
-
-                    await _menuRepository.AddAsync(menu);
-                    getirMenu.Id = menu.Id;
-
-                    foreach (var getirMenuOption in getirMenu.MenuOptions)
-                    {
-                        var menuOption = new MenuOption
-                        {
-                            Id = Guid.NewGuid(),
-                            MenuId = getirMenu.Id,
-                            Name = getirMenuOption.Name,
-                            Description = string.Empty,
-                            MinCount = getirMenuOption.MinCount,
-                            MaxCount = getirMenuOption.MaxCount,
-                            OrderIndex = getirMenu.MenuOptions.IndexOf(getirMenuOption)
-                        };
-
-                        await _menuOptionRepository.AddAsync(menuOption);
-                        getirMenuOption.Id = menuOption.Id;
-
-                        foreach (var getirMenuOptionValues in getirMenuOption.MenuOptionValues)
-                        {
-                            var menuOptionValues = new MenuOptionValue
-                            {
-                                Id = Guid.NewGuid(),
-                                MenuOptionId = getirMenuOption.Id,
-                                ProductId = lstProduct.FirstOrDefault(x => x.Hash == getirMenuOptionValues.ProductReferenceId)
-                                                ?.Id ??
-                                            Guid.Empty,
-                                Price = (decimal)getirMenuOptionValues.Price,
-                                OrderIndex = getirMenuOption.MenuOptionValues.IndexOf(getirMenuOptionValues),
-                            };
-
-                            if (menuOptionValues.ProductId == Guid.Empty) continue;
-
-                            await _menuOptionValueRepository.AddAsync(menuOptionValues);
-                            getirMenuOptionValues.Id = menuOptionValues.Id;
-
-                            foreach (var getirMenuOptionValueOption in getirMenuOptionValues.MenuOptionValueOptions)
-                            {
-                                var menuOptionValueOption = new MenuOptionValueOption
-                                {
-                                    Id = Guid.NewGuid(),
-                                    MenuOptionValueId = getirMenuOptionValues.Id,
-                                    Name = getirMenuOptionValueOption.Name,
-                                    Description = string.Empty,
-                                    MinCount = getirMenuOptionValueOption.MinCount,
-                                    MaxCount = getirMenuOptionValueOption.MaxCount,
-                                    OrderIndex = getirMenuOption.MenuOptionValues.IndexOf(getirMenuOptionValues)
-                                };
-
-                                await _menuOptionValueOptionRepository.AddAsync(menuOptionValueOption);
-                                getirMenuOptionValueOption.Id = menuOptionValueOption.Id;
-
-                                foreach (var getirMenuOptionValueOptionValue in getirMenuOptionValueOption.MenuOptionValueOptionValues)
-                                {
-                                    var menuOptionValueOptionValueCommand = new MenuOptionValueOptionValue
-                                    {
-                                        Id = Guid.NewGuid(),
-                                        MenuOptionValueOptionId = getirMenuOptionValueOption.Id,
-                                        ProductId = lstProduct.FirstOrDefault(x => x.Hash == getirMenuOptionValueOptionValue.ProductReferenceId)?.Id ?? Guid.Empty,
-                                        Price = (decimal)getirMenuOptionValueOptionValue.Price,
-                                        OrderIndex = getirMenuOptionValueOption.MenuOptionValueOptionValues.IndexOf(getirMenuOptionValueOptionValue)
-                                    };
-
-                                    if (menuOptionValueOptionValueCommand.ProductId == Guid.Empty) continue;
-
-                                    await _menuOptionValueOptionValueRepository.AddAsync(menuOptionValueOptionValueCommand);
-                                    getirMenuOptionValueOptionValue.Id = menuOptionValueOptionValueCommand.Id;
-                                }
-                            }
-                        }
-                    }
-
-                    var categoryDetail = new CategoryDetail
-                    {
-                        Id = Guid.NewGuid(),
-                        CategoryId = category.Id,
-                        MenuId = menu.Id,
-                        OrderIndex = getirCategory.Menus.IndexOf(getirMenu)
-                    };
-
-                    await _categoryDetailRepository.AddAsync(categoryDetail);
-                    getirMenu.Id = categoryDetail.Id;
-                }
-            }
+            await SaveEntities(lstProduct, lstCategory, restaurantId);
         }
         catch (Exception e)
         {
-            throw new Exception("Error occurred while saving data", e);
+            throw new Exception("Error occurred while saving Getir data", e);
         }
+    }
+
+    public async Task TransferDataFromYemekSepeti(string ysRestaurantId, Guid restaurantId)
+    {
+        try
+        {
+            _yemekSepetiAdapter.TransferRestaurant(ysRestaurantId);
+
+            var productFilePath = Path.Combine(Directory.GetCurrentDirectory(), $"{ysRestaurantId}-YemekSepetiProduct.json");
+            var categoryFilePath = Path.Combine(Directory.GetCurrentDirectory(), $"{ysRestaurantId}-YemekSepetiCategory.json");
+            if (!File.Exists(productFilePath) || !File.Exists(categoryFilePath))
+            {
+                throw new FileNotFoundException("YemekSepeti product or category file not found.");
+            }
+
+            var lstProduct = JsonConvert.DeserializeObject<List<Domain.Infrastructure.GetirService.Dto.Product>>(File.ReadAllText(productFilePath));
+            var lstCategory = JsonConvert.DeserializeObject<List<Domain.Infrastructure.GetirService.Dto.Category>>(File.ReadAllText(categoryFilePath));
+
+            await SaveEntities(lstProduct, lstCategory, restaurantId);
+        }
+        catch (Exception e)
+        {
+            throw new Exception("Error occurred while saving YemekSepeti data", e);
+        }
+    }
+
+    private async Task SaveEntities(
+        List<Domain.Infrastructure.GetirService.Dto.Product> lstProduct,
+        List<Domain.Infrastructure.GetirService.Dto.Category> lstCategory,
+        Guid restaurantId)
+    {
+        // --- Dictionary lookup: O(n) → O(1) for product resolution ---
+        var productByHash = lstProduct
+            .Where(x => !string.IsNullOrEmpty(x.Hash))
+            .GroupBy(x => x.Hash)
+            .ToDictionary(g => g.Key, g => g.First());
+
+        // --- 1. Batch insert: Products ---
+        var products = lstProduct.Select(p =>
+        {
+            if (p.Id == Guid.Empty) p.Id = Guid.NewGuid();
+            return new Product
+            {
+                Id = p.Id,
+                RestaurantId = restaurantId,
+                Name = p.Name,
+                ProductType = p.ProductType,
+                OrderIndex = 0,
+                Price = (decimal)p.Price,
+            };
+        }).ToList();
+
+        await _productRepository.AddRangeAsync(products);
+
+        // --- 2. Collect all entities in memory, then batch insert ---
+        var allCategories = new List<Category>();
+        var allMenus = new List<Menu>();
+        var allMenuOptions = new List<MenuOption>();
+        var allMenuOptionValues = new List<MenuOptionValue>();
+        var allMenuOptionValueOptions = new List<MenuOptionValueOption>();
+        var allMenuOptionValueOptionValues = new List<MenuOptionValueOptionValue>();
+        var allCategoryDetails = new List<CategoryDetail>();
+
+        for (var catIdx = 0; catIdx < lstCategory.Count; catIdx++)
+        {
+            var srcCategory = lstCategory[catIdx];
+            var category = new Category
+            {
+                Id = Guid.NewGuid(),
+                RestaurantId = restaurantId,
+                Name = srcCategory.Name,
+                OrderIndex = catIdx
+            };
+            allCategories.Add(category);
+            srcCategory.Id = category.Id;
+
+            for (var menuIdx = 0; menuIdx < srcCategory.Menus.Count; menuIdx++)
+            {
+                var srcMenu = srcCategory.Menus[menuIdx];
+                var menu = new Menu
+                {
+                    Id = Guid.NewGuid(),
+                    RestaurantId = restaurantId,
+                    Name = srcMenu.Name,
+                    Description = srcMenu.Description ?? string.Empty,
+                    Price = (decimal)srcMenu.Price,
+                    OrderIndex = menuIdx
+                };
+                allMenus.Add(menu);
+                srcMenu.Id = menu.Id;
+
+                for (var optIdx = 0; optIdx < srcMenu.MenuOptions.Count; optIdx++)
+                {
+                    var srcOpt = srcMenu.MenuOptions[optIdx];
+                    var menuOption = new MenuOption
+                    {
+                        Id = Guid.NewGuid(),
+                        MenuId = menu.Id,
+                        Name = srcOpt.Name,
+                        Description = string.Empty,
+                        MinCount = srcOpt.MinCount,
+                        MaxCount = srcOpt.MaxCount,
+                        OrderIndex = optIdx
+                    };
+                    allMenuOptions.Add(menuOption);
+                    srcOpt.Id = menuOption.Id;
+
+                    for (var valIdx = 0; valIdx < srcOpt.MenuOptionValues.Count; valIdx++)
+                    {
+                        var srcVal = srcOpt.MenuOptionValues[valIdx];
+                        var resolvedProductId = ResolveProductId(srcVal.ProductReferenceId, productByHash);
+                        if (resolvedProductId == Guid.Empty) continue;
+
+                        var menuOptionValue = new MenuOptionValue
+                        {
+                            Id = Guid.NewGuid(),
+                            MenuOptionId = menuOption.Id,
+                            ProductId = resolvedProductId,
+                            Price = (decimal)srcVal.Price,
+                            OrderIndex = valIdx,
+                        };
+                        allMenuOptionValues.Add(menuOptionValue);
+                        srcVal.Id = menuOptionValue.Id;
+
+                        for (var vooIdx = 0; vooIdx < srcVal.MenuOptionValueOptions.Count; vooIdx++)
+                        {
+                            var srcVoo = srcVal.MenuOptionValueOptions[vooIdx];
+                            var menuOptionValueOption = new MenuOptionValueOption
+                            {
+                                Id = Guid.NewGuid(),
+                                MenuOptionValueId = menuOptionValue.Id,
+                                Name = srcVoo.Name,
+                                Description = string.Empty,
+                                MinCount = srcVoo.MinCount,
+                                MaxCount = srcVoo.MaxCount,
+                                OrderIndex = vooIdx
+                            };
+                            allMenuOptionValueOptions.Add(menuOptionValueOption);
+                            srcVoo.Id = menuOptionValueOption.Id;
+
+                            for (var voovIdx = 0; voovIdx < srcVoo.MenuOptionValueOptionValues.Count; voovIdx++)
+                            {
+                                var srcVoov = srcVoo.MenuOptionValueOptionValues[voovIdx];
+                                var resolvedProductId2 = ResolveProductId(srcVoov.ProductReferenceId, productByHash);
+                                if (resolvedProductId2 == Guid.Empty) continue;
+
+                                var menuOptionValueOptionValue = new MenuOptionValueOptionValue
+                                {
+                                    Id = Guid.NewGuid(),
+                                    MenuOptionValueOptionId = menuOptionValueOption.Id,
+                                    ProductId = resolvedProductId2,
+                                    Price = (decimal)srcVoov.Price,
+                                    OrderIndex = voovIdx
+                                };
+                                allMenuOptionValueOptionValues.Add(menuOptionValueOptionValue);
+                                srcVoov.Id = menuOptionValueOptionValue.Id;
+                            }
+                        }
+                    }
+                }
+
+                allCategoryDetails.Add(new CategoryDetail
+                {
+                    Id = Guid.NewGuid(),
+                    CategoryId = category.Id,
+                    MenuId = menu.Id,
+                    OrderIndex = menuIdx
+                });
+            }
+        }
+
+        // --- 3. Batch insert all entities ---
+        await _categoryRepository.AddRangeAsync(allCategories);
+        await _menuRepository.AddRangeAsync(allMenus);
+        await _menuOptionRepository.AddRangeAsync(allMenuOptions);
+        await _menuOptionValueRepository.AddRangeAsync(allMenuOptionValues);
+        await _menuOptionValueOptionRepository.AddRangeAsync(allMenuOptionValueOptions);
+        await _menuOptionValueOptionValueRepository.AddRangeAsync(allMenuOptionValueOptionValues);
+        await _categoryDetailRepository.AddRangeAsync(allCategoryDetails);
+    }
+
+    private static Guid ResolveProductId(
+        string productReferenceId,
+        Dictionary<string, Domain.Infrastructure.GetirService.Dto.Product> byHash)
+    {
+        if (string.IsNullOrEmpty(productReferenceId)) return Guid.Empty;
+
+        if (byHash.TryGetValue(productReferenceId, out var match))
+            return match.Id;
+
+        return Guid.Empty;
     }
 }

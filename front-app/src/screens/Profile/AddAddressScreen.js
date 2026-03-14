@@ -6,7 +6,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -14,8 +13,10 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {addressService} from '../../api';
+import {useToast} from '../../context/ToastContext';
 
 const AddAddressScreen = ({route, navigation}) => {
+  const {showToast} = useToast();
   const editAddress = route.params?.address;
   const isEditing = !!editAddress;
 
@@ -31,7 +32,7 @@ const AddAddressScreen = ({route, navigation}) => {
 
   const handleSave = async () => {
     if (!addressName.trim() || !firstName.trim() || !lastName.trim() || !phone.trim() || !addressLine1.trim()) {
-      Alert.alert('Hata', 'Lütfen zorunlu alanları doldurun');
+      showToast('Lütfen zorunlu alanları doldurun', 'warning');
       return;
     }
 
@@ -62,14 +63,13 @@ const AddAddressScreen = ({route, navigation}) => {
       }
 
       if (!res.data.hasFailed) {
-        Alert.alert('Başarılı', isEditing ? 'Adres güncellendi' : 'Adres eklendi', [
-          {text: 'Tamam', onPress: () => navigation.goBack()},
-        ]);
+        showToast(isEditing ? 'Adres güncellendi' : 'Adres eklendi', 'success');
+        navigation.goBack();
       } else {
-        Alert.alert('Hata', res.data.messages?.[0]?.description || 'İşlem başarısız');
+        showToast(res.data.messages?.[0]?.description || 'İşlem başarısız', 'error');
       }
     } catch (e) {
-      Alert.alert('Hata', 'Bir hata oluştu');
+      showToast('Bir hata oluştu', 'error');
     } finally {
       setLoading(false);
     }

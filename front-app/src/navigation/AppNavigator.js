@@ -1,15 +1,19 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {View, Text, StyleSheet, Platform} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {useAuth} from '../context/AuthContext';
 import {useCart} from '../context/CartContext';
+import {useAppData} from '../context/AppDataContext';
 import {Colors, Fonts} from '../theme';
 
 import SplashScreen from '../screens/Auth/SplashScreen';
+import OnboardingScreen from '../screens/Onboarding/OnboardingScreen';
 import LoginScreen from '../screens/Auth/LoginScreen';
 import RegisterScreen from '../screens/Auth/RegisterScreen';
 
@@ -27,6 +31,8 @@ import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 import ChangePasswordScreen from '../screens/Profile/ChangePasswordScreen';
 import AddressListScreen from '../screens/Profile/AddressListScreen';
 import AddAddressScreen from '../screens/Profile/AddAddressScreen';
+import SavedCardsScreen from '../screens/Profile/SavedCardsScreen';
+import ThreeDsWebViewScreen from '../screens/Payment/ThreeDsWebViewScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -55,6 +61,7 @@ const ProfileStackNavigator = () => (
     <ProfileStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
     <ProfileStack.Screen name="AddressList" component={AddressListScreen} />
     <ProfileStack.Screen name="AddAddress" component={AddAddressScreen} />
+    <ProfileStack.Screen name="SavedCards" component={SavedCardsScreen} />
   </ProfileStack.Navigator>
 );
 
@@ -69,6 +76,7 @@ const CartBadge = ({count}) => {
 
 const TabNavigator = () => {
   const {itemCount} = useCart();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -76,7 +84,11 @@ const TabNavigator = () => {
         headerShown: false,
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textTertiary,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: {
+          ...styles.tabBar,
+          paddingBottom: Math.max(insets.bottom, 8),
+          height: 56 + Math.max(insets.bottom, 8),
+        },
         tabBarLabelStyle: styles.tabBarLabel,
         tabBarIcon: ({focused, color, size}) => {
           let iconName;
@@ -99,6 +111,19 @@ const TabNavigator = () => {
         options={{tabBarLabel: 'Ana Sayfa'}}
       />
       <Tab.Screen
+        name="CartTab"
+        component={CartScreen}
+        options={{
+          tabBarLabel: 'Sepetim',
+          tabBarIcon: ({focused, color}) => (
+            <View>
+              <Icon name={focused ? 'cart' : 'cart-outline'} size={focused ? 26 : 24} color={color} />
+              <CartBadge count={itemCount} />
+            </View>
+          ),
+        }}
+      />
+      <Tab.Screen
         name="OrdersTab"
         component={OrderStackNavigator}
         options={{tabBarLabel: 'Siparişler'}}
@@ -112,46 +137,59 @@ const TabNavigator = () => {
   );
 };
 
-const AuthNavigator = () => (
-  <Stack.Navigator screenOptions={{headerShown: false}}>
-    <Stack.Screen name="Login" component={LoginScreen} />
-    <Stack.Screen name="Register" component={RegisterScreen} />
-  </Stack.Navigator>
-);
-
 const AppNavigator = () => {
   const {isLoading, isAuthenticated} = useAuth();
+  const {dataReady, enableLoading} = useAppData();
+  const [onboardingDone, setOnboardingDone] = useState(null);
 
-  if (isLoading) {
+  useEffect(() => {
+    AsyncStorage.getItem('onboarding_completed').then(val => {
+      const done = val === 'true';
+      setOnboardingDone(done);
+      if (done) enableLoading();
+    });
+  }, []);
+
+  const handleOnboardingComplete = () => {
+    setOnboardingDone(true);
+    enableLoading();
+  };
+
+  // Auth yükleniyor veya onboarding durumu henüz bilinmiyor
+  if (isLoading || onboardingDone === null) {
+    return <SplashScreen />;
+  }
+
+  // Onboarding yapılmamış
+  if (!onboardingDone) {
+    return <OnboardingScreen onComplete={handleOnboardingComplete} />;
+  }
+
+  // Onboarding tamam ama veriler henüz yüklenmedi
+  if (!dataReady) {
     return <SplashScreen />;
   }
 
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{headerShown: false}}>
-        {!isAuthenticated ? (
-          <Stack.Screen name="Auth" component={AuthNavigator} />
-        ) : (
-          <>
-            <Stack.Screen name="MainTabs" component={TabNavigator} />
-            <Stack.Screen name="RestaurantDetail" component={RestaurantDetailScreen} />
-            <Stack.Screen
-              name="Cart"
-              component={CartScreen}
-              options={{presentation: 'modal', animation: 'slide_from_bottom'}}
-            />
-            <Stack.Screen
-              name="Checkout"
-              component={CheckoutScreen}
-            />
-            <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
-            <Stack.Screen name="OrderHistory" component={OrderHistoryScreen} />
-            <Stack.Screen name="AddressList" component={AddressListScreen} />
-            <Stack.Screen name="AddAddress" component={AddAddressScreen} />
-            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-            <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
-          </>
-        )}
+        <Stack.Screen name="MainTabs" component={TabNavigator} />
+        <Stack.Screen name="RestaurantDetail" component={RestaurantDetailScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen
+          name="Cart"
+          component={CartScreen}
+          options={{presentation: 'modal', animation: 'slide_from_bottom'}}
+        />
+        <Stack.Screen name="Checkout" component={CheckoutScreen} />
+        <Stack.Screen name="ThreeDsWebView" component={ThreeDsWebViewScreen} />
+        <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
+        <Stack.Screen name="OrderHistory" component={OrderHistoryScreen} />
+        <Stack.Screen name="AddressList" component={AddressListScreen} />
+        <Stack.Screen name="AddAddress" component={AddAddressScreen} />
+        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+        <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -162,9 +200,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderTopWidth: 1,
     borderTopColor: Colors.borderLight,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 8,
     paddingTop: 8,
-    height: Platform.OS === 'ios' ? 88 : 64,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: -2},
     shadowOpacity: 0.06,

@@ -21,8 +21,12 @@ using Application.Services.Seller._8_MenuOptionValueOptionValueService;
 using Application.Services.Seller._9_CategoryService;
 using Application.Services.Seller._99_RestaurantTransferService;
 using Application.Services.Seller.CdnWorkerService;
+using Application.Services.Seller.CouponService;
 using Application.Services.Seller.OptionTemplateService;
 using Application.Services.Seller.SubscriptionService;
+using Application.Services.Buyer.CardService;
+using Application.Services.Buyer.CouponService;
+using Application.Services.Buyer.PaymentService;
 using Base.Constant;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -84,7 +88,6 @@ public static class ApplicationServiceRegistration
         services.AddScoped<ISellerService, SellerManager>();
         services.AddScoped<IRestaurantService, RestaurantManager>();
         services.AddScoped<IRestaurantTransferService, RestaurantTransferService>();
-        services.AddScoped<IRestaurantTransferServiceV2, RestaurantTransferServiceV2>();
 
         services.AddScoped<IProductService, ProductManager>();
         services.AddScoped<IProductAttributeService, ProductAttributeManager>();
@@ -102,9 +105,15 @@ public static class ApplicationServiceRegistration
         //Buyer
         services.AddScoped<IBasketService, BasketManager>();
         services.AddScoped<IOrderService, OrderManager>();
+        services.AddScoped<ICardService, CardManager>();
+        services.AddScoped<IPaymentService, PaymentManager>();
 
         //Subscription
         services.AddScoped<ISubscriptionService, SubscriptionManager>();
+
+        //Coupon
+        services.AddScoped<ICouponService, CouponManager>();
+        services.AddScoped<ICouponValidationService, CouponValidationManager>();
 
         //Global
         services.AddScoped<ITokenAccessor, TokenAccessor>();

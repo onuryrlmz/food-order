@@ -70,13 +70,14 @@ public class AuthorizationServiceEnums
 
     public enum OrderStatusEnums : short
     {
-        Pending = 1,
-        Confirmed = 2,
-        Preparing = 3,
-        OnTheWay = 4,
-        Delivered = 5,
-        Cancelled = 6,
-        Rejected = 7
+        PaymentPending = 1,
+        PaymentFailed = 2,
+        CancelledByBuyer = 3,
+        WaitingRestaurantApproval = 4,
+        RejectedByRestaurant = 5,
+        Preparing = 6,
+        OnTheWay = 7,
+        Delivered = 8
     }
 
     public enum PaymentStatusEnums : short
@@ -104,9 +105,9 @@ public class AuthorizationServiceEnums
 
     public enum PaymentOptionEnums : short
     {
-        CashOnDelivery = 1,
-        CreditCard = 2,
-        OnlineTransfer = 3
+        CreditCard = 1,
+        CashOnDelivery = 2,
+        CashCreditCard = 3
     }
 
     public static Dictionary<short, UserRoleEnums> UserRoleEnumList => Enum.GetValues(typeof(UserRoleEnums)).Cast<UserRoleEnums>().ToDictionary(t => (short)t, t => t);

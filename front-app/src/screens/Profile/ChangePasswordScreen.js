@@ -6,7 +6,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -14,8 +13,10 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {authService} from '../../api';
+import {useToast} from '../../context/ToastContext';
 
 const ChangePasswordScreen = ({navigation}) => {
+  const {showToast} = useToast();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -25,15 +26,15 @@ const ChangePasswordScreen = ({navigation}) => {
 
   const handleChange = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun');
+      showToast('Lütfen tüm alanları doldurun', 'warning');
       return;
     }
     if (newPassword.length < 6) {
-      Alert.alert('Hata', 'Yeni şifre en az 6 karakter olmalıdır');
+      showToast('Yeni şifre en az 6 karakter olmalıdır', 'warning');
       return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert('Hata', 'Yeni şifreler eşleşmiyor');
+      showToast('Yeni şifreler eşleşmiyor', 'warning');
       return;
     }
 
@@ -44,14 +45,13 @@ const ChangePasswordScreen = ({navigation}) => {
         newPassword,
       });
       if (!res.data.hasFailed) {
-        Alert.alert('Başarılı', 'Şifreniz başarıyla değiştirildi', [
-          {text: 'Tamam', onPress: () => navigation.goBack()},
-        ]);
+        showToast('Şifreniz başarıyla değiştirildi', 'success');
+        navigation.goBack();
       } else {
-        Alert.alert('Hata', res.data.messages?.[0]?.description || 'Şifre değiştirilemedi');
+        showToast(res.data.messages?.[0]?.description || 'Şifre değiştirilemedi', 'error');
       }
     } catch (e) {
-      Alert.alert('Hata', 'Bir hata oluştu');
+      showToast('Bir hata oluştu', 'error');
     } finally {
       setLoading(false);
     }

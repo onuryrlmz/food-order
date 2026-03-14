@@ -12,4 +12,5 @@ public class OrderItem : Entity<Guid>
     public string? ItemSnapshotJson { get; set; }
 
     public virtual Order Order { get; set; }
+    public virtual ICollection<OrderItemValue> OrderItemValues { get; set; }
 }

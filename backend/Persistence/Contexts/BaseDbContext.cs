@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Domain.Entities.Buyer;
 using Domain.Entities.Common;
 using Domain.Entities.Seller;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +14,22 @@ public sealed class BaseDbContext : DbContext
     public BaseDbContext(DbContextOptions dbContextOptions, IConfiguration configuration) : base(dbContextOptions)
     {
         Configuration = configuration;
-        Database?.EnsureCreated();
+        //Database?.EnsureCreated();
         //Database?.Migrate();
     }
 
     private IConfiguration Configuration { get; set; }
+
+    public DbSet<Coupon> Coupons { get; set; }
+    public DbSet<CouponMenu> CouponMenus { get; set; }
+    public DbSet<CouponCategory> CouponCategories { get; set; }
+    public DbSet<UserCoupon> UserCoupons { get; set; }
+    public DbSet<UserExternalInfo> UserExternalInfos { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderItemValue> OrderItemValues { get; set; }
+    public DbSet<OrderItemValueOption> OrderItemValueOptions { get; set; }
+    public DbSet<Payment> Payments { get; set; }
+    public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())
     {

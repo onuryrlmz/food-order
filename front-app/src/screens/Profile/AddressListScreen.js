@@ -5,16 +5,17 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Alert,
   RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {addressService} from '../../api';
+import {useToast} from '../../context/ToastContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import EmptyState from '../../components/EmptyState';
 
 const AddressListScreen = ({navigation}) => {
+  const {showToast, showConfirm} = useToast();
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -57,34 +58,30 @@ const AddressListScreen = ({navigation}) => {
         loadAddresses();
       }
     } catch (e) {
-      Alert.alert('Hata', 'Varsayılan adres değiştirilemedi');
+      showToast('Varsayılan adres değiştirilemedi', 'error');
     }
   };
 
   const handleDelete = (id) => {
-    Alert.alert(
-      'Adresi Sil',
-      'Bu adresi silmek istediğinize emin misiniz?',
-      [
-        {text: 'İptal', style: 'cancel'},
-        {
-          text: 'Sil',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const res = await addressService.deleteAddress(id);
-              if (!res.data.hasFailed) {
-                loadAddresses();
-              } else {
-                Alert.alert('Hata', res.data.messages?.[0]?.description || 'Silinemedi');
-              }
-            } catch (e) {
-              Alert.alert('Hata', 'Adres silinemedi');
-            }
-          },
-        },
-      ],
-    );
+    showConfirm({
+      title: 'Adresi Sil',
+      message: 'Bu adresi silmek istediğinize emin misiniz?',
+      confirmText: 'Sil',
+      cancelText: 'İptal',
+      confirmStyle: 'destructive',
+      onConfirm: async () => {
+        try {
+          const res = await addressService.deleteAddress(id);
+          if (!res.data.hasFailed) {
+            loadAddresses();
+          } else {
+            showToast(res.data.messages?.[0]?.description || 'Silinemedi', 'error');
+          }
+        } catch (e) {
+          showToast('Adres silinemedi', 'error');
+        }
+      },
+    });
   };
 
   const renderAddress = ({item}) => (

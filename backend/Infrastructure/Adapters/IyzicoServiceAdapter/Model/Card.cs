@@ -17,6 +17,8 @@ public class Card : IyzipayResource
     public string CardFamily { get; set; }
     public long? CardBankCode { get; set; }
     public string CardBankName { get; set; }
+    public string ExpireMonth { get; set; }
+    public string ExpireYear { get; set; }
 
     public static Card Create(CreateCardRequest request, Options options)
     {

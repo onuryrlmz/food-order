@@ -31,9 +31,6 @@ apiClient.interceptors.response.use(
     return response;
   },
   async error => {
-    if (error.response?.status === 401) {
-      await AsyncStorage.removeItem('auth_token');
-    }
     return Promise.reject(error);
   },
 );

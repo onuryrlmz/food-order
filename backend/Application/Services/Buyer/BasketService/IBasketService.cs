@@ -10,4 +10,5 @@ public interface IBasketService
     Task<ServiceObjectResult<GetBasketDto>> GetBasketByIdForRedis();
     Task<ServiceObjectResult<bool>> UpdateBasketForDb(UpdateBasketDto dto);
     Task<ServiceObjectResult<bool>> UpdateBasketForRedis(UpdateBasketDto dto);
+    Task<ServiceObjectResult<bool>> ClearBasketForRedis();
 }

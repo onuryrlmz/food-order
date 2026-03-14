@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import useSWR from 'swr';
 import AdminLayout from '@/components/layout/AdminLayout';
 import Table from '@/components/ui/Table';
@@ -11,33 +11,47 @@ import { useToast } from '@/components/ui/Toast';
 import fetcher from '@/lib/fetcher';
 import api from '@/lib/api';
 
-// Backend: Pending=1, Confirmed=2, Preparing=3, OnTheWay=4, Delivered=5, Cancelled=6, Rejected=7
 const STATUS_MAP = {
+  1: { label: 'Ödeme Bekliyor', color: 'yellow' },
+  2: { label: 'Ödeme Başarısız', color: 'red' },
+  3: { label: 'Alıcı İptal Etti', color: 'red' },
+  4: { label: 'Restoran Onayı Bekliyor', color: 'orange' },
+  5: { label: 'Restoran Reddetti', color: 'red' },
+  6: { label: 'Hazırlanıyor', color: 'purple' },
+  7: { label: 'Yola Çıktı', color: 'blue' },
+  8: { label: 'Teslim Edildi', color: 'green' },
+};
+
+const PAYMENT_STATUS_MAP = {
   1: { label: 'Bekliyor', color: 'yellow' },
-  2: { label: 'Onaylandı', color: 'blue' },
-  3: { label: 'Hazırlanıyor', color: 'orange' },
-  4: { label: 'Yolda', color: 'purple' },
-  5: { label: 'Teslim Edildi', color: 'green' },
-  6: { label: 'İptal', color: 'red' },
-  7: { label: 'Reddedildi', color: 'red' },
+  2: { label: 'Tamamlandı', color: 'green' },
+  3: { label: 'Başarısız', color: 'red' },
+  4: { label: 'İade Edildi', color: 'orange' },
+};
+
+const PAYMENT_OPTION_MAP = {
+  1: 'Online Kredi Kartı',
+  2: 'Kapıda Nakit',
+  3: 'Kapıda Kredi Kartı',
 };
 
 const STATUS_OPTIONS = [
-  { value: 2, label: 'Onaylandı' },
-  { value: 3, label: 'Hazırlanıyor' },
-  { value: 4, label: 'Yolda' },
-  { value: 5, label: 'Teslim Edildi' },
-  { value: 6, label: 'İptal' },
-  { value: 7, label: 'Reddedildi' },
+  { value: 4, label: 'Restoran Onayı Bekliyor' },
+  { value: 5, label: 'Restoran Reddetti' },
+  { value: 6, label: 'Hazırlanıyor' },
+  { value: 7, label: 'Yola Çıktı' },
+  { value: 8, label: 'Teslim Edildi' },
 ];
 
 const FILTER_TABS = [
   { key: null, label: 'Tümü' },
-  { key: 1, label: 'Bekliyor' },
-  { key: 2, label: 'Onaylandı' },
-  { key: 3, label: 'Hazırlanıyor' },
-  { key: 5, label: 'Teslim Edildi' },
-  { key: 6, label: 'İptal' },
+  { key: 1, label: 'Ödeme Bekliyor' },
+  { key: 4, label: 'Onay Bekliyor' },
+  { key: 6, label: 'Hazırlanıyor' },
+  { key: 7, label: 'Yolda' },
+  { key: 8, label: 'Teslim Edildi' },
+  { key: 2, label: 'Ödeme Başarısız' },
+  { key: 3, label: 'İptal' },
 ];
 
 export default function OrdersPage() {
@@ -45,6 +59,8 @@ export default function OrdersPage() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState(null);
   const [statusModal, setStatusModal] = useState(null);
+  const [detailModal, setDetailModal] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [updating, setUpdating] = useState(false);
 
@@ -75,6 +91,18 @@ export default function OrdersPage() {
     }
   };
 
+  const handleShowDetail = async (order) => {
+    setDetailLoading(true);
+    setDetailModal(order);
+    try {
+      const res = await api.get(`/v1/admin/order/${order.id}`);
+      if (!res.data?.hasFailed) {
+        setDetailModal(res.data.data);
+      }
+    } catch { }
+    setDetailLoading(false);
+  };
+
   const columns = [
     {
       title: 'Sipariş',
@@ -87,8 +115,8 @@ export default function OrdersPage() {
       key: 'customerName',
       render: (v, row) => (
         <div>
-          <p className="font-medium text-sm">{v || row.userId?.slice(0, 8) || '—'}</p>
-          <p className="text-xs text-gray-400">{row.deliveryAddress || ''}</p>
+          <p className="font-medium text-sm">{v || '—'}</p>
+          <p className="text-xs text-gray-400">{row.customerPhone || ''}</p>
         </div>
       ),
     },
@@ -103,11 +131,24 @@ export default function OrdersPage() {
       render: (v) => <span className="font-semibold text-sm">₺{Number(v || 0).toFixed(2)}</span>,
     },
     {
-      title: 'Durum',
+      title: 'Sipariş Durumu',
       key: 'statusId',
       render: (v) => {
         const s = STATUS_MAP[v] || { label: String(v), color: 'gray' };
         return <Badge label={s.label} color={s.color} />;
+      },
+    },
+    {
+      title: 'Ödeme',
+      key: 'paymentStatusId',
+      render: (v, row) => {
+        const ps = PAYMENT_STATUS_MAP[v] || { label: String(v), color: 'gray' };
+        return (
+          <div>
+            <Badge label={ps.label} color={ps.color} />
+            <p className="text-xs text-gray-400 mt-0.5">{PAYMENT_OPTION_MAP[row.paymentOptionId] || ''}</p>
+          </div>
+        );
       },
     },
     {
@@ -118,15 +159,12 @@ export default function OrdersPage() {
     {
       title: 'İşlem',
       key: 'id',
-      width: 130,
+      width: 180,
       render: (_, row) => (
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => { setStatusModal(row); setNewStatus(''); }}
-        >
-          Durum Güncelle
-        </Button>
+        <div className="flex gap-1">
+          <Button size="sm" variant="ghost" onClick={() => handleShowDetail(row)}>Detay</Button>
+          <Button size="sm" variant="outline" onClick={() => { setStatusModal(row); setNewStatus(''); }}>Durum</Button>
+        </div>
       ),
     },
   ];
@@ -166,6 +204,7 @@ export default function OrdersPage() {
         )}
       </div>
 
+      {/* Durum Güncelle Modal */}
       <Modal isOpen={!!statusModal} onClose={() => setStatusModal(null)} title="Durum Güncelle" size="sm">
         <div className="space-y-4">
           <div className="bg-gray-50 rounded-lg p-3 text-sm">
@@ -198,6 +237,174 @@ export default function OrdersPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Sipariş Detay Modal */}
+      <Modal isOpen={!!detailModal} onClose={() => setDetailModal(null)} title="Sipariş Detayı" size="lg">
+        {detailLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="w-6 h-6 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : detailModal && (
+          <div className="space-y-5">
+            {/* Genel Bilgiler */}
+            <div className="grid grid-cols-2 gap-4">
+              <InfoCard label="Sipariş ID" value={detailModal.id} mono />
+              <InfoCard label="Tarih" value={detailModal.createdDate ? new Date(detailModal.createdDate).toLocaleString('tr-TR') : '—'} />
+              <InfoCard label="Müşteri" value={detailModal.customerName || '—'} sub={detailModal.customerEmail} />
+              <InfoCard label="Telefon" value={detailModal.customerPhone || '—'} />
+              <InfoCard label="Restoran" value={detailModal.restaurantName || '—'} />
+              <InfoCard label="Ödeme Yöntemi" value={PAYMENT_OPTION_MAP[detailModal.paymentOptionId] || '—'} />
+            </div>
+
+            {/* Durum */}
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-600">Sipariş Durumu:</span>
+              <Badge label={STATUS_MAP[detailModal.statusId]?.label || String(detailModal.statusId)} color={STATUS_MAP[detailModal.statusId]?.color || 'gray'} />
+              <span className="text-sm font-medium text-gray-600 ml-4">Ödeme:</span>
+              <Badge label={PAYMENT_STATUS_MAP[detailModal.paymentStatusId]?.label || String(detailModal.paymentStatusId)} color={PAYMENT_STATUS_MAP[detailModal.paymentStatusId]?.color || 'gray'} />
+            </div>
+
+            {detailModal.cancellationReason && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                <span className="font-medium">İptal/Red Nedeni:</span> {detailModal.cancellationReason}
+              </div>
+            )}
+
+            {/* Tutarlar */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-gray-700 mb-2">Tutarlar</h4>
+              <div className="grid grid-cols-4 gap-3 text-sm">
+                <div><span className="text-gray-500">Ürünler:</span> <span className="font-medium">₺{Number(detailModal.totalProductPrice || 0).toFixed(2)}</span></div>
+                <div><span className="text-gray-500">Teslimat:</span> <span className="font-medium">₺{Number(detailModal.shipmentPrice || 0).toFixed(2)}</span></div>
+                <div><span className="text-gray-500">İndirim:</span> <span className="font-medium text-green-600">-₺{Number(detailModal.discountAmount || 0).toFixed(2)}</span></div>
+                <div><span className="text-gray-500">Toplam:</span> <span className="font-bold text-orange-600">₺{Number(detailModal.totalPrice || 0).toFixed(2)}</span></div>
+              </div>
+              {detailModal.couponCode && <p className="text-xs text-gray-400 mt-1">Kupon: {detailModal.couponCode}</p>}
+            </div>
+
+            {/* Ürünler */}
+            {detailModal.items?.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Ürünler</h4>
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead><tr className="bg-gray-50 text-xs text-gray-500 uppercase">
+                      <th className="px-3 py-2 text-left">Ürün</th>
+                      <th className="px-3 py-2 text-right">Adet</th>
+                      <th className="px-3 py-2 text-right">Birim Fiyat</th>
+                      <th className="px-3 py-2 text-right">Toplam</th>
+                    </tr></thead>
+                    <tbody>
+                      {detailModal.items.map((item) => (
+                        <React.Fragment key={item.id}>
+                          <tr className="border-t border-gray-100">
+                            <td className="px-3 py-2">
+                              <p className="font-medium">{item.menuName || '—'}</p>
+                              {item.description && <p className="text-xs text-gray-400">{item.description}</p>}
+                            </td>
+                            <td className="px-3 py-2 text-right">{item.quantity}</td>
+                            <td className="px-3 py-2 text-right">₺{Number(item.unitPrice).toFixed(2)}</td>
+                            <td className="px-3 py-2 text-right font-medium">₺{Number(item.totalPrice).toFixed(2)}</td>
+                          </tr>
+                          {item.values?.length > 0 && (
+                            <tr>
+                              <td colSpan={4} className="px-3 pb-2">
+                                <div className="bg-gray-50 rounded p-2 space-y-1">
+                                  {item.values.map((val, vi) => (
+                                    <div key={vi}>
+                                      <div className="flex items-center justify-between text-xs">
+                                        <span className="text-gray-600"><span className="font-medium">{val.optionName}:</span> {val.valueName}{val.quantity > 1 ? ` x${val.quantity}` : ''}</span>
+                                        {val.unitPrice > 0 && <span className="text-gray-500">+₺{Number(val.totalPrice).toFixed(2)}</span>}
+                                      </div>
+                                      {val.options?.length > 0 && val.options.map((opt, oi) => (
+                                        <div key={oi} className="flex items-center justify-between text-xs text-gray-400 ml-3">
+                                          <span><span className="font-medium">{opt.optionName}:</span> {opt.valueName}{opt.quantity > 1 ? ` x${opt.quantity}` : ''}</span>
+                                          {opt.unitPrice > 0 && <span>+₺{Number(opt.totalPrice).toFixed(2)}</span>}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ))}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Ödeme Kayıtları */}
+            {detailModal.payments?.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Ödeme Kayıtları</h4>
+                <div className="space-y-2">
+                  {detailModal.payments.map((p) => (
+                    <div key={p.id} className="border border-gray-200 rounded-lg p-3 text-sm">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge label={PAYMENT_STATUS_MAP[p.statusId]?.label || String(p.statusId)} color={PAYMENT_STATUS_MAP[p.statusId]?.color || 'gray'} />
+                        <span className="font-semibold">₺{Number(p.amount).toFixed(2)}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-500">
+                        {p.providerPaymentId && <p>Provider Payment ID: <span className="font-mono text-gray-700">{p.providerPaymentId}</span></p>}
+                        {p.providerConversationId && <p>Conversation ID: <span className="font-mono text-gray-700">{p.providerConversationId}</span></p>}
+                        {p.cardLastFourDigits && <p>Kart: **** {p.cardLastFourDigits} {p.cardType && `(${p.cardType})`} {p.cardAssociation && `- ${p.cardAssociation}`}</p>}
+                        {p.errorMessage && <p className="col-span-2 text-red-500">Hata: {p.errorMessage}</p>}
+                        {p.completedAt && <p>Tamamlanma: {new Date(p.completedAt).toLocaleString('tr-TR')}</p>}
+                        {p.failedAt && <p>Başarısız: {new Date(p.failedAt).toLocaleString('tr-TR')}</p>}
+                        <p>Oluşturma: {new Date(p.createdDate).toLocaleString('tr-TR')}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Durum Geçmişi */}
+            {detailModal.statusHistory?.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Durum Geçmişi</h4>
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead><tr className="bg-gray-50 text-xs text-gray-500 uppercase">
+                      <th className="px-3 py-2 text-left">Durum</th>
+                      <th className="px-3 py-2 text-left">Not</th>
+                      <th className="px-3 py-2 text-left">Tarih</th>
+                    </tr></thead>
+                    <tbody>
+                      {detailModal.statusHistory.map((sh) => (
+                        <tr key={sh.id} className="border-t border-gray-100">
+                          <td className="px-3 py-2"><Badge label={STATUS_MAP[sh.statusId]?.label || sh.statusName} color={STATUS_MAP[sh.statusId]?.color || 'gray'} /></td>
+                          <td className="px-3 py-2 text-gray-500 text-xs">{sh.note || '—'}</td>
+                          <td className="px-3 py-2 text-xs text-gray-500">{new Date(sh.occurredAt).toLocaleString('tr-TR')}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {detailModal.notes && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm">
+                <span className="font-medium text-yellow-800">Sipariş Notu:</span> <span className="text-yellow-700">{detailModal.notes}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </AdminLayout>
+  );
+}
+
+function InfoCard({ label, value, sub, mono }) {
+  return (
+    <div className="bg-gray-50 rounded-lg p-3">
+      <p className="text-xs text-gray-500 mb-0.5">{label}</p>
+      <p className={`text-sm font-medium text-gray-800 ${mono ? 'font-mono text-xs' : ''}`}>{value}</p>
+      {sub && <p className="text-xs text-gray-400">{sub}</p>}
+    </div>
   );
 }

@@ -11,6 +11,7 @@ const CuisineFilter = ({cuisines, selectedCuisine, onSelect}) => {
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.container}
+      style={styles.scrollView}
     >
       <TouchableOpacity
         style={[styles.chip, !selectedCuisine && styles.chipActive]}
@@ -41,33 +42,32 @@ const CuisineFilter = ({cuisines, selectedCuisine, onSelect}) => {
 };
 
 const styles = StyleSheet.create({
+  scrollView: {
+    maxHeight: 44,
+    marginBottom: Spacing.sm,
+  },
   container: {
     paddingHorizontal: Spacing.base,
-    paddingBottom: Spacing.md,
     gap: 8,
+    alignItems: 'center',
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.surface,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: BorderRadius.round,
+    paddingHorizontal: 12,
+    height: 36,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: Colors.border,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
   },
   chipActive: {
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
   },
   chipIcon: {
-    fontSize: 18,
-    marginRight: 6,
+    fontSize: 14,
+    marginRight: 4,
   },
   chipText: {
     fontSize: Fonts.sizes.sm,

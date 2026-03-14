@@ -25,4 +25,9 @@ public class CustomerBasketController : BaseController
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
     public async Task<ServiceObjectResult<bool>> UpdateBasket([FromBody] UpdateBasketDto requestDto)
         => await _basketService.UpdateBasketForRedis(requestDto);
+
+    [HttpDelete]
+    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    public async Task<ServiceObjectResult<bool>> ClearBasket()
+        => await _basketService.ClearBasketForRedis();
 }

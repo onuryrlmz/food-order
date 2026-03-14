@@ -6,7 +6,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -15,9 +14,11 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {useAuth} from '../../context/AuthContext';
 import {authService} from '../../api';
+import {useToast} from '../../context/ToastContext';
 
 const EditProfileScreen = ({navigation}) => {
   const {user, refreshProfile} = useAuth();
+  const {showToast} = useToast();
   const [firstName, setFirstName] = useState(user?.firstName || '');
   const [lastName, setLastName] = useState(user?.lastName || '');
   const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '');
@@ -25,7 +26,7 @@ const EditProfileScreen = ({navigation}) => {
 
   const handleSave = async () => {
     if (!firstName.trim() || !lastName.trim()) {
-      Alert.alert('Hata', 'Ad ve soyad boş bırakılamaz');
+      showToast('Ad ve soyad boş bırakılamaz', 'warning');
       return;
     }
 
@@ -38,13 +39,13 @@ const EditProfileScreen = ({navigation}) => {
       });
       if (!res.data.hasFailed) {
         await refreshProfile();
-        Alert.alert('Başarılı', 'Profil bilgileriniz güncellendi');
+        showToast('Profil bilgileriniz güncellendi', 'success');
         navigation.goBack();
       } else {
-        Alert.alert('Hata', res.data.messages?.[0]?.description || 'Güncelleme başarısız');
+        showToast(res.data.messages?.[0]?.description || 'Güncelleme başarısız', 'error');
       }
     } catch (e) {
-      Alert.alert('Hata', 'Bir hata oluştu');
+      showToast('Bir hata oluştu', 'error');
     } finally {
       setLoading(false);
     }

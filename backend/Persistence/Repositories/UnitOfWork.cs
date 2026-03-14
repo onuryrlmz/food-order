@@ -32,6 +32,8 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     public IBasketItemValueItemValueRepository BasketItemValueItemValueRepository { get; }
     public IOrderRepository OrderRepository { get; }
     public IOrderItemRepository OrderItemRepository { get; }
+    public IPaymentRepository PaymentRepository { get; }
+    public IOrderStatusHistoryRepository OrderStatusHistoryRepository { get; }
     public IOptionTemplateRepository OptionTemplateRepository { get; }
     public IOptionTemplateValueRepository OptionTemplateValueRepository { get; }
     public IOptionTemplateValueOptionRepository OptionTemplateValueOptionRepository { get; }
@@ -59,6 +61,8 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         IBasketItemValueItemValueRepository basketItemValueItemValueRepository,
         IOrderRepository orderRepository,
         IOrderItemRepository orderItemRepository,
+        IPaymentRepository paymentRepository,
+        IOrderStatusHistoryRepository orderStatusHistoryRepository,
         IOptionTemplateRepository optionTemplateRepository,
         IOptionTemplateValueRepository optionTemplateValueRepository,
         IOptionTemplateValueOptionRepository optionTemplateValueOptionRepository,
@@ -86,6 +90,8 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         BasketItemValueItemValueRepository = basketItemValueItemValueRepository;
         OrderRepository = orderRepository;
         OrderItemRepository = orderItemRepository;
+        PaymentRepository = paymentRepository;
+        OrderStatusHistoryRepository = orderStatusHistoryRepository;
         OptionTemplateRepository = optionTemplateRepository;
         OptionTemplateValueRepository = optionTemplateValueRepository;
         OptionTemplateValueOptionRepository = optionTemplateValueOptionRepository;

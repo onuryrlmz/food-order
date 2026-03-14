@@ -8,15 +8,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {useAuth} from '../../context/AuthContext';
+import {useCart} from '../../context/CartContext';
+import {useToast} from '../../context/ToastContext';
 
-const LoginScreen = ({navigation}) => {
+const LoginScreen = ({navigation, route}) => {
   const {login} = useAuth();
+  const {showToast} = useToast();
+  const {loadBasketFromBackend} = useCart();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -24,14 +27,20 @@ const LoginScreen = ({navigation}) => {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun');
+      showToast('Lütfen tüm alanları doldurun', 'warning');
       return;
     }
     setLoading(true);
     const result = await login(email.trim(), password);
     setLoading(false);
-    if (!result.success) {
-      Alert.alert('Giriş Başarısız', result.error);
+    if (result.success) {
+      // Login sonrası sepeti yükle ve geri dön
+      loadBasketFromBackend();
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      }
+    } else {
+      showToast(result.error || 'Giriş başarısız', 'error');
     }
   };
 

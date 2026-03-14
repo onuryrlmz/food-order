@@ -1,119 +1,295 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   TouchableOpacity,
+  TextInput,
   Animated,
   Dimensions,
-  Alert,
-  ActivityIndicator,
+  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {restaurantService} from '../../api';
-import {useCart} from '../../context/CartContext';
+import { Colors, Fonts, Spacing, BorderRadius } from '../../theme';
+import { addressService } from '../../api';
+import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
+import { useAppData } from '../../context/AppDataContext';
+import { useToast } from '../../context/ToastContext';
 import MenuItemCard from '../../components/MenuItemCard';
-import CartFloatingButton from '../../components/CartFloatingButton';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import MenuOptionModal from '../../components/MenuOptionModal';
 
-const {width: SCREEN_WIDTH} = Dimensions.get('window');
-const HEADER_MAX_HEIGHT = 240;
-const HEADER_MIN_HEIGHT = 90;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const COVER_HEIGHT = 240;
+const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 50 : 24;
 
-const RestaurantDetailScreen = ({route, navigation}) => {
-  const {restaurantId} = route.params;
-  const {cart, addItem} = useCart();
-  const [restaurantData, setRestaurantData] = useState(null);
+const RestaurantDetailScreen = ({ route, navigation }) => {
+  const { restaurantId } = route.params;
+  const { cart, addItem, isDifferentRestaurant } = useCart();
+  const { isAuthenticated } = useAuth();
+  const { selectedRestaurant, selectedRestaurantJson, selectRestaurant } = useAppData();
+  const { showToast, showConfirm } = useToast();
+
+  const restaurantName = selectedRestaurant?.name || '';
+  const coverImage = selectedRestaurant?.imageUrl || null;
+  const sellerId = selectedRestaurant?.sellerId || null;
+
+  const [menuData, setMenuData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const scrollY = useRef(new Animated.Value(0)).current;
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedMenu, setSelectedMenu] = useState(null);
+  const [pendingCartAction, setPendingCartAction] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const mainScrollRef = useRef(null);
+  const tabScrollRef = useRef(null);
+  const sectionLayouts = useRef({});
+  const tabLayouts = useRef({});
+  const isUserTap = useRef(false);
+  const currentScrollY = useRef(0);
+  const [isSticky, setIsSticky] = useState(false);
+  const [infoCardHeight, setInfoCardHeight] = useState(0);
+  const [tabBarHeight, setTabBarHeight] = useState(0);
+  const stickyThreshold = useRef(0);
 
   useEffect(() => {
-    loadRestaurantInfo();
+    // Eğer selectedRestaurant yoksa (direkt URL ile gelindi vs.) yükle
+    if (!selectedRestaurant || selectedRestaurant.id !== restaurantId) {
+      selectRestaurant(restaurantId);
+    }
   }, [restaurantId]);
 
-  const loadRestaurantInfo = async () => {
-    try {
-      const res = await restaurantService.getRestaurantInfo(restaurantId);
-      if (res.data && !res.data.hasFailed) {
-        let parsed = res.data.data;
-        if (typeof parsed === 'string') {
-          parsed = JSON.parse(parsed);
-        }
-        setRestaurantData(parsed);
-        if (parsed.categories?.length > 0) {
-          setSelectedCategory(parsed.categories[0].id);
-        }
-      }
-    } catch (e) {
-      console.log('Restaurant info error:', e);
-      Alert.alert('Hata', 'Restoran bilgileri yüklenemedi');
-    } finally {
+  // selectedRestaurantJson yüklenince menuData'yı set et
+  useEffect(() => {
+    if (selectedRestaurantJson && selectedRestaurantJson.length > 0) {
+      setMenuData(selectedRestaurantJson);
+      setSelectedCategory(selectedRestaurantJson[0].id);
       setLoading(false);
     }
-  };
+  }, [selectedRestaurantJson]);
+
+  // Login veya adres ekleme sonrası geri dönünce bekleyen sepet aksiyonunu çalıştır
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (pendingCartAction && isAuthenticated) {
+        checkAddressAndAdd(pendingCartAction.menuItem, pendingCartAction.selectedOptions, pendingCartAction.totalPrice);
+      }
+    });
+    return unsubscribe;
+  }, [navigation, pendingCartAction, isAuthenticated]);
 
   const handleAddToCart = (menuItem) => {
-    if (cart && cart.restaurantId !== restaurantId) {
-      Alert.alert(
-        'Sepeti Değiştir',
-        'Sepetinizde başka bir restoranın ürünleri var. Sepeti temizleyip bu restorandan eklensin mi?',
-        [
-          {text: 'İptal', style: 'cancel'},
-          {
-            text: 'Evet',
-            style: 'destructive',
-            onPress: () => doAddToCart(menuItem),
-          },
-        ],
-      );
+    const hasOptions = menuItem.menuOptions && menuItem.menuOptions.length > 0;
+
+    if (hasOptions) {
+      setSelectedMenu(menuItem);
+      setModalVisible(true);
     } else {
-      doAddToCart(menuItem);
+      confirmAndAdd(menuItem, [], menuItem.price);
     }
   };
 
-  const doAddToCart = (menuItem) => {
+  const handleModalAddToCart = (menu, selectedOptions, totalPrice) => {
+    confirmAndAdd(menu, selectedOptions, totalPrice);
+  };
+
+  const confirmAndAdd = (menuItem, selectedOptions, totalPrice) => {
+    if (isDifferentRestaurant(restaurantId)) {
+      showConfirm({
+        title: 'Sepeti Değiştir',
+        message: `Sepetinizde "${cart.restaurantName}" restoranından ürünler var. Sepeti temizleyip bu restorandan eklensin mi?`,
+        confirmText: 'Evet, Değiştir',
+        cancelText: 'Hayır',
+        confirmStyle: 'destructive',
+        onConfirm: () => doAddToCart(menuItem, selectedOptions, totalPrice),
+      });
+    } else {
+      doAddToCart(menuItem, selectedOptions, totalPrice);
+    }
+  };
+
+  const doAddToCart = (menuItem, selectedOptions, totalPrice) => {
+    if (!isAuthenticated) {
+      setPendingCartAction({ menuItem, selectedOptions, totalPrice });
+      navigation.navigate('Login', { returnTo: 'RestaurantDetail' });
+      return;
+    }
+    checkAddressAndAdd(menuItem, selectedOptions, totalPrice);
+  };
+
+  const checkAddressAndAdd = async (menuItem, selectedOptions, totalPrice) => {
+    try {
+      const res = await addressService.getList();
+      const list = res.data?.data || res.data?.rawData || [];
+      const addresses = Array.isArray(list) ? list : [];
+      if (addresses.length === 0) {
+        setPendingCartAction({ menuItem, selectedOptions, totalPrice });
+        showConfirm({
+          title: 'Adres Gerekli',
+          message: 'Sipariş verebilmek için bir teslimat adresi eklemelisiniz.',
+          confirmText: 'Adres Ekle',
+          cancelText: 'İptal',
+          confirmStyle: 'primary',
+          onConfirm: () => navigation.navigate('AddAddress', { returnTo: 'RestaurantDetail' }),
+          onCancel: () => setPendingCartAction(null),
+        });
+        return;
+      }
+    } catch (e) {}
+    setPendingCartAction(null);
     const item = {
       menuId: menuItem.id,
       menuName: menuItem.name,
       quantity: 1,
-      unitPrice: menuItem.price,
-      totalPrice: menuItem.price,
+      unitPrice: totalPrice,
+      totalPrice: totalPrice,
       imageUrl: menuItem.imageUrl || null,
-      values: [],
+      values: selectedOptions,
     };
     addItem(item, {
       id: restaurantId,
-      sellerId: restaurantData?.sellerId,
-      name: restaurantData?.name,
-      imageUrl: restaurantData?.coverImage,
+      sellerId: sellerId,
+      name: restaurantName,
+      imageUrl: coverImage,
     });
   };
 
-  const headerTranslate = scrollY.interpolate({
-    inputRange: [0, HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT],
-    outputRange: [0, -(HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT)],
-    extrapolate: 'clamp',
-  });
+  const handleInfoCardLayout = useCallback((event) => {
+    const h = event.nativeEvent.layout.height;
+    setInfoCardHeight(h);
+  }, []);
 
-  const imageOpacity = scrollY.interpolate({
-    inputRange: [0, (HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT) / 2, HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT],
-    outputRange: [1, 0.5, 0],
-    extrapolate: 'clamp',
-  });
+  const handleTabBarLayout = useCallback((event) => {
+    const h = event.nativeEvent.layout.height;
+    setTabBarHeight(h);
+  }, []);
+
+  const handleSectionLayout = useCallback((categoryId, event) => {
+    sectionLayouts.current[categoryId] = event.nativeEvent.layout.y;
+  }, []);
+
+  const handleTabLayout = useCallback((categoryId, event) => {
+    tabLayouts.current[categoryId] = event.nativeEvent.layout.x;
+  }, []);
+
+  const stickyTop = STATUS_BAR_HEIGHT + 52;
+
+  const handleScroll = useCallback((event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    currentScrollY.current = offsetY;
+
+    const threshold = COVER_HEIGHT - stickyTop - 20;
+    const shouldStick = offsetY >= threshold;
+    setIsSticky(shouldStick);
+
+    if (isUserTap.current) return;
+
+    const stickyOffset = stickyTop + infoCardHeight + tabBarHeight;
+    const adjustedY = offsetY - COVER_HEIGHT + stickyOffset + 20;
+    const entries = Object.entries(sectionLayouts.current)
+      .map(([id, y]) => ({ id, y }))
+      .sort((a, b) => a.y - b.y);
+
+    let activeCat = entries[0]?.id;
+    for (const entry of entries) {
+      if (entry.y <= adjustedY) {
+        activeCat = entry.id;
+      } else {
+        break;
+      }
+    }
+
+    if (activeCat && activeCat !== selectedCategory) {
+      setSelectedCategory(activeCat);
+      scrollTabIntoView(activeCat);
+    }
+  }, [selectedCategory, infoCardHeight, tabBarHeight]);
+
+  const scrollTabIntoView = useCallback((categoryId) => {
+    const tabX = tabLayouts.current[categoryId];
+    if (tabX != null && tabScrollRef.current) {
+      tabScrollRef.current.scrollTo({ x: Math.max(0, tabX - 40), animated: true });
+    }
+  }, []);
+
+  const handleTabPress = useCallback((categoryId) => {
+    setSelectedCategory(categoryId);
+    isUserTap.current = true;
+
+    const sectionY = sectionLayouts.current[categoryId];
+    if (sectionY != null && mainScrollRef.current) {
+      const stickyOffset = stickyTop + infoCardHeight + tabBarHeight;
+      mainScrollRef.current.scrollTo({
+        y: sectionY + COVER_HEIGHT - stickyOffset + 10,
+        animated: true,
+      });
+    }
+    scrollTabIntoView(categoryId);
+
+    setTimeout(() => {
+      isUserTap.current = false;
+    }, 600);
+  }, [scrollTabIntoView, infoCardHeight, tabBarHeight]);
+
+  const categories = useMemo(() => {
+    const seen = new Map();
+    return menuData.filter(cat => {
+      if (seen.has(cat.name)) {
+        // Merge categoriesDetail into existing
+        const existing = seen.get(cat.name);
+        if (cat.categoriesDetail) {
+          existing.categoriesDetail = [...(existing.categoriesDetail || []), ...cat.categoriesDetail];
+        }
+        return false;
+      }
+      seen.set(cat.name, cat);
+      return true;
+    });
+  }, [menuData]);
+
+  const filteredCategories = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return categories;
+
+    return categories
+      .map(cat => {
+        const matchedMenus = (cat.categoriesDetail || []).map(cd => {
+          const filtered = (cd.menus || []).filter(menu => {
+            if (menu.name?.toLowerCase().includes(q)) return true;
+            if (menu.description?.toLowerCase().includes(q)) return true;
+            if (menu.menuOptions?.some(opt =>
+              opt.name?.toLowerCase().includes(q) ||
+              opt.menuOptionValues?.some(v => v.name?.toLowerCase().includes(q))
+            )) return true;
+            return false;
+          });
+          return { ...cd, menus: filtered };
+        }).filter(cd => cd.menus.length > 0);
+
+        if (cat.name?.toLowerCase().includes(q) && matchedMenus.length === 0) {
+          return cat;
+        }
+
+        if (matchedMenus.length === 0) return null;
+        return { ...cat, categoriesDetail: matchedMenus };
+      })
+      .filter(Boolean);
+  }, [categories, searchQuery]);
+
+  const isSearching = searchQuery.trim().length > 0;
+  const displayCategories = isSearching ? filteredCategories : categories;
 
   if (loading) {
     return <LoadingSpinner message="Restoran yükleniyor..." />;
   }
 
-  if (!restaurantData) {
+  if (!menuData || menuData.length === 0) {
     return (
       <View style={styles.errorContainer}>
         <Icon name="alert-circle-outline" size={48} color={Colors.error} />
-        <Text style={styles.errorText}>Restoran bulunamadı</Text>
+        <Text style={styles.errorText}>Menü bulunamadı</Text>
         <TouchableOpacity style={styles.errorButton} onPress={() => navigation.goBack()}>
           <Text style={styles.errorButtonText}>Geri Dön</Text>
         </TouchableOpacity>
@@ -121,126 +297,191 @@ const RestaurantDetailScreen = ({route, navigation}) => {
     );
   }
 
-  const categories = restaurantData.categories || [];
-  const currentCategory = categories.find(c => c.id === selectedCategory);
-  const menuItems = currentCategory?.menus || [];
+  const renderInfoCard = () => (
+    <View style={styles.infoCardInner}>
+      <Text style={styles.restaurantName}>{restaurantName || 'Restoran'}</Text>
+      <View style={styles.infoRow}>
+        <View style={styles.infoChip}>
+          <Icon name="star" size={16} color={Colors.star} />
+          <Text style={styles.infoChipText}>4.5</Text>
+        </View>
+        <View style={styles.infoChip}>
+          <Icon name="clock-outline" size={16} color={Colors.primary} />
+          <Text style={styles.infoChipText}>30-45 dk</Text>
+        </View>
+      </View>
+      <View style={styles.searchContainer}>
+        <Icon name="magnify" size={20} color={Colors.textLight} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Menüde ara..."
+          placeholderTextColor={Colors.textLight}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          returnKeyType="search"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.searchClear}>
+            <Icon name="close-circle" size={18} color={Colors.textLight} />
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  );
+
+  const renderTabBar = () => (
+    <ScrollView
+      ref={tabScrollRef}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.categoryTabs}
+    >
+      {displayCategories.map(cat => {
+        const isActive = selectedCategory === cat.id;
+        return (
+          <TouchableOpacity
+            key={cat.id}
+            style={[styles.categoryTab, isActive && styles.categoryTabActive]}
+            onPress={() => handleTabPress(cat.id)}
+            onLayout={(e) => handleTabLayout(cat.id, e)}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.categoryTabText, isActive && styles.categoryTabTextActive]}>
+              {cat.name}
+            </Text>
+            {isActive && <View style={styles.categoryIndicator} />}
+          </TouchableOpacity>
+        );
+      })}
+    </ScrollView>
+  );
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.headerImage, {transform: [{translateY: headerTranslate}]}]}>
-        {restaurantData.coverImage ? (
-          <Animated.Image
-            source={{uri: restaurantData.coverImage}}
-            style={[styles.coverImage, {opacity: imageOpacity}]}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={styles.coverPlaceholder}>
-            <Icon name="food" size={48} color={Colors.textLight} />
+      <ScrollView
+        ref={mainScrollRef}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
+        {/* Cover Image */}
+        <View style={styles.coverContainer}>
+          {coverImage ? (
+            <Animated.Image
+              source={{ uri: coverImage }}
+              style={styles.coverImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.coverPlaceholder}>
+              <Icon name="store" size={48} color={Colors.textLight} />
+            </View>
+          )}
+          <View style={styles.headerOverlay} />
+        </View>
+
+        {/* Info Card - inline (scrolls with content) */}
+        <View style={[styles.infoCard, isSticky && { opacity: 0 }]} onLayout={handleInfoCardLayout}>
+          {renderInfoCard()}
+        </View>
+
+        {/* Tab Bar - inline (scrolls with content) */}
+        {displayCategories.length > 0 && (
+          <View style={isSticky ? { opacity: 0 } : undefined} onLayout={handleTabBarLayout}>
+            {renderTabBar()}
           </View>
         )}
-        <View style={styles.headerOverlay} />
+
+        {/* Menu Sections */}
+        <View style={styles.menuSection}>
+          {displayCategories.map(cat => {
+            const catMenuItems = cat.categoriesDetail?.flatMap(cd => cd.menus || []) || [];
+            if (catMenuItems.length === 0) return null;
+            return (
+              <View
+                key={cat.id}
+                onLayout={(e) => handleSectionLayout(cat.id, e)}
+              >
+                <Text style={styles.sectionTitle}>{cat.name}</Text>
+                {catMenuItems.map(item => (
+                  <MenuItemCard
+                    key={item.id}
+                    item={item}
+                    onPress={() => handleAddToCart(item)}
+                  />
+                ))}
+              </View>
+            );
+          })}
+          {isSearching && displayCategories.length === 0 && (
+            <View style={styles.emptySearch}>
+              <Icon name="magnify" size={40} color={Colors.textLight} />
+              <Text style={styles.emptySearchText}>"{ searchQuery}" için sonuç bulunamadı</Text>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+
+      {/* Sticky Header Overlay */}
+      {isSticky && (
+        <View style={styles.stickyHeader}>
+          <View style={styles.stickyActionRow}>
+            <TouchableOpacity
+              style={[styles.headerButton, styles.headerButtonSticky]}
+              onPress={() => navigation.goBack()}
+            >
+              <Icon name="arrow-left" size={24} color={Colors.text} />
+            </TouchableOpacity>
+            <View style={styles.headerRight}>
+              <TouchableOpacity style={[styles.headerButton, styles.headerButtonSticky]}>
+                <Icon name="heart-outline" size={24} color={Colors.text} />
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.headerButton, styles.headerButtonSticky, styles.headerButtonML]}>
+                <Icon name="share-variant-outline" size={24} color={Colors.text} />
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View style={styles.stickyInfoCard}>
+            {renderInfoCard()}
+          </View>
+          {displayCategories.length > 0 && (
+            <View style={styles.stickyTabBar}>
+              {renderTabBar()}
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Back Button - shown only when NOT sticky */}
+      {!isSticky && (
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => navigation.goBack()}
+          >
             <Icon name="arrow-left" size={24} color="#FFF" />
           </TouchableOpacity>
           <View style={styles.headerRight}>
             <TouchableOpacity style={styles.headerButton}>
               <Icon name="heart-outline" size={24} color="#FFF" />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.headerButton, {marginLeft: 8}]}>
+            <TouchableOpacity style={[styles.headerButton, styles.headerButtonML]}>
               <Icon name="share-variant-outline" size={24} color="#FFF" />
             </TouchableOpacity>
           </View>
         </View>
-      </Animated.View>
+      )}
 
-      <Animated.ScrollView
-        onScroll={Animated.event(
-          [{nativeEvent: {contentOffset: {y: scrollY}}}],
-          {useNativeDriver: true},
-        )}
-        scrollEventThrottle={16}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{paddingTop: HEADER_MAX_HEIGHT, paddingBottom: 100}}
-      >
-        <View style={styles.infoCard}>
-          <Text style={styles.restaurantName}>{restaurantData.name}</Text>
-          {restaurantData.description ? (
-            <Text style={styles.restaurantDesc}>{restaurantData.description}</Text>
-          ) : null}
-
-          <View style={styles.infoRow}>
-            <View style={styles.infoChip}>
-              <Icon name="star" size={16} color={Colors.star} />
-              <Text style={styles.infoChipText}>4.5</Text>
-            </View>
-            <View style={styles.infoChip}>
-              <Icon name="clock-outline" size={16} color={Colors.primary} />
-              <Text style={styles.infoChipText}>
-                {restaurantData.minDeliveryTime}-{restaurantData.maxDeliveryTime} dk
-              </Text>
-            </View>
-            <View style={styles.infoChip}>
-              <Icon name="currency-try" size={16} color={Colors.primary} />
-              <Text style={styles.infoChipText}>
-                Min ₺{restaurantData.minimumOrderPrice}
-              </Text>
-            </View>
-          </View>
-
-          {restaurantData.isOpen === false && (
-            <View style={styles.closedBanner}>
-              <Icon name="clock-alert-outline" size={18} color={Colors.error} />
-              <Text style={styles.closedText}>Restoran şu anda kapalı</Text>
-            </View>
-          )}
-        </View>
-
-        {categories.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryTabs}
-          >
-            {categories.map(cat => {
-              const isActive = selectedCategory === cat.id;
-              return (
-                <TouchableOpacity
-                  key={cat.id}
-                  style={[styles.categoryTab, isActive && styles.categoryTabActive]}
-                  onPress={() => setSelectedCategory(cat.id)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.categoryTabText, isActive && styles.categoryTabTextActive]}>
-                    {cat.name}
-                  </Text>
-                  {isActive && <View style={styles.categoryIndicator} />}
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        )}
-
-        <View style={styles.menuSection}>
-          {menuItems.length > 0 ? (
-            menuItems.map(item => (
-              <MenuItemCard
-                key={item.id}
-                item={item}
-                onPress={() => handleAddToCart(item)}
-              />
-            ))
-          ) : (
-            <View style={styles.emptyMenu}>
-              <Icon name="food-off" size={40} color={Colors.textLight} />
-              <Text style={styles.emptyMenuText}>Bu kategoride ürün bulunmuyor</Text>
-            </View>
-          )}
-        </View>
-      </Animated.ScrollView>
-
-      <CartFloatingButton onPress={() => navigation.navigate('Cart')} />
+      <MenuOptionModal
+        visible={modalVisible}
+        menu={selectedMenu}
+        onClose={() => {
+          setModalVisible(false);
+          setSelectedMenu(null);
+        }}
+        onAddToCart={handleModalAddToCart}
+      />
     </View>
   );
 };
@@ -250,13 +491,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  headerImage: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: HEADER_MAX_HEIGHT,
-    zIndex: 10,
+  coverContainer: {
+    height: COVER_HEIGHT,
+    width: '100%',
   },
   coverImage: {
     width: '100%',
@@ -274,12 +511,13 @@ const styles = StyleSheet.create({
   },
   headerActions: {
     position: 'absolute',
-    top: 50,
+    top: STATUS_BAR_HEIGHT,
     left: 16,
     right: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    zIndex: 30,
   },
   headerRight: {
     flexDirection: 'row',
@@ -292,6 +530,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerButtonSticky: {
+    backgroundColor: Colors.borderLight,
+  },
+  headerButtonML: {
+    marginLeft: 8,
+  },
   infoCard: {
     backgroundColor: Colors.surface,
     marginHorizontal: Spacing.base,
@@ -299,22 +543,17 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xl,
     padding: Spacing.lg,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 6,
   },
+  infoCardInner: {},
   restaurantName: {
     fontSize: Fonts.sizes.xxl,
     fontWeight: Fonts.weights.heavy,
     color: Colors.text,
     marginBottom: 6,
-  },
-  restaurantDesc: {
-    fontSize: Fonts.sizes.md,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.md,
-    lineHeight: 20,
   },
   infoRow: {
     flexDirection: 'row',
@@ -334,23 +573,40 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginLeft: 4,
   },
-  closedBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFEBEE',
-    padding: Spacing.md,
-    borderRadius: BorderRadius.md,
-    marginTop: Spacing.md,
+  stickyHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 20,
+    backgroundColor: Colors.surface,
+    paddingTop: STATUS_BAR_HEIGHT,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 8,
   },
-  closedText: {
-    fontSize: Fonts.sizes.sm,
-    color: Colors.error,
-    fontWeight: Fonts.weights.semibold,
-    marginLeft: 8,
+  stickyActionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+  },
+  stickyInfoCard: {
+    backgroundColor: Colors.surface,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.sm,
+  },
+  stickyTabBar: {
+    backgroundColor: Colors.surface,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.borderLight,
   },
   categoryTabs: {
     paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.lg,
+    paddingTop: Spacing.sm,
     paddingBottom: Spacing.sm,
     gap: 4,
   },
@@ -382,8 +638,50 @@ const styles = StyleSheet.create({
     borderRadius: 1.5,
   },
   menuSection: {
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.sm,
     paddingBottom: Spacing.xxl,
+  },
+  sectionTitle: {
+    fontSize: Fonts.sizes.lg,
+    fontWeight: Fonts.weights.bold,
+    color: Colors.text,
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.sm,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.borderLight,
+    borderRadius: 10,
+    marginTop: Spacing.md,
+    paddingHorizontal: 12,
+    height: 40,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: Fonts.sizes.md,
+    color: Colors.text,
+    padding: 0,
+    height: 40,
+  },
+  searchClear: {
+    padding: 4,
+    marginLeft: 4,
+  },
+  emptySearch: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xxxl,
+  },
+  emptySearchText: {
+    fontSize: Fonts.sizes.md,
+    color: Colors.textSecondary,
+    marginTop: Spacing.md,
+    textAlign: 'center',
+    paddingHorizontal: Spacing.lg,
   },
   emptyMenu: {
     alignItems: 'center',

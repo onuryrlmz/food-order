@@ -5,24 +5,46 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {useAuth} from '../../context/AuthContext';
+import {useToast} from '../../context/ToastContext';
 
 const ProfileScreen = ({navigation}) => {
-  const {user, logout} = useAuth();
+  const {user, logout, isAuthenticated} = useAuth();
+  const {showConfirm} = useToast();
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Profilim</Text>
+        </View>
+        <View style={styles.guestContainer}>
+          <Icon name="account-circle-outline" size={80} color={Colors.textTertiary} />
+          <Text style={styles.guestTitle}>Giriş Yapın</Text>
+          <Text style={styles.guestSubtitle}>Sipariş vermek ve profilinizi yönetmek için giriş yapın</Text>
+          <TouchableOpacity style={styles.guestLoginButton} onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.guestLoginButtonText}>Giriş Yap</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+            <Text style={styles.guestRegisterText}>Hesabınız yok mu? <Text style={{color: Colors.primary, fontWeight: '700'}}>Kayıt Olun</Text></Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   const handleLogout = () => {
-    Alert.alert(
-      'Çıkış Yap',
-      'Hesabınızdan çıkış yapmak istediğinize emin misiniz?',
-      [
-        {text: 'İptal', style: 'cancel'},
-        {text: 'Çıkış Yap', style: 'destructive', onPress: logout},
-      ],
-    );
+    showConfirm({
+      title: 'Çıkış Yap',
+      message: 'Hesabınızdan çıkış yapmak istediğinize emin misiniz?',
+      confirmText: 'Çıkış Yap',
+      cancelText: 'İptal',
+      confirmStyle: 'destructive',
+      onConfirm: logout,
+    });
   };
 
   const menuItems = [
@@ -39,6 +61,13 @@ const ProfileScreen = ({navigation}) => {
       subtitle: 'Teslimat adreslerinizi yönetin',
       onPress: () => navigation.navigate('AddressList'),
       color: Colors.success,
+    },
+    {
+      icon: 'credit-card-outline',
+      label: 'Kayıtlı Kartlarım',
+      subtitle: 'Ödeme kartlarınızı yönetin',
+      onPress: () => navigation.navigate('SavedCards'),
+      color: '#5856D6',
     },
     {
       icon: 'receipt',
@@ -257,6 +286,42 @@ const styles = StyleSheet.create({
     color: Colors.textTertiary,
     textAlign: 'center',
     marginTop: Spacing.lg,
+  },
+  guestContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  guestTitle: {
+    fontSize: Fonts.sizes.xxl,
+    fontWeight: Fonts.weights.bold,
+    color: Colors.text,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
+  },
+  guestSubtitle: {
+    fontSize: Fonts.sizes.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: Spacing.xl,
+  },
+  guestLoginButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: 16,
+    paddingHorizontal: 48,
+    marginBottom: Spacing.md,
+  },
+  guestLoginButtonText: {
+    color: '#FFF',
+    fontSize: Fonts.sizes.lg,
+    fontWeight: Fonts.weights.bold,
+  },
+  guestRegisterText: {
+    fontSize: Fonts.sizes.md,
+    color: Colors.textSecondary,
   },
 });
 

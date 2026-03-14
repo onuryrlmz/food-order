@@ -17,7 +17,7 @@ public class CustomerOrderController : BaseController
 
     [HttpPost("place")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
-    public async Task<ServiceObjectResult<Guid>> PlaceOrder([FromBody] PlaceOrderRequestDto requestDto)
+    public async Task<ServiceObjectResult<PlaceOrderResponseDto>> PlaceOrder([FromBody] PlaceOrderRequestDto requestDto)
         => await _orderService.PlaceOrder(requestDto);
 
     [HttpGet("history")]

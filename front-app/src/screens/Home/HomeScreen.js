@@ -11,104 +11,40 @@ import {
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing} from '../../theme';
-import {restaurantService, cuisineService, addressService} from '../../api';
 import {useAuth} from '../../context/AuthContext';
 import {useCart} from '../../context/CartContext';
+import {useAppData} from '../../context/AppDataContext';
 import RestaurantCard from '../../components/RestaurantCard';
 import SearchBar from '../../components/SearchBar';
 import CuisineFilter from '../../components/CuisineFilter';
-import CartFloatingButton from '../../components/CartFloatingButton';
-import LoadingSpinner from '../../components/LoadingSpinner';
 import EmptyState from '../../components/EmptyState';
 
 const HomeScreen = ({navigation}) => {
-  const {user} = useAuth();
+  const {user, isAuthenticated} = useAuth();
   const {itemCount} = useCart();
+  const {cuisines, restaurants, defaultAddress, refreshRestaurants, refreshAddress, selectRestaurant} = useAppData();
   const insets = useSafeAreaInsets();
-  const [restaurants, setRestaurants] = useState([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
-  const [cuisines, setCuisines] = useState([]);
   const [selectedCuisine, setSelectedCuisine] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [defaultAddress, setDefaultAddress] = useState(null);
-
-  useEffect(() => {
-    loadInitialData();
-  }, []);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      refreshAddress();
+      if (isAuthenticated) refreshAddress();
     });
     return unsubscribe;
-  }, [navigation]);
+  }, [navigation, isAuthenticated]);
 
   useEffect(() => {
     filterRestaurants();
   }, [searchQuery, selectedCuisine, restaurants]);
 
-  const refreshAddress = async () => {
-    try {
-      const res = await addressService.getList();
-      const list = res.data?.data || res.data?.rawData || [];
-      const addresses = Array.isArray(list) ? list : [];
-      const def = addresses.find(a => a.isDefault) || addresses[0];
-      if (def) {
-        setDefaultAddress(def);
-      }
-    } catch (e) {
-      console.log('Refresh address error:', e);
-    }
-  };
-
-  const loadInitialData = async () => {
-    setLoading(true);
-    try {
-      const [cuisineRes, addressRes] = await Promise.all([
-        cuisineService.getList().catch(() => null),
-        addressService.getList().catch(() => null),
-      ]);
-
-      const cuisineList = cuisineRes?.data?.data || cuisineRes?.data?.rawData || [];
-      if (Array.isArray(cuisineList)) {
-        setCuisines(cuisineList);
-      }
-
-      let addrId = null;
-      const addrList = addressRes?.data?.data || addressRes?.data?.rawData || [];
-      const addresses = Array.isArray(addrList) ? addrList : [];
-      const def = addresses.find(a => a.isDefault) || addresses[0];
-      if (def) {
-        setDefaultAddress(def);
-        addrId = def.id;
-      }
-
-      await loadRestaurants(addrId);
-    } catch (e) {
-      console.log('Initial data error:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadRestaurants = async (addressId) => {
-    try {
-      const res = await restaurantService.getRestaurants(addressId);
-      if (res.data?.data) {
-        setRestaurants(res.data.data);
-      }
-    } catch (e) {
-      console.log('Restaurant fetch error:', e);
-    }
-  };
-
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadRestaurants(defaultAddress?.id);
+    await refreshRestaurants();
     setRefreshing(false);
-  }, [defaultAddress]);
+  }, [refreshRestaurants]);
 
   const filterRestaurants = () => {
     let filtered = [...restaurants];
@@ -132,8 +68,9 @@ const HomeScreen = ({navigation}) => {
     setFilteredRestaurants(filtered);
   };
 
-  const renderHeader = () => (
-    <View>
+  return (
+    <View style={[styles.container, {paddingTop: insets.top}]}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
       <View style={styles.topBar}>
         <TouchableOpacity style={styles.locationButton} onPress={() => navigation.navigate('AddressList')}>
           <Icon name="map-marker" size={22} color={Colors.primary} />
@@ -184,26 +121,19 @@ const HomeScreen = ({navigation}) => {
           {filteredRestaurants.length} restoran
         </Text>
       </View>
-    </View>
-  );
 
-  if (loading) {
-    return <LoadingSpinner message="Restoranlar yükleniyor..." />;
-  }
-
-  return (
-    <View style={[styles.container, {paddingTop: insets.top}]}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
       <FlatList
         data={filteredRestaurants}
         keyExtractor={item => item.id}
         renderItem={({item}) => (
           <RestaurantCard
             restaurant={item}
-            onPress={() => navigation.navigate('RestaurantDetail', {restaurantId: item.id, restaurantName: item.name})}
+            onPress={() => {
+              selectRestaurant(item.id);
+              navigation.navigate('RestaurantDetail', {restaurantId: item.id});
+            }}
           />
         )}
-        ListHeaderComponent={renderHeader}
         ListEmptyComponent={
           <EmptyState
             icon="food-off"
@@ -218,8 +148,8 @@ const HomeScreen = ({navigation}) => {
         }
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       />
-      <CartFloatingButton onPress={() => navigation.navigate('Cart')} />
     </View>
   );
 };

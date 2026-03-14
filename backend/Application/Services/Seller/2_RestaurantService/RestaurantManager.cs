@@ -68,21 +68,32 @@ public class RestaurantManager : IRestaurantService
         var result = new ServiceCollectionResult<GetRestaurantsResponseDto>();
         try
         {
-            var address = await _addressRepository.GetAsync(x => x.Id == requestRequestDto.AddressId);
-            if (address == null)
-            {
-                result.Fail("Address not found");
-                return result;
-            }
+            double lat, lng;
 
-            if (string.IsNullOrEmpty(address.Latitude) || string.IsNullOrEmpty(address.Longitude))
+            // Doğrudan lat/lng verilmişse kullan (login olmadan konum bazlı arama)
+            if (requestRequestDto.Latitude.HasValue && requestRequestDto.Longitude.HasValue)
             {
-                result.SetData(new List<GetRestaurantsResponseDto>());
-                return result;
+                lat = requestRequestDto.Latitude.Value;
+                lng = requestRequestDto.Longitude.Value;
             }
+            else
+            {
+                var address = await _addressRepository.GetAsync(x => x.Id == requestRequestDto.AddressId);
+                if (address == null)
+                {
+                    result.Fail("Address not found");
+                    return result;
+                }
 
-            var lat = double.Parse(address.Latitude, System.Globalization.CultureInfo.InvariantCulture);
-            var lng = double.Parse(address.Longitude, System.Globalization.CultureInfo.InvariantCulture);
+                if (string.IsNullOrEmpty(address.Latitude) || string.IsNullOrEmpty(address.Longitude))
+                {
+                    result.SetData(new List<GetRestaurantsResponseDto>());
+                    return result;
+                }
+
+                lat = double.Parse(address.Latitude, System.Globalization.CultureInfo.InvariantCulture);
+                lng = double.Parse(address.Longitude, System.Globalization.CultureInfo.InvariantCulture);
+            }
 
             if (lat < 36.0 || lat > 42.0 || lng < 26.0 || lng > 45.0)
             {
@@ -140,6 +151,7 @@ public class RestaurantManager : IRestaurantService
             const string query = @"
         SELECT 
             r.`Id`,
+            r.`SellerId`,
             r.`Name`,
             r.`Description`,
             r.`CoverImage` AS ImageUrl,

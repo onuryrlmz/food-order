@@ -16,12 +16,12 @@ public class CustomerRestaurantController : BaseController
     public CustomerRestaurantController(IRestaurantService restaurantService) => _restaurantService = restaurantService;
 
     [HttpGet]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(false, false)]
     public async Task<ServiceCollectionResult<GetRestaurantsResponseDto>> GetList([FromQuery] GetRestaurantsRequestDto requestDto)
         => await _restaurantService.GetRestaurants(requestDto);
 
     [HttpGet("{id}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(false, false)]
     public async Task<ServiceObjectResult<string>> GetInfo(Guid id)
         => await _restaurantService.GetRestaurantInfo(new GetRestaurantInformationRequestDto { Id = id });
 }

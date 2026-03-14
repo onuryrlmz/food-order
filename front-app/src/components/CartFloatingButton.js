@@ -1,16 +1,21 @@
 import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing} from '../theme';
 import {useCart} from '../context/CartContext';
 
 const CartFloatingButton = ({onPress}) => {
   const {cart, itemCount} = useCart();
+  const insets = useSafeAreaInsets();
 
   if (!cart || itemCount === 0) return null;
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.9}>
+    <TouchableOpacity
+      style={[styles.container, {bottom: Math.max(insets.bottom, 12) + 12}]}
+      onPress={onPress}
+      activeOpacity={0.9}>
       <View style={styles.left}>
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{itemCount}</Text>
@@ -25,7 +30,6 @@ const CartFloatingButton = ({onPress}) => {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 24,
     left: Spacing.base,
     right: Spacing.base,
     backgroundColor: Colors.primary,

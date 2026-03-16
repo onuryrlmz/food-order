@@ -101,18 +101,41 @@ public class RestaurantManager : IRestaurantService
                 return result;
             }
 
-            var gridId = GetGridId(lat, lng);
+            var hasFilters = !string.IsNullOrWhiteSpace(requestRequestDto.Search)
+                             || requestRequestDto.CuisineId.HasValue
+                             || requestRequestDto.MinRating.HasValue
+                             || requestRequestDto.MaxMinOrder.HasValue
+                             || requestRequestDto.IsOpen.HasValue
+                             || requestRequestDto.SortBy != null
+                             || requestRequestDto.Page > 1;
 
-            var cachedJson = await _redisService.GetValueAsync<string>(gridId);
             var restaurantList = new List<GetRestaurantsResponseDto>();
 
-            if (!string.IsNullOrEmpty(cachedJson))
+            if (!hasFilters)
             {
-                restaurantList = JsonConvert.DeserializeObject<List<GetRestaurantsResponseDto>>(cachedJson);
+                var gridId = GetGridId(lat, lng);
+                var cachedJson = await _redisService.GetValueAsync<string>(gridId);
+
+                if (!string.IsNullOrEmpty(cachedJson))
+                {
+                    restaurantList = JsonConvert.DeserializeObject<List<GetRestaurantsResponseDto>>(cachedJson);
+                }
+                else
+                {
+                    var resultPolygon = await GetRestaurantsByPolygon(lat, lng, requestRequestDto);
+                    if (resultPolygon.HasFailed)
+                    {
+                        result.Fail(resultPolygon.Messages);
+                        return result;
+                    }
+
+                    restaurantList = resultPolygon.Data;
+                    await _redisService.SetValueAsync(gridId, JsonConvert.SerializeObject(restaurantList), TimeSpan.FromMinutes(15));
+                }
             }
             else
             {
-                var resultPolygon = await GetRestaurantsByPolygon(lat, lng);
+                var resultPolygon = await GetRestaurantsByPolygon(lat, lng, requestRequestDto);
                 if (resultPolygon.HasFailed)
                 {
                     result.Fail(resultPolygon.Messages);
@@ -120,7 +143,6 @@ public class RestaurantManager : IRestaurantService
                 }
 
                 restaurantList = resultPolygon.Data;
-                await _redisService.SetValueAsync(gridId, JsonConvert.SerializeObject(restaurantList), TimeSpan.FromMinutes(15));
             }
 
             result.SetData(restaurantList);
@@ -143,13 +165,68 @@ public class RestaurantManager : IRestaurantService
         return $"grid_{latIndex}_{lngIndex}";
     }
 
-    private async Task<ServiceCollectionResult<GetRestaurantsResponseDto>> GetRestaurantsByPolygon(double lat, double lng)
+    private async Task<ServiceCollectionResult<GetRestaurantsResponseDto>> GetRestaurantsByPolygon(double lat, double lng, GetRestaurantsRequestDto? filters = null)
     {
         var result = new ServiceCollectionResult<GetRestaurantsResponseDto>();
         try
         {
-            const string query = @"
-        SELECT 
+            var whereClauses = new List<string>
+            {
+                "r.`ServiceAreaPolygonWkt` IS NOT NULL",
+                "ST_Contains(ST_GeomFromText(r.`ServiceAreaPolygonWkt`), ST_GeomFromText(CONCAT('POINT(', @lng, ' ', @lat, ')')))",
+                "r.`IsActive` = 1",
+                "r.`DeletedDate` IS NULL"
+            };
+
+            var parameters = new DynamicParameters();
+            parameters.Add("lat", lat);
+            parameters.Add("lng", lng);
+
+            if (filters != null)
+            {
+                if (!string.IsNullOrWhiteSpace(filters.Search))
+                {
+                    whereClauses.Add("r.`Name` LIKE @search");
+                    parameters.Add("search", $"%{filters.Search}%");
+                }
+                if (filters.MinRating.HasValue)
+                {
+                    whereClauses.Add("r.`Rating` >= @minRating");
+                    parameters.Add("minRating", filters.MinRating.Value);
+                }
+                if (filters.MaxMinOrder.HasValue)
+                {
+                    whereClauses.Add("r.`MinimumOrderPrice` <= @maxMinOrder");
+                    parameters.Add("maxMinOrder", filters.MaxMinOrder.Value);
+                }
+                if (filters.IsOpen.HasValue)
+                {
+                    whereClauses.Add("r.`IsOpen` = @isOpen");
+                    parameters.Add("isOpen", filters.IsOpen.Value);
+                }
+            }
+
+            var orderBy = "r.`Rating` DESC";
+            if (filters?.SortBy != null)
+            {
+                orderBy = filters.SortBy switch
+                {
+                    "rating" => "r.`Rating` DESC",
+                    "minOrder" => "r.`MinimumOrderPrice` ASC",
+                    "deliveryTime" => "r.`MinDeliveryTime` ASC",
+                    "name" => "r.`Name` ASC",
+                    _ => "r.`Rating` DESC"
+                };
+            }
+
+            var page = filters?.Page ?? 1;
+            var pageSize = Math.Min(filters?.PageSize ?? 50, 100);
+            var offset = (page - 1) * pageSize;
+            parameters.Add("pageSize", pageSize);
+            parameters.Add("offset", offset);
+
+            var query = $@"
+        SELECT
             r.`Id`,
             r.`SellerId`,
             r.`Name`,
@@ -160,24 +237,16 @@ public class RestaurantManager : IRestaurantService
             r.`MinDeliveryTime`,
             r.`MaxDeliveryTime`
         FROM `Restaurant` r
-        WHERE 
-            r.`ServiceAreaPolygonWkt` IS NOT NULL
-            AND ST_Contains(
-                ST_GeomFromText(r.`ServiceAreaPolygonWkt`),
-                ST_GeomFromText(CONCAT('POINT(', @lng, ' ', @lat, ')'))
-            )
-            AND r.`IsActive` = 1
-            AND r.`DeletedDate` IS NULL
+        WHERE {string.Join(" AND ", whereClauses)}
+        ORDER BY {orderBy}
+        LIMIT @pageSize OFFSET @offset
     ";
 
             var conn = _context.Database.GetDbConnection();
             if (conn.State != ConnectionState.Open)
                 await conn.OpenAsync();
 
-            var restaurants = (await conn.QueryAsync<GetRestaurantsResponseDto>(
-                query,
-                new { lat, lng }
-            )).ToList();
+            var restaurants = (await conn.QueryAsync<GetRestaurantsResponseDto>(query, parameters)).ToList();
 
             if (restaurants.Count > 0)
             {

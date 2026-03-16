@@ -35,6 +35,12 @@ public sealed class BaseDbContext : DbContext
     // Courier
     public DbSet<RestaurantCourier> RestaurantCouriers { get; set; }
     public DbSet<CourierLocation> CourierLocations { get; set; }
+    public DbSet<CourierCompany> CourierCompanies { get; set; }
+    public DbSet<CourierCompanyMember> CourierCompanyMembers { get; set; }
+    public DbSet<RestaurantCourierCompany> RestaurantCourierCompanies { get; set; }
+
+    // Seller - Subscription
+    public DbSet<SubscriptionUsage> SubscriptionUsages { get; set; }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())
     {

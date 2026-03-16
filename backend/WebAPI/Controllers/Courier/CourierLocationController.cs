@@ -17,7 +17,9 @@ public class CourierLocationController : BaseController
         => _courierLocationService = courierLocationService;
 
     [HttpPost("location")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Courier)]
+    [AuthorizeAPIRequest(true, false,
+        AuthorizationServiceEnums.UserRoleEnums.Courier,
+        AuthorizationServiceEnums.UserRoleEnums.CourierCompanyAdmin)]
     public async Task<ServiceObjectResult<bool>> UpdateLocation([FromBody] UpdateLocationRequestDto request)
         => await _courierLocationService.UpdateLocationAsync(Client!._tokenDto!.UserId, request.Latitude, request.Longitude, request.OrderId);
 }

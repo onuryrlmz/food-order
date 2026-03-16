@@ -17,12 +17,16 @@ public class CourierOrderController : BaseController
     public CourierOrderController(ICourierOrderService courierOrderService) => _courierOrderService = courierOrderService;
 
     [HttpGet("active")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Courier)]
+    [AuthorizeAPIRequest(true, false,
+        AuthorizationServiceEnums.UserRoleEnums.Courier,
+        AuthorizationServiceEnums.UserRoleEnums.CourierCompanyAdmin)]
     public async Task<ServiceCollectionResult<CourierOrderDto>> GetActiveOrders()
         => await _courierOrderService.GetActiveOrdersAsync(Client!._tokenDto!.UserId);
 
     [HttpGet("history")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Courier)]
+    [AuthorizeAPIRequest(true, false,
+        AuthorizationServiceEnums.UserRoleEnums.Courier,
+        AuthorizationServiceEnums.UserRoleEnums.CourierCompanyAdmin)]
     public async Task<ServiceCollectionResult<CourierOrderDto>> GetHistory(
         [FromQuery] int month,
         [FromQuery] int year)

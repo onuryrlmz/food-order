@@ -20,6 +20,8 @@ import { useToast } from '../../context/ToastContext';
 import MenuItemCard from '../../components/MenuItemCard';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import MenuOptionModal from '../../components/MenuOptionModal';
+import ReviewList from '../../components/ReviewList';
+import {favoriteService} from '../../api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const COVER_HEIGHT = 240;
@@ -43,6 +45,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [pendingCartAction, setPendingCartAction] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFavorite, setIsFavorite] = useState(false);
   const mainScrollRef = useRef(null);
   const tabScrollRef = useRef(null);
   const sectionLayouts = useRef({});
@@ -154,6 +157,21 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
       name: restaurantName,
       imageUrl: coverImage,
     });
+  };
+
+  const toggleFavorite = async () => {
+    if (!isAuthenticated) return;
+    try {
+      if (isFavorite) {
+        await favoriteService.removeFavorite(restaurantId);
+        setIsFavorite(false);
+      } else {
+        await favoriteService.addFavorite(restaurantId);
+        setIsFavorite(true);
+      }
+    } catch (e) {
+      // silently fail
+    }
   };
 
   const handleInfoCardLayout = useCallback((event) => {
@@ -421,6 +439,9 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
             </View>
           )}
         </View>
+
+        {/* Reviews Section */}
+        {!isSearching && <ReviewList restaurantId={restaurantId} />}
       </ScrollView>
 
       {/* Sticky Header Overlay */}
@@ -434,8 +455,8 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
               <Icon name="arrow-left" size={24} color={Colors.text} />
             </TouchableOpacity>
             <View style={styles.headerRight}>
-              <TouchableOpacity style={[styles.headerButton, styles.headerButtonSticky]}>
-                <Icon name="heart-outline" size={24} color={Colors.text} />
+              <TouchableOpacity style={[styles.headerButton, styles.headerButtonSticky]} onPress={toggleFavorite}>
+                <Icon name={isFavorite ? 'heart' : 'heart-outline'} size={24} color={isFavorite ? Colors.primary : Colors.text} />
               </TouchableOpacity>
               <TouchableOpacity style={[styles.headerButton, styles.headerButtonSticky, styles.headerButtonML]}>
                 <Icon name="share-variant-outline" size={24} color={Colors.text} />
@@ -463,8 +484,8 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
             <Icon name="arrow-left" size={24} color="#FFF" />
           </TouchableOpacity>
           <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.headerButton}>
-              <Icon name="heart-outline" size={24} color="#FFF" />
+            <TouchableOpacity style={styles.headerButton} onPress={toggleFavorite}>
+              <Icon name={isFavorite ? 'heart' : 'heart-outline'} size={24} color={isFavorite ? Colors.primary : '#FFF'} />
             </TouchableOpacity>
             <TouchableOpacity style={[styles.headerButton, styles.headerButtonML]}>
               <Icon name="share-variant-outline" size={24} color="#FFF" />

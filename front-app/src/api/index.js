@@ -4,4 +4,6 @@ export {basketService} from './basketService';
 export {orderService} from './orderService';
 export {addressService} from './addressService';
 export {cuisineService} from './cuisineService';
+export {reviewService} from './reviewService';
+export {favoriteService} from './favoriteService';
 export {default as apiClient} from './client';

@@ -94,15 +94,30 @@ export const verifyResetCode = (emailOrPhone, code) =>
 export const resetPassword = (emailOrPhone, code, newPassword) =>
   api.post('/v1/auth/reset-password', { emailOrPhone, code, newPassword }).then(r => r.data);
 
-// Analytics
-export const getAdminAnalytics = (period = 'month') =>
-  api.get(`/v1/admin/analytics?period=${period}`).then(r => r.data);
+// Analytics — period → startDate/endDate conversion
+function periodToDates(period) {
+  const end = new Date();
+  const start = new Date();
+  if (period === 'week') start.setDate(end.getDate() - 7);
+  else if (period === 'year') start.setFullYear(end.getFullYear() - 1);
+  else start.setMonth(end.getMonth() - 1);
+  return { startDate: start.toISOString().split('T')[0], endDate: end.toISOString().split('T')[0] };
+}
 
-export const getAdminOrderTrends = (period = 'month') =>
-  api.get(`/v1/admin/analytics/orders?period=${period}`).then(r => r.data);
+export const getAdminAnalytics = (period = 'month') => {
+  const { startDate, endDate } = periodToDates(period);
+  return api.get(`/v1/admin/analytics/summary?startDate=${startDate}&endDate=${endDate}`).then(r => r.data);
+};
 
-export const getAdminTopRestaurants = (period = 'month') =>
-  api.get(`/v1/admin/analytics/top-restaurants?period=${period}`).then(r => r.data);
+export const getAdminOrderTrends = (period = 'month') => {
+  const { startDate, endDate } = periodToDates(period);
+  return api.get(`/v1/admin/analytics/trends?startDate=${startDate}&endDate=${endDate}`).then(r => r.data);
+};
+
+export const getAdminTopRestaurants = (period = 'month', limit = 10) => {
+  const { startDate, endDate } = periodToDates(period);
+  return api.get(`/v1/admin/analytics/top-restaurants?startDate=${startDate}&endDate=${endDate}&limit=${limit}`).then(r => r.data);
+};
 
 // Overdue Orders
 export const getOverdueOrders = (page = 1) =>

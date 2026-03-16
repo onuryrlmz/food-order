@@ -128,15 +128,30 @@ export const verifyResetCode = (emailOrPhone, code) =>
 export const resetPassword = (emailOrPhone, code, newPassword) =>
   api.post('/v1/auth/reset-password', { emailOrPhone, code, newPassword }).then(r => r.data);
 
-// Analytics
-export const getSellerAnalytics = (restaurantId, period = 'month') =>
-  api.get(`/v1/seller/analytics?restaurantId=${restaurantId}&period=${period}`).then(r => r.data);
+// Analytics — period → startDate/endDate conversion
+function periodToDates(period) {
+  const end = new Date();
+  const start = new Date();
+  if (period === 'week') start.setDate(end.getDate() - 7);
+  else if (period === 'year') start.setFullYear(end.getFullYear() - 1);
+  else start.setMonth(end.getMonth() - 1);
+  return { startDate: start.toISOString().split('T')[0], endDate: end.toISOString().split('T')[0] };
+}
 
-export const getSellerOrderTrends = (restaurantId, period = 'month') =>
-  api.get(`/v1/seller/analytics/orders?restaurantId=${restaurantId}&period=${period}`).then(r => r.data);
+export const getSellerAnalytics = (restaurantId, period = 'month') => {
+  const { startDate, endDate } = periodToDates(period);
+  return api.get(`/v1/seller/analytics/summary/${restaurantId}?startDate=${startDate}&endDate=${endDate}`).then(r => r.data);
+};
 
-export const getSellerTopProducts = (restaurantId, period = 'month') =>
-  api.get(`/v1/seller/analytics/top-products?restaurantId=${restaurantId}&period=${period}`).then(r => r.data);
+export const getSellerOrderTrends = (restaurantId, period = 'month') => {
+  const { startDate, endDate } = periodToDates(period);
+  return api.get(`/v1/seller/analytics/trends/${restaurantId}?startDate=${startDate}&endDate=${endDate}`).then(r => r.data);
+};
+
+export const getSellerTopProducts = (restaurantId, period = 'month', limit = 10) => {
+  const { startDate, endDate } = periodToDates(period);
+  return api.get(`/v1/seller/analytics/top-products/${restaurantId}?startDate=${startDate}&endDate=${endDate}&limit=${limit}`).then(r => r.data);
+};
 
 // Image Upload
 export const uploadProductImage = (productId, file) => {

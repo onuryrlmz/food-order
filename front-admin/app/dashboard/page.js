@@ -98,7 +98,7 @@ export default function DashboardPage() {
             {[
               { label: 'Aylik Siparis', value: analytics.totalOrders ?? '—', color: 'orange' },
               { label: 'Aylik Gelir', value: analytics.totalRevenue != null ? `₺${Number(analytics.totalRevenue).toFixed(0)}` : '—', color: 'green' },
-              { label: 'Ort. Siparis', value: analytics.avgOrderValue != null ? `₺${Number(analytics.avgOrderValue).toFixed(0)}` : '—', color: 'blue' },
+              { label: 'Ort. Siparis', value: analytics.averageOrderValue != null ? `₺${Number(analytics.averageOrderValue).toFixed(0)}` : '—', color: 'blue' },
               { label: 'Aktif Musteri', value: analytics.uniqueCustomers ?? '—', color: 'purple' },
             ].map(s => (
               <StatCard
@@ -121,11 +121,11 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
               <h3 className="font-semibold text-gray-800 mb-4">Siparis Trendi (Aylik)</h3>
-              <MiniBarChart data={trends} valueKey="orderCount" labelKey="label" color="#f97316" />
+              <MiniBarChart data={trends} valueKey="orderCount" labelKey="date" color="#f97316" />
             </div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
               <h3 className="font-semibold text-gray-800 mb-4">Gelir Trendi (Aylik)</h3>
-              <MiniBarChart data={trends} valueKey="revenue" labelKey="label" color="#10b981" />
+              <MiniBarChart data={trends} valueKey="revenue" labelKey="date" color="#10b981" />
             </div>
           </div>
         )}

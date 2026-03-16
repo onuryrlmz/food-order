@@ -170,6 +170,30 @@ export const rejectRestaurantInvite = async id => {
   return res.data;
 };
 
+// --- Earnings APIs ---
+
+export const getEarnings = async (period = 'daily') => {
+  const res = await apiClient.get(`/v1/courier/earnings?period=${period}`);
+  return res.data;
+};
+
+export const getEarningsHistory = async (period = 'daily') => {
+  const res = await apiClient.get(`/v1/courier/earnings/history?period=${period}`);
+  return res.data;
+};
+
+// --- Status APIs ---
+
+export const getCourierStatus = async () => {
+  const res = await apiClient.get('/v1/courier/status');
+  return res.data;
+};
+
+export const updateCourierStatus = async (statusId) => {
+  const res = await apiClient.put('/v1/courier/status', {courierStatusId: statusId});
+  return res.data;
+};
+
 // --- Pickup & Delivery APIs ---
 
 export const getPendingPickups = async (restaurantId, page = 1, size = 20) => {

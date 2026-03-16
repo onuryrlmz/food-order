@@ -69,7 +69,7 @@ export default function AnalyticsPage() {
   const summaryCards = [
     { label: 'Toplam Siparis', value: summary?.totalOrders ?? '—', color: 'bg-blue-500' },
     { label: 'Toplam Gelir', value: summary?.totalRevenue != null ? `₺${Number(summary.totalRevenue).toFixed(2)}` : '—', color: 'bg-emerald-500' },
-    { label: 'Ort. Siparis Tutari', value: summary?.avgOrderValue != null ? `₺${Number(summary.avgOrderValue).toFixed(2)}` : '—', color: 'bg-purple-500' },
+    { label: 'Ort. Siparis Tutari', value: summary?.averageOrderValue != null ? `₺${Number(summary.averageOrderValue).toFixed(2)}` : '—', color: 'bg-purple-500' },
     { label: 'Tekil Musteri', value: summary?.uniqueCustomers ?? '—', color: 'bg-orange-500' },
   ];
 
@@ -125,13 +125,13 @@ export default function AnalyticsPage() {
               {/* Order Trend Chart */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                 <h2 className="font-semibold text-gray-800 mb-4">Siparis Trendi</h2>
-                <MiniBarChart data={trends} valueKey="orderCount" labelKey="label" color="emerald" />
+                <MiniBarChart data={trends} valueKey="orderCount" labelKey="date" color="emerald" />
               </div>
 
               {/* Revenue Trend Chart */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                 <h2 className="font-semibold text-gray-800 mb-4">Gelir Trendi</h2>
-                <MiniBarChart data={trends} valueKey="revenue" labelKey="label" color="blue" />
+                <MiniBarChart data={trends} valueKey="revenue" labelKey="date" color="blue" />
               </div>
             </div>
 
@@ -153,10 +153,10 @@ export default function AnalyticsPage() {
                     </thead>
                     <tbody className="divide-y divide-gray-50">
                       {topProducts.map((p, i) => (
-                        <tr key={p.productId || i} className="hover:bg-gray-50">
+                        <tr key={p.menuId || i} className="hover:bg-gray-50">
                           <td className="px-4 py-3 text-gray-400 font-medium">{i + 1}</td>
-                          <td className="px-4 py-3 font-medium text-gray-800">{p.productName}</td>
-                          <td className="px-4 py-3 text-right">{p.totalQuantity}</td>
+                          <td className="px-4 py-3 font-medium text-gray-800">{p.menuName}</td>
+                          <td className="px-4 py-3 text-right">{p.orderCount}</td>
                           <td className="px-4 py-3 text-right font-semibold text-emerald-600">₺{Number(p.totalRevenue || 0).toFixed(2)}</td>
                         </tr>
                       ))}

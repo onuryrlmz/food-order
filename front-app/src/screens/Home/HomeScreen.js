@@ -19,6 +19,7 @@ import SearchBar from '../../components/SearchBar';
 import CuisineFilter from '../../components/CuisineFilter';
 import EmptyState from '../../components/EmptyState';
 import ActiveOrderBanner, {ActiveOrdersSummary} from '../../components/ActiveOrderBanner';
+import FilterModal from '../../components/FilterModal';
 import {orderService} from '../../api';
 
 const HomeScreen = ({navigation}) => {
@@ -31,6 +32,8 @@ const HomeScreen = ({navigation}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [activeOrders, setActiveOrders] = useState([]);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({});
 
   const loadActiveOrders = useCallback(async () => {
     if (!isAuthenticated) {
@@ -59,7 +62,7 @@ const HomeScreen = ({navigation}) => {
 
   useEffect(() => {
     filterRestaurants();
-  }, [searchQuery, selectedCuisine, restaurants]);
+  }, [searchQuery, selectedCuisine, restaurants, activeFilters]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -86,8 +89,41 @@ const HomeScreen = ({navigation}) => {
         );
       }
     }
+    // Apply advanced filters
+    if (activeFilters.cuisineId) {
+      const cuisine = cuisines.find(c => c.id === activeFilters.cuisineId);
+      if (cuisine) {
+        filtered = filtered.filter(r =>
+          r.categories?.some(c => c.toLowerCase().includes(cuisine.name.toLowerCase())),
+        );
+      }
+    }
+    if (activeFilters.minRating) {
+      filtered = filtered.filter(r => (r.rating || 0) >= activeFilters.minRating);
+    }
+    if (activeFilters.sortBy) {
+      switch (activeFilters.sortBy) {
+        case 'rating':
+          filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+          break;
+        case 'delivery_time':
+          filtered.sort((a, b) => (a.minDeliveryTime || 0) - (b.minDeliveryTime || 0));
+          break;
+        case 'min_order':
+          filtered.sort((a, b) => (a.minBasketPrice || 0) - (b.minBasketPrice || 0));
+          break;
+      }
+    }
     setFilteredRestaurants(filtered);
   };
+
+  const handleApplyFilters = (filters) => {
+    setActiveFilters(filters);
+  };
+
+  const filterCount = (activeFilters.cuisineId ? 1 : 0) +
+    (activeFilters.minRating ? 1 : 0) +
+    (activeFilters.sortBy ? 1 : 0);
 
   return (
     <View style={[styles.container, {paddingTop: insets.top}]}>
@@ -151,9 +187,18 @@ const HomeScreen = ({navigation}) => {
             ? cuisines.find(c => c.id === selectedCuisine)?.name || 'Restoranlar'
             : 'Yakınındaki Restoranlar'}
         </Text>
-        <Text style={styles.resultCount}>
-          {filteredRestaurants.length} restoran
-        </Text>
+        <View style={styles.sectionHeaderRight}>
+          <TouchableOpacity
+            style={[styles.filterButton, filterCount > 0 && styles.filterButtonActive]}
+            onPress={() => setFilterModalVisible(true)}
+          >
+            <Icon name="tune-variant" size={18} color={filterCount > 0 ? '#FFF' : Colors.textSecondary} />
+            {filterCount > 0 && <Text style={styles.filterBadge}>{filterCount}</Text>}
+          </TouchableOpacity>
+          <Text style={styles.resultCount}>
+            {filteredRestaurants.length} restoran
+          </Text>
+        </View>
       </View>
 
       <FlatList
@@ -183,6 +228,14 @@ const HomeScreen = ({navigation}) => {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+      />
+
+      <FilterModal
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        onApply={handleApplyFilters}
+        cuisines={cuisines}
+        initialFilters={activeFilters}
       />
     </View>
   );
@@ -264,6 +317,37 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sizes.lg,
     fontWeight: Fonts.weights.bold,
     color: Colors.text,
+  },
+  sectionHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  filterButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: Colors.borderLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterButtonActive: {
+    backgroundColor: Colors.primary,
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: Colors.error,
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '700',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    textAlign: 'center',
+    lineHeight: 16,
+    overflow: 'hidden',
   },
   resultCount: {
     fontSize: Fonts.sizes.sm,

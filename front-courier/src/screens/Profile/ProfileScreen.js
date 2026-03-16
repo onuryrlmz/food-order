@@ -16,6 +16,8 @@ import {
   getProfile,
   updateProfile,
   changePassword,
+  getCourierStatus,
+  updateCourierStatus,
 } from '../../api/courierService';
 
 export default function ProfileScreen() {
@@ -30,6 +32,9 @@ export default function ProfileScreen() {
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
 
+  const [isOnline, setIsOnline] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(false);
+
   const [pwdModal, setPwdModal] = useState(false);
   const [currentPwd, setCurrentPwd] = useState('');
   const [newPwd, setNewPwd] = useState('');
@@ -38,12 +43,19 @@ export default function ProfileScreen() {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const result = await getProfile();
-      if (!result.hasFailed && result.data) {
-        setProfile(result.data);
-        setFirstName(result.data.firstName || '');
-        setLastName(result.data.lastName || '');
-        setPhoneNumber(result.data.phoneNumber || '');
+      const [profileResult, statusResult] = await Promise.all([
+        getProfile(),
+        getCourierStatus().catch(() => null),
+      ]);
+      if (!profileResult.hasFailed && profileResult.data) {
+        setProfile(profileResult.data);
+        setFirstName(profileResult.data.firstName || '');
+        setLastName(profileResult.data.lastName || '');
+        setPhoneNumber(profileResult.data.phoneNumber || '');
+      }
+      if (statusResult && !statusResult.hasFailed && statusResult.data) {
+        // statusId: 1=Offline, 2=Online, 3=OnDelivery
+        setIsOnline(statusResult.data.courierStatusId === 2 || statusResult.data.courierStatusId === 3);
       }
     } catch (e) {
       console.error('Profile fetch error:', e);
@@ -118,6 +130,23 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleToggleStatus = async () => {
+    setStatusLoading(true);
+    try {
+      const newStatusId = isOnline ? 1 : 2; // 1=Offline, 2=Online
+      const result = await updateCourierStatus(newStatusId);
+      if (!result.hasFailed) {
+        setIsOnline(!isOnline);
+      } else {
+        Alert.alert('Hata', result.messages?.[0]?.description || 'Durum guncellenemedi');
+      }
+    } catch (e) {
+      Alert.alert('Hata', 'Durum guncellenirken bir hata olustu.');
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     Alert.alert('Çıkış', 'Çıkış yapmak istediğinize emin misiniz?', [
       {text: 'İptal', style: 'cancel'},
@@ -141,6 +170,32 @@ export default function ProfileScreen() {
           <MaterialCommunityIcons name="account" size={40} color="#FF6B00" />
         </View>
         <Text style={styles.email}>{profile?.email || '-'}</Text>
+      </View>
+
+      {/* Online/Offline Toggle */}
+      <View style={styles.card}>
+        <View style={styles.statusRow}>
+          <View style={styles.statusInfo}>
+            <View style={[styles.statusDot, {backgroundColor: isOnline ? '#34C759' : '#ccc'}]} />
+            <Text style={styles.statusText}>
+              {isOnline ? 'Cevrimici' : 'Cevrimdisi'}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.statusToggle, isOnline && styles.statusToggleActive]}
+            onPress={handleToggleStatus}
+            disabled={statusLoading}
+            activeOpacity={0.8}
+          >
+            {statusLoading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.statusToggleText}>
+                {isOnline ? 'Cevrimdisi Ol' : 'Cevrimici Ol'}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Profile Info */}
@@ -440,5 +495,39 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     marginBottom: 16,
     textAlign: 'center',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statusInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 8,
+  },
+  statusText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+  },
+  statusToggle: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: '#34C759',
+  },
+  statusToggleActive: {
+    backgroundColor: '#dc3545',
+  },
+  statusToggleText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
   },
 });

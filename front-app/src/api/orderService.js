@@ -21,4 +21,7 @@ export const orderService = {
 
   getCourierLocation: (orderId) =>
     apiClient.get(`/v1/customer/order/${orderId}/courier-location`),
+
+  reorder: (orderId) =>
+    apiClient.post(`/customer/order/${orderId}/reorder`),
 };

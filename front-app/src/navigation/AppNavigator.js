@@ -35,6 +35,7 @@ import ChangePasswordScreen from '../screens/Profile/ChangePasswordScreen';
 import AddressListScreen from '../screens/Profile/AddressListScreen';
 import AddAddressScreen from '../screens/Profile/AddAddressScreen';
 import SavedCardsScreen from '../screens/Profile/SavedCardsScreen';
+import FavoritesScreen from '../screens/Profile/FavoritesScreen';
 import ThreeDsWebViewScreen from '../screens/Payment/ThreeDsWebViewScreen';
 
 const Stack = createNativeStackNavigator();
@@ -67,6 +68,7 @@ const ProfileStackNavigator = () => (
     <ProfileStack.Screen name="AddressList" component={AddressListScreen} />
     <ProfileStack.Screen name="AddAddress" component={AddAddressScreen} />
     <ProfileStack.Screen name="SavedCards" component={SavedCardsScreen} />
+    <ProfileStack.Screen name="Favorites" component={FavoritesScreen} />
     <ProfileStack.Screen name="OrderHistory" component={OrderHistoryScreen} />
     <ProfileStack.Screen name="OrderDetail" component={OrderDetailScreen} />
   </ProfileStack.Navigator>
@@ -198,6 +200,7 @@ const AppNavigator = () => {
         <Stack.Screen name="OrderHistory" component={OrderHistoryScreen} />
         <Stack.Screen name="AddressList" component={AddressListScreen} />
         <Stack.Screen name="AddAddress" component={AddAddressScreen} />
+        <Stack.Screen name="Favorites" component={FavoritesScreen} />
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       </Stack.Navigator>

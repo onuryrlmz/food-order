@@ -13,11 +13,12 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MapView, {Marker} from 'react-native-maps';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {orderService} from '../../api';
+import {orderService, reviewService} from '../../api';
 import {useToast} from '../../context/ToastContext';
 import {ORDER_STATUS, PAYMENT_OPTIONS} from '../../utils/constants';
 import OrderStatusBadge from '../../components/OrderStatusBadge';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import ReviewModal from '../../components/ReviewModal';
 import {createOrderConnection} from '../../utils/signalr';
 
 const OrderDetailScreen = ({route, navigation}) => {
@@ -27,6 +28,8 @@ const OrderDetailScreen = ({route, navigation}) => {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [courierLocation, setCourierLocation] = useState(null);
+  const [reviewModalVisible, setReviewModalVisible] = useState(false);
+  const [reordering, setReordering] = useState(false);
 
   const connectionRef = useRef(null);
 
@@ -146,7 +149,44 @@ const OrderDetailScreen = ({route, navigation}) => {
     return `${day}.${month}.${year} ${hours}:${minutes}`;
   };
 
+  const handleReviewSubmit = async ({rating, comment}) => {
+    try {
+      const res = await reviewService.createReview({
+        orderId,
+        restaurantId: order.restaurantId,
+        rating,
+        comment,
+      });
+      if (res.data && !res.data.hasFailed) {
+        showToast('Degerlendirmeniz kaydedildi', 'success');
+      } else {
+        showToast(res.data?.messages?.[0]?.description || 'Degerlendirme gonderilemedi', 'error');
+      }
+    } catch (e) {
+      showToast('Degerlendirme gonderilemedi', 'error');
+      throw e;
+    }
+  };
+
+  const handleReorder = async () => {
+    setReordering(true);
+    try {
+      const res = await orderService.reorder(orderId);
+      if (res.data && !res.data.hasFailed) {
+        showToast('Urunler sepete eklendi', 'success');
+        navigation.navigate('CartTab');
+      } else {
+        showToast(res.data?.messages?.[0]?.description || 'Tekrar siparis verilemedi', 'error');
+      }
+    } catch (e) {
+      showToast('Tekrar siparis verilemedi', 'error');
+    } finally {
+      setReordering(false);
+    }
+  };
+
   const canCancel = order && (order.statusId === 1 || order.statusId === 2);
+  const isDelivered = order && order.statusId === 8;
 
   if (loading) {
     return <LoadingSpinner message="Sipariş detayı yükleniyor..." />;
@@ -400,6 +440,34 @@ const OrderDetailScreen = ({route, navigation}) => {
           )}
         </View>
 
+        {isDelivered && (
+          <View style={styles.deliveredActions}>
+            <TouchableOpacity
+              style={styles.reviewButton}
+              onPress={() => setReviewModalVisible(true)}
+              activeOpacity={0.8}
+            >
+              <Icon name="star-outline" size={20} color={Colors.star} />
+              <Text style={styles.reviewButtonText}>Degerlendir</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.reorderButton}
+              onPress={handleReorder}
+              activeOpacity={0.8}
+              disabled={reordering}
+            >
+              {reordering ? (
+                <ActivityIndicator color="#FFF" size="small" />
+              ) : (
+                <>
+                  <Icon name="refresh" size={20} color="#FFF" />
+                  <Text style={styles.reorderButtonText}>Tekrar Siparis</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+
         {canCancel && (
           <TouchableOpacity
             style={styles.cancelButton}
@@ -418,6 +486,13 @@ const OrderDetailScreen = ({route, navigation}) => {
           </TouchableOpacity>
         )}
       </ScrollView>
+
+      <ReviewModal
+        visible={reviewModalVisible}
+        onClose={() => setReviewModalVisible(false)}
+        onSubmit={handleReviewSubmit}
+        restaurantName={order?.restaurantName}
+      />
     </View>
   );
 };
@@ -793,6 +868,44 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: Fonts.sizes.sm,
     fontWeight: Fonts.weights.bold,
+  },
+  deliveredActions: {
+    flexDirection: 'row',
+    marginHorizontal: Spacing.base,
+    marginTop: Spacing.lg,
+    gap: 10,
+  },
+  reviewButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: '#FFF9E6',
+    borderWidth: 1,
+    borderColor: Colors.star + '30',
+  },
+  reviewButtonText: {
+    fontSize: Fonts.sizes.md,
+    fontWeight: Fonts.weights.bold,
+    color: '#B8860B',
+    marginLeft: 6,
+  },
+  reorderButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.primary,
+  },
+  reorderButtonText: {
+    fontSize: Fonts.sizes.md,
+    fontWeight: Fonts.weights.bold,
+    color: '#FFF',
+    marginLeft: 6,
   },
 });
 

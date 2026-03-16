@@ -63,6 +63,13 @@ const ProfileScreen = ({navigation}) => {
       color: Colors.success,
     },
     {
+      icon: 'heart-outline',
+      label: 'Favorilerim',
+      subtitle: 'Favori restoranlarinizi goruntuleyin',
+      onPress: () => navigation.navigate('Favorites'),
+      color: Colors.primary,
+    },
+    {
       icon: 'credit-card-outline',
       label: 'Kayıtlı Kartlarım',
       subtitle: 'Ödeme kartlarınızı yönetin',

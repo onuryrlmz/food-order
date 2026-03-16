@@ -14,6 +14,7 @@ import PickupScreen from '../screens/Orders/PickupScreen';
 import OrderMapScreen from '../screens/Orders/OrderMapScreen';
 import MyRestaurantsScreen from '../screens/Restaurants/MyRestaurantsScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
+import EarningsScreen from '../screens/Earnings/EarningsScreen';
 import CompanyRegistrationScreen from '../screens/Company/CompanyRegistrationScreen';
 import CompanyDashboardScreen from '../screens/Company/CompanyDashboardScreen';
 import MemberManagementScreen from '../screens/Company/MemberManagementScreen';
@@ -127,6 +128,22 @@ function MainTabs() {
           tabBarIcon: ({color, size}) => (
             <MaterialCommunityIcons
               name="history"
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Earnings"
+        component={EarningsScreen}
+        options={{
+          headerShown: true,
+          headerTitle: 'Kazanclarim',
+          tabBarLabel: 'Kazanc',
+          tabBarIcon: ({color, size}) => (
+            <MaterialCommunityIcons
+              name="cash-multiple"
               color={color}
               size={size}
             />

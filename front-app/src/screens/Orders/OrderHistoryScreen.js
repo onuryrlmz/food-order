@@ -11,12 +11,14 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {orderService} from '../../api';
 import {useAuth} from '../../context/AuthContext';
+import {useToast} from '../../context/ToastContext';
 import OrderStatusBadge from '../../components/OrderStatusBadge';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import EmptyState from '../../components/EmptyState';
 
 const OrderHistoryScreen = ({navigation}) => {
   const {isAuthenticated} = useAuth();
+  const {showToast} = useToast();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -60,6 +62,20 @@ const OrderHistoryScreen = ({navigation}) => {
   const onEndReached = () => {
     if (hasMore && !loading) {
       loadOrders(page + 1);
+    }
+  };
+
+  const handleReorder = async (orderId) => {
+    try {
+      const res = await orderService.reorder(orderId);
+      if (res.data && !res.data.hasFailed) {
+        showToast('Urunler sepete eklendi', 'success');
+        navigation.navigate('CartTab');
+      } else {
+        showToast(res.data?.messages?.[0]?.description || 'Tekrar siparis verilemedi', 'error');
+      }
+    } catch (e) {
+      showToast('Tekrar siparis verilemedi', 'error');
     }
   };
 
@@ -113,9 +129,21 @@ const OrderHistoryScreen = ({navigation}) => {
 
       <View style={styles.orderFooter}>
         <Text style={styles.totalPrice}>₺{item.totalPrice?.toFixed(2)}</Text>
-        <View style={styles.detailButton}>
-          <Text style={styles.detailButtonText}>Detay</Text>
-          <Icon name="chevron-right" size={18} color={Colors.primary} />
+        <View style={styles.footerActions}>
+          {item.statusId === 8 && (
+            <TouchableOpacity
+              style={styles.reorderBtn}
+              onPress={() => handleReorder(item.id)}
+              activeOpacity={0.8}
+            >
+              <Icon name="refresh" size={16} color={Colors.primary} />
+              <Text style={styles.reorderBtnText}>Tekrar</Text>
+            </TouchableOpacity>
+          )}
+          <View style={styles.detailButton}>
+            <Text style={styles.detailButtonText}>Detay</Text>
+            <Icon name="chevron-right" size={18} color={Colors.primary} />
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -255,6 +283,25 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sizes.lg,
     fontWeight: Fonts.weights.heavy,
     color: Colors.text,
+  },
+  footerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  reorderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: Colors.primary + '12',
+    gap: 4,
+  },
+  reorderBtnText: {
+    fontSize: Fonts.sizes.sm,
+    color: Colors.primary,
+    fontWeight: Fonts.weights.bold,
   },
   detailButton: {
     flexDirection: 'row',

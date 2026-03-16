@@ -33,6 +33,7 @@ using Application.Services.Courier.CourierCompanyService;
 using Application.Services.Buyer.CardService;
 using Application.Services.Buyer.CouponService;
 using Application.Services.Buyer.PaymentService;
+using Application.Services.Buyer.ReviewService;
 using Application.Services.Common.BackgroundJobs;
 using Base.Constant;
 using FluentValidation;
@@ -115,6 +116,7 @@ public static class ApplicationServiceRegistration
         //Buyer
         services.AddScoped<IBasketService, BasketManager>();
         services.AddScoped<IOrderService, OrderManager>();
+        services.AddScoped<IReviewService, ReviewManager>();
         services.AddScoped<ICardService, CardManager>();
         services.AddScoped<IPaymentService, PaymentManager>();
 

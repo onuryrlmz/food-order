@@ -1,8 +1,11 @@
 using Application.Services.Common.TokenService;
 using Base.Enums;
+using Dapper;
 using Domain.Dto.Seller.Subscription;
 using Domain.Entities.Seller;
 using Domain.Service;
+using Microsoft.EntityFrameworkCore;
+using Persistence.Contexts;
 using Persistence.IRepositories;
 using Persistence.IRepositories.Seller;
 
@@ -13,12 +16,14 @@ public class SubscriptionManager : ISubscriptionService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITokenAccessor _tokenAccessor;
     private readonly IRestaurantRepository _restaurantRepository;
+    private readonly BaseDbContext _context;
 
-    public SubscriptionManager(IUnitOfWork unitOfWork, ITokenAccessor tokenAccessor, IRestaurantRepository restaurantRepository)
+    public SubscriptionManager(IUnitOfWork unitOfWork, ITokenAccessor tokenAccessor, IRestaurantRepository restaurantRepository, BaseDbContext context)
     {
         _unitOfWork = unitOfWork;
         _tokenAccessor = tokenAccessor;
         _restaurantRepository = restaurantRepository;
+        _context = context;
     }
 
     public async Task<ServiceCollectionResult<GetSubscriptionPlanResponseDto>> GetPlans()
@@ -369,6 +374,202 @@ public class SubscriptionManager : ISubscriptionService
             result.Fail(e);
         }
 
+        return result;
+    }
+
+    public async Task<ServiceObjectResult<SubscriptionUsageDto>> GetUsageAsync(Guid sellerId, Guid restaurantId)
+    {
+        var result = new ServiceObjectResult<SubscriptionUsageDto>();
+        try
+        {
+            var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(
+                s => s.RestaurantId == restaurantId && s.SellerId == sellerId &&
+                     s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active);
+
+            if (subscription == null)
+            {
+                result.Fail("Aktif abonelik bulunamadı.");
+                return result;
+            }
+
+            var plan = await _unitOfWork.SubscriptionPlanRepository.GetAsync(p => p.Id == subscription.SubscriptionPlanId);
+            var now = DateTime.UtcNow;
+
+            var usage = await _unitOfWork.SubscriptionUsageRepository.GetAsync(
+                u => u.SubscriptionId == subscription.Id && u.Year == now.Year && u.Month == now.Month);
+
+            var orderCount = usage?.OrderCount ?? 0;
+            var maxOrders = plan?.MaxOrdersPerMonth ?? int.MaxValue;
+            var usagePercent = maxOrders == int.MaxValue ? 0 : (double)orderCount / maxOrders * 100;
+            var remainingDays = Math.Max(0, (int)(subscription.EndDate - now).TotalDays);
+
+            result.SetData(new SubscriptionUsageDto
+            {
+                OrderCount = orderCount,
+                MaxOrdersPerMonth = maxOrders,
+                UsagePercentage = Math.Round(usagePercent, 1),
+                RemainingDays = remainingDays,
+                PlanName = plan?.Name ?? ""
+            });
+        }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+        return result;
+    }
+
+    public async Task<ServiceObjectResult<UpgradePreviewDto>> GetUpgradePreviewAsync(Guid sellerId, Guid restaurantId, Guid targetPlanId)
+    {
+        var result = new ServiceObjectResult<UpgradePreviewDto>();
+        try
+        {
+            var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(
+                s => s.RestaurantId == restaurantId && s.SellerId == sellerId &&
+                     s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active);
+
+            if (subscription == null)
+            {
+                result.Fail("Aktif abonelik bulunamadı.");
+                return result;
+            }
+
+            var currentPlan = await _unitOfWork.SubscriptionPlanRepository.GetAsync(p => p.Id == subscription.SubscriptionPlanId);
+            var targetPlan = await _unitOfWork.SubscriptionPlanRepository.GetAsync(p => p.Id == targetPlanId && p.IsActive);
+
+            if (targetPlan == null)
+            {
+                result.Fail("Hedef plan bulunamadı.");
+                return result;
+            }
+
+            if (targetPlan.MonthlyPrice <= (currentPlan?.MonthlyPrice ?? 0))
+            {
+                result.Fail("Sadece daha yüksek bir plana geçiş yapabilirsiniz.");
+                return result;
+            }
+
+            var now = DateTime.UtcNow;
+            var totalDays = (int)(subscription.EndDate - subscription.StartDate).TotalDays;
+            var remainingDays = Math.Max(0, (int)(subscription.EndDate - now).TotalDays);
+            var proratedAmount = totalDays > 0
+                ? (targetPlan.MonthlyPrice - (currentPlan?.MonthlyPrice ?? 0)) * remainingDays / totalDays
+                : 0;
+
+            result.SetData(new UpgradePreviewDto
+            {
+                CurrentPlanName = currentPlan?.Name ?? "",
+                TargetPlanName = targetPlan.Name,
+                CurrentPrice = currentPlan?.MonthlyPrice ?? 0,
+                TargetPrice = targetPlan.MonthlyPrice,
+                ProratedAmount = Math.Round(proratedAmount, 2),
+                RemainingDays = remainingDays,
+                TotalDays = totalDays,
+                TargetMaxOrders = targetPlan.MaxOrdersPerMonth
+            });
+        }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+        return result;
+    }
+
+    public async Task<ServiceObjectResult<bool>> UpgradePlanAsync(Guid sellerId, UpgradeRequestDto request)
+    {
+        var result = new ServiceObjectResult<bool>();
+        try
+        {
+            var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(
+                s => s.RestaurantId == request.RestaurantId && s.SellerId == sellerId &&
+                     s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active,
+                enableTracking: true);
+
+            if (subscription == null)
+            {
+                result.Fail("Aktif abonelik bulunamadı.");
+                return result;
+            }
+
+            var targetPlan = await _unitOfWork.SubscriptionPlanRepository.GetAsync(p => p.Id == request.TargetPlanId && p.IsActive);
+            if (targetPlan == null)
+            {
+                result.Fail("Hedef plan bulunamadı.");
+                return result;
+            }
+
+            subscription.SubscriptionPlanId = targetPlan.Id;
+            _unitOfWork.SubscriptionRepository.Update(subscription);
+            await _unitOfWork.CompleteAsync();
+
+            result.SetData(true);
+            result.AddSuccessMessage($"Plan '{targetPlan.Name}' olarak yükseltildi.");
+        }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+        return result;
+    }
+
+    public async Task<ServiceObjectResult<bool>> IncrementOrderCountAsync(Guid restaurantId)
+    {
+        var result = new ServiceObjectResult<bool>();
+        try
+        {
+            var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(
+                s => s.RestaurantId == restaurantId &&
+                     s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active);
+
+            if (subscription == null)
+            {
+                result.Fail("Aktif abonelik bulunamadı.");
+                return result;
+            }
+
+            var plan = await _unitOfWork.SubscriptionPlanRepository.GetAsync(p => p.Id == subscription.SubscriptionPlanId);
+            var now = DateTime.UtcNow;
+
+            var conn = _context.Database.GetDbConnection();
+            if (conn.State != System.Data.ConnectionState.Open)
+                await conn.OpenAsync();
+
+            // Lazy create usage record with ON DUPLICATE KEY UPDATE
+            var usageId = Guid.NewGuid();
+            await conn.ExecuteAsync(@"
+                INSERT INTO SubscriptionUsage (Id, SubscriptionId, Year, Month, OrderCount, CreatedDate, UpdatedDate)
+                VALUES (@id, @subscriptionId, @year, @month, 0, @now, @now)
+                ON DUPLICATE KEY UPDATE OrderCount = OrderCount",
+                new { id = usageId, subscriptionId = subscription.Id, year = now.Year, month = now.Month, now });
+
+            // Atomic increment with limit check
+            var affected = await conn.ExecuteAsync(@"
+                UPDATE SubscriptionUsage
+                SET OrderCount = OrderCount + 1, UpdatedDate = @now
+                WHERE SubscriptionId = @subscriptionId
+                  AND Year = @year AND Month = @month
+                  AND OrderCount < @maxOrders",
+                new
+                {
+                    subscriptionId = subscription.Id,
+                    year = now.Year,
+                    month = now.Month,
+                    maxOrders = plan?.MaxOrdersPerMonth ?? int.MaxValue,
+                    now
+                });
+
+            if (affected == 0)
+            {
+                result.Fail("Aylık sipariş limitinize ulaştınız. Paketinizi yükseltin.");
+                return result;
+            }
+
+            result.SetData(true);
+        }
+        catch (Exception ex)
+        {
+            result.Fail($"Hata: {ex.Message}");
+        }
         return result;
     }
 

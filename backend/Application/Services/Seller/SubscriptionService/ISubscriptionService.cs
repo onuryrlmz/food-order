@@ -14,4 +14,10 @@ public interface ISubscriptionService
     Task<ServiceCollectionResult<GetSubscriptionResponseDto>> GetSellerSubscriptions();
     Task<ServiceCollectionResult<GetSubscriptionResponseDto>> GetAllSubscriptions(int page = 1, int pageSize = 20);
     Task<ServiceObjectResult<bool>> CheckAndExpireSubscriptions();
+
+    // Subscription Usage
+    Task<ServiceObjectResult<SubscriptionUsageDto>> GetUsageAsync(Guid sellerId, Guid restaurantId);
+    Task<ServiceObjectResult<UpgradePreviewDto>> GetUpgradePreviewAsync(Guid sellerId, Guid restaurantId, Guid targetPlanId);
+    Task<ServiceObjectResult<bool>> UpgradePlanAsync(Guid sellerId, UpgradeRequestDto request);
+    Task<ServiceObjectResult<bool>> IncrementOrderCountAsync(Guid restaurantId);
 }

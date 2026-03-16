@@ -40,17 +40,18 @@ export const AuthProvider = ({children}) => {
           phoneNumber,
           firstName,
           lastName,
+          userRoleId,
           token: newToken,
         } = result.data;
 
         await AsyncStorage.setItem('courier_token', newToken);
         await AsyncStorage.setItem(
           'courier_info',
-          JSON.stringify({userId, email: userEmail, phoneNumber, firstName, lastName}),
+          JSON.stringify({userId, email: userEmail, phoneNumber, firstName, lastName, userRoleId}),
         );
 
         setToken(newToken);
-        setCourier({userId, email: userEmail, phoneNumber, firstName, lastName});
+        setCourier({userId, email: userEmail, phoneNumber, firstName, lastName, userRoleId});
         setIsAuthenticated(true);
         return {success: true};
       }

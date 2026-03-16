@@ -89,3 +89,102 @@ export const changePassword = async (currentPassword, newPassword) => {
   });
   return res.data;
 };
+
+// --- Company APIs ---
+
+export const registerCompany = async data => {
+  const res = await apiClient.post('/v1/courier/company/register', data);
+  return res.data;
+};
+
+export const getMyCompany = async () => {
+  const res = await apiClient.get('/v1/courier/company/my');
+  return res.data;
+};
+
+export const updateCompany = async data => {
+  const res = await apiClient.put('/v1/courier/company/my', data);
+  return res.data;
+};
+
+export const searchCouriers = async query => {
+  const res = await apiClient.get(
+    `/v1/courier/company/members/search?q=${query}`,
+  );
+  return res.data;
+};
+
+export const requestMembership = async courierId => {
+  const res = await apiClient.post('/v1/courier/company/members/request', {
+    courierId,
+  });
+  return res.data;
+};
+
+export const getCompanyMembers = async () => {
+  const res = await apiClient.get('/v1/courier/company/members');
+  return res.data;
+};
+
+export const removeMember = async id => {
+  const res = await apiClient.delete(`/v1/courier/company/members/${id}`);
+  return res.data;
+};
+
+export const getCompanyInvites = async () => {
+  const res = await apiClient.get('/v1/courier/company-invites');
+  return res.data;
+};
+
+export const acceptCompanyInvite = async id => {
+  const res = await apiClient.put(`/v1/courier/company-invites/${id}/accept`);
+  return res.data;
+};
+
+export const rejectCompanyInvite = async id => {
+  const res = await apiClient.put(`/v1/courier/company-invites/${id}/reject`);
+  return res.data;
+};
+
+export const leaveCompany = async () => {
+  const res = await apiClient.put('/v1/courier/company/leave');
+  return res.data;
+};
+
+export const getRestaurantInvites = async () => {
+  const res = await apiClient.get('/v1/courier/company/restaurant-invites');
+  return res.data;
+};
+
+export const acceptRestaurantInvite = async id => {
+  const res = await apiClient.put(
+    `/v1/courier/company/restaurant-invites/${id}/accept`,
+  );
+  return res.data;
+};
+
+export const rejectRestaurantInvite = async id => {
+  const res = await apiClient.put(
+    `/v1/courier/company/restaurant-invites/${id}/reject`,
+  );
+  return res.data;
+};
+
+// --- Pickup & Delivery APIs ---
+
+export const getPendingPickups = async (restaurantId, page = 1, size = 20) => {
+  const res = await apiClient.get(
+    `/v1/courier/pickup/${restaurantId}/pending?page=${page}&size=${size}`,
+  );
+  return res.data;
+};
+
+export const confirmPickup = async orderId => {
+  const res = await apiClient.put(`/v1/courier/pickup/${orderId}/confirm`);
+  return res.data;
+};
+
+export const deliverOrder = async orderId => {
+  const res = await apiClient.put(`/v1/courier/orders/${orderId}/deliver`);
+  return res.data;
+};

@@ -135,42 +135,55 @@ public class SellerManager : ISellerService
                     var sellerUser = await _userRepository.GetAsync(x => x.SellerId == seller.Id && x.UserRoleId == (short)AuthorizationServiceEnums.UserRoleEnums.SellerAdmin, withDeleted: false);
                     if (sellerUser != null)
                     {
+                        // Get seller address for iyzico
+                        var sellerAddress = await _addressRepository.GetAsync(
+                            a => a.SellerId == seller.Id &&
+                                 a.AddressType == (short)AuthorizationServiceEnums.AddressTypeEnums.Invoice);
+                        var addressStr = sellerAddress?.AddressLine1 ?? "Adres bilgisi yok";
+
+                        // Validate TC kimlik for Individual sellers
+                        if (seller.CompanyType == (short)AuthorizationServiceEnums.CompanyTypeEnums.Individual &&
+                            (string.IsNullOrEmpty(seller.IdentityNumber) || seller.IdentityNumber.Length != 11))
+                        {
+                            result.AddErrorMessage("Şahıs firması için 11 haneli TC kimlik numarası gereklidir.");
+                            return result;
+                        }
+
+                        // iyzico sub-merchant kaydı — BLOCKING
+                        var paymentSellerResponse = _iyzicoServiceAdapter.CreateSeller(new CreateSubMerchantDto
+                        {
+                            Id = seller.Id,
+                            CompanyType = seller.CompanyType,
+                            CompanyName = seller.LegalName,
+                            TaxCode = seller.TaxCode,
+                            TaxArea = seller.TaxArea,
+                            IBAN = seller.IBAN,
+                            Address = addressStr,
+                            Email = sellerUser.Email,
+                            IdentityNumber = seller.IdentityNumber
+                        });
+
+                        if (paymentSellerResponse.HasFailed || string.IsNullOrWhiteSpace(paymentSellerResponse.Data))
+                        {
+                            var errorMsg = paymentSellerResponse.Messages?.FirstOrDefault()?.Description ?? "Bilinmeyen hata";
+                            result.Fail($"iyzico alt üye işyeri kaydı başarısız: {errorMsg}");
+                            return result;
+                        }
+
+                        // Save subMerchantKey to SellerDetail
+                        await _sellerDetailRepository.AddAsync(new SellerDetail
+                        {
+                            SellerId = seller.Id,
+                            Key1 = (int)AuthorizationServiceEnums.SellerDetailKey1.PaymentSubMerchantKey,
+                            Key2 = (int)AuthorizationServiceEnums.SellerDetailKey2.Iyzico,
+                            ValueStr = paymentSellerResponse.Data
+                        });
+
                         seller.CompanyStatus = (short)AuthorizationServiceEnums.CompanyStatusEnums.Approved;
                         await _sellerRepository.UpdateAsync(seller);
 
                         sellerUser.UserStatusId = (short)AuthorizationServiceEnums.UserStatusEnums.Active;
                         await _userRepository.UpdateAsync(sellerUser);
-
-                        // Iyzico sub-merchant kaydı — başarısız olsa da onaylama devam eder
-                        try
-                        {
-                            var paymentSellerResponse = _iyzicoServiceAdapter.CreateSeller(new CreateSubMerchantDto
-                            {
-                                Id = seller.Id,
-                                CompanyType = seller.CompanyType,
-                                CompanyName = seller.LegalName,
-                                TaxCode = seller.TaxCode,
-                                TaxArea = seller.TaxArea,
-                                IBAN = seller.IBAN,
-                                Address = "Test Adres",
-                                Email = sellerUser.Email
-                            });
-
-                            if (!string.IsNullOrWhiteSpace(paymentSellerResponse.Data))
-                            {
-                                await _sellerDetailRepository.AddAsync(new SellerDetail
-                                {
-                                    SellerId = seller.Id,
-                                    Key1 = (int)AuthorizationServiceEnums.SellerDetailKey1.PaymentSubMerchantKey,
-                                    Key2 = (int)AuthorizationServiceEnums.SellerDetailKey2.Iyzico,
-                                    ValueStr = paymentSellerResponse.Data
-                                });
-                            }
-                        }
-                        catch
-                        {
-                            // Iyzico hatası onaylamayı engellemez
-                        }
 
                         result.SetData(true);
                         //TODO: Satıcı onaylandı maili gönderilecek
@@ -263,6 +276,108 @@ public class SellerManager : ISellerService
             }).ToList();
 
             result.SetData(sellers.Count, dtos);
+        }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+        return result;
+    }
+
+    public async Task<ServiceObjectResult<bool>> RetryIyzicoRegistrationAsync(Guid sellerId)
+    {
+        var result = new ServiceObjectResult<bool>();
+        try
+        {
+            var seller = await _sellerRepository.GetAsync(x => x.Id == sellerId);
+            if (seller == null)
+            {
+                result.Fail("Satıcı bulunamadı.");
+                return result;
+            }
+
+            var sellerUser = await _userRepository.GetAsync(
+                x => x.SellerId == seller.Id &&
+                     x.UserRoleId == (short)AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
+                withDeleted: false);
+
+            if (sellerUser == null)
+            {
+                result.Fail("Satıcı yöneticisi bulunamadı.");
+                return result;
+            }
+
+            var sellerAddress = await _addressRepository.GetAsync(
+                a => a.SellerId == seller.Id &&
+                     a.AddressType == (short)AuthorizationServiceEnums.AddressTypeEnums.Invoice);
+            var addressStr = sellerAddress?.AddressLine1 ?? "Adres bilgisi yok";
+
+            // Check if subMerchantKey already exists
+            var existingDetail = await _sellerDetailRepository.GetAsync(
+                d => d.SellerId == seller.Id &&
+                     d.Key1 == (int)AuthorizationServiceEnums.SellerDetailKey1.PaymentSubMerchantKey &&
+                     d.Key2 == (int)AuthorizationServiceEnums.SellerDetailKey2.Iyzico);
+
+            if (existingDetail != null)
+            {
+                // Update existing sub-merchant
+                var updateResult = _iyzicoServiceAdapter.UpdateSeller(new UpdateSellerRequestDto
+                {
+                    Id = seller.Id,
+                    SellerPaymentId = existingDetail.ValueStr,
+                    CompanyType = seller.CompanyType,
+                    CompanyName = seller.LegalName,
+                    TaxCode = seller.TaxCode,
+                    TaxArea = seller.TaxArea,
+                    IBAN = seller.IBAN,
+                    Address = addressStr,
+                    Email = sellerUser.Email
+                });
+
+                if (updateResult.HasFailed)
+                {
+                    var msg = updateResult.Messages?.FirstOrDefault()?.Description ?? "Bilinmeyen hata";
+                    result.Fail($"iyzico güncelleme başarısız: {msg}");
+                    return result;
+                }
+
+                result.SetData(true);
+                result.AddSuccessMessage("iyzico kaydı güncellendi.");
+            }
+            else
+            {
+                // Create new sub-merchant
+                var createResult = _iyzicoServiceAdapter.CreateSeller(new CreateSubMerchantDto
+                {
+                    Id = seller.Id,
+                    CompanyType = seller.CompanyType,
+                    CompanyName = seller.LegalName,
+                    TaxCode = seller.TaxCode,
+                    TaxArea = seller.TaxArea,
+                    IBAN = seller.IBAN,
+                    Address = addressStr,
+                    Email = sellerUser.Email,
+                    IdentityNumber = seller.IdentityNumber
+                });
+
+                if (createResult.HasFailed || string.IsNullOrWhiteSpace(createResult.Data))
+                {
+                    var msg = createResult.Messages?.FirstOrDefault()?.Description ?? "Bilinmeyen hata";
+                    result.Fail($"iyzico kayıt başarısız: {msg}");
+                    return result;
+                }
+
+                await _sellerDetailRepository.AddAsync(new SellerDetail
+                {
+                    SellerId = seller.Id,
+                    Key1 = (int)AuthorizationServiceEnums.SellerDetailKey1.PaymentSubMerchantKey,
+                    Key2 = (int)AuthorizationServiceEnums.SellerDetailKey2.Iyzico,
+                    ValueStr = createResult.Data
+                });
+
+                result.SetData(true);
+                result.AddSuccessMessage("iyzico kaydı oluşturuldu.");
+            }
         }
         catch (Exception e)
         {

@@ -24,11 +24,10 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
         {
             result.SetData(string.Empty);
 
-            var merchantType = requestDto.CompanyType switch
-            {
-                (short)AuthorizationServiceEnums.CompanyTypeEnums.Company => SubMerchantType.LIMITED_OR_JOINT_STOCK_COMPANY.ToString(),
-                (short)AuthorizationServiceEnums.CompanyTypeEnums.Individual => SubMerchantType.PRIVATE_COMPANY.ToString()
-            };
+            var isIndividual = requestDto.CompanyType == (short)AuthorizationServiceEnums.CompanyTypeEnums.Individual;
+            var merchantType = isIndividual
+                ? SubMerchantType.PERSONAL.ToString()
+                : SubMerchantType.LIMITED_OR_JOINT_STOCK_COMPANY.ToString();
 
             var request = new CreateSubMerchantRequest
             {
@@ -40,7 +39,7 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
                 Email = requestDto.Email,
                 Name = requestDto.CompanyName,
                 Iban = requestDto.IBAN,
-                IdentityNumber = requestDto.TaxCode,
+                IdentityNumber = isIndividual ? requestDto.IdentityNumber ?? requestDto.TaxCode : requestDto.TaxCode,
                 TaxNumber = requestDto.TaxCode,
                 Currency = Currency.TRY.ToString(),
                 TaxOffice = requestDto.TaxArea,

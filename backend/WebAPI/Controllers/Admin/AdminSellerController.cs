@@ -38,4 +38,9 @@ public class AdminSellerController : BaseController
         requestDto.Id = id;
         return await _sellerService.UpdateSeller(requestDto);
     }
+
+    [HttpPut("sellers/{id}/retry-iyzico")]
+    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    public async Task<ServiceObjectResult<bool>> RetryIyzico(Guid id)
+        => await _sellerService.RetryIyzicoRegistrationAsync(id);
 }

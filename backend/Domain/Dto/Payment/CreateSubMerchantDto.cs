@@ -10,4 +10,5 @@ public class CreateSubMerchantDto
     public string IBAN { get; set; }
     public string Address { get; set; }
     public string Email { get; set; }
+    public string? IdentityNumber { get; set; }
 }

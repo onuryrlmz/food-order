@@ -24,4 +24,5 @@ public class GetSubscriptionPlanResponseDto
     public short PlanType { get; set; }
     public decimal MonthlyPrice { get; set; }
     public int MaxRestaurants { get; set; }
+    public int MaxOrdersPerMonth { get; set; }
 }

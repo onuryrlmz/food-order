@@ -42,4 +42,26 @@ public class SellerSubscriptionController : BaseController
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Cancel(Guid id)
         => await _subscriptionService.CancelSubscription(id);
+
+    [HttpGet("usage")]
+    [AuthorizeAPIRequest(true, false,
+        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
+        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+    public async Task<ServiceObjectResult<SubscriptionUsageDto>> GetUsage(
+        [FromQuery] Guid restaurantId)
+        => await _subscriptionService.GetUsageAsync(Client!._tokenDto!.SellerId ?? Guid.Empty, restaurantId);
+
+    [HttpGet("upgrade/preview")]
+    [AuthorizeAPIRequest(true, false,
+        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    public async Task<ServiceObjectResult<UpgradePreviewDto>> GetUpgradePreview(
+        [FromQuery] Guid restaurantId, [FromQuery] Guid planId)
+        => await _subscriptionService.GetUpgradePreviewAsync(Client!._tokenDto!.SellerId ?? Guid.Empty, restaurantId, planId);
+
+    [HttpPost("upgrade")]
+    [AuthorizeAPIRequest(true, false,
+        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    public async Task<ServiceObjectResult<bool>> Upgrade(
+        [FromBody] UpgradeRequestDto request)
+        => await _subscriptionService.UpgradePlanAsync(Client!._tokenDto!.SellerId ?? Guid.Empty, request);
 }

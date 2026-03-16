@@ -580,7 +580,8 @@ public class SubscriptionManager : ISubscriptionService
         Description = plan.Description,
         PlanType = plan.PlanType,
         MonthlyPrice = plan.MonthlyPrice,
-        MaxRestaurants = plan.MaxRestaurants
+        MaxRestaurants = plan.MaxRestaurants,
+        MaxOrdersPerMonth = plan.MaxOrdersPerMonth
     };
 
     private static GetSubscriptionResponseDto MapSubscriptionToDto(Subscription s, string planName, string restaurantName, decimal monthlyPrice) => new()

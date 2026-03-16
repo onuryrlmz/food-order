@@ -68,6 +68,10 @@ public static class PersistenceServiceRegistration
         //Courier
         services.AddScoped<IRestaurantCourierRepository, RestaurantCourierRepository>();
         services.AddScoped<ICourierLocationRepository, CourierLocationRepository>();
+        services.AddScoped<ICourierCompanyRepository, CourierCompanyRepository>();
+        services.AddScoped<ICourierCompanyMemberRepository, CourierCompanyMemberRepository>();
+        services.AddScoped<IRestaurantCourierCompanyRepository, RestaurantCourierCompanyRepository>();
+        services.AddScoped<ISubscriptionUsageRepository, SubscriptionUsageRepository>();
 
         return services;
     }

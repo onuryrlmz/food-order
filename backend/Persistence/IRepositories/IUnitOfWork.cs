@@ -38,6 +38,12 @@ public interface IUnitOfWork : IDisposable
     // Courier
     IRestaurantCourierRepository RestaurantCourierRepository { get; }
     ICourierLocationRepository CourierLocationRepository { get; }
+    ICourierCompanyRepository CourierCompanyRepository { get; }
+    ICourierCompanyMemberRepository CourierCompanyMemberRepository { get; }
+    IRestaurantCourierCompanyRepository RestaurantCourierCompanyRepository { get; }
+
+    // Subscription Usage
+    ISubscriptionUsageRepository SubscriptionUsageRepository { get; }
 
     Task<int> CompleteAsync();
     Task BeginTransactionAsync();

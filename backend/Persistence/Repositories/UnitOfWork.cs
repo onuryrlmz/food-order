@@ -45,6 +45,12 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     // Courier
     public IRestaurantCourierRepository RestaurantCourierRepository { get; }
     public ICourierLocationRepository CourierLocationRepository { get; }
+    public ICourierCompanyRepository CourierCompanyRepository { get; }
+    public ICourierCompanyMemberRepository CourierCompanyMemberRepository { get; }
+    public IRestaurantCourierCompanyRepository RestaurantCourierCompanyRepository { get; }
+
+    // Subscription Usage
+    public ISubscriptionUsageRepository SubscriptionUsageRepository { get; }
 
     public UnitOfWork(BaseDbContext context,
         ICuisineRepository cuisineRepository,
@@ -75,7 +81,11 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         IRestaurantCdnUpdateQueueRepository restaurantCdnUpdateQueueRepository,
         IRestaurantWorkingHourRepository restaurantWorkingHourRepository,
         IRestaurantCourierRepository restaurantCourierRepository,
-        ICourierLocationRepository courierLocationRepository)
+        ICourierLocationRepository courierLocationRepository,
+        ICourierCompanyRepository courierCompanyRepository,
+        ICourierCompanyMemberRepository courierCompanyMemberRepository,
+        IRestaurantCourierCompanyRepository restaurantCourierCompanyRepository,
+        ISubscriptionUsageRepository subscriptionUsageRepository)
     {
         _context = context;
         CuisineRepository = cuisineRepository;
@@ -107,6 +117,10 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         RestaurantWorkingHourRepository = restaurantWorkingHourRepository;
         RestaurantCourierRepository = restaurantCourierRepository;
         CourierLocationRepository = courierLocationRepository;
+        CourierCompanyRepository = courierCompanyRepository;
+        CourierCompanyMemberRepository = courierCompanyMemberRepository;
+        RestaurantCourierCompanyRepository = restaurantCourierCompanyRepository;
+        SubscriptionUsageRepository = subscriptionUsageRepository;
     }
 
     public async Task BeginTransactionAsync()

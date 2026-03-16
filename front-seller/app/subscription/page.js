@@ -8,7 +8,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import fetcher from '@/lib/fetcher';
-import api from '@/lib/api';
+import api, { toggleAutoRenew } from '@/lib/api';
 
 const STATUS_MAP = {
   1: { label: 'Aktif', color: 'green' },
@@ -24,6 +24,7 @@ export default function SubscriptionPage() {
   const [selectedRestaurant, setSelectedRestaurant] = useState('');
   const [subscribing, setSubscribing] = useState(false);
   const [cancelling, setCancelling] = useState(null);
+  const [togglingRenew, setTogglingRenew] = useState(null);
 
   const { data: subsData, mutate } = useSWR('/v1/seller/subscription/my', fetcher);
   const { data: plansData } = useSWR('/v1/seller/subscription/plans', fetcher);
@@ -66,6 +67,23 @@ export default function SubscriptionPage() {
       toast(err.response?.data?.messages?.[0]?.description || 'Hata oluştu', 'error');
     } finally {
       setCancelling(null);
+    }
+  };
+
+  const handleToggleAutoRenew = async (sub) => {
+    setTogglingRenew(sub.id);
+    try {
+      const res = await toggleAutoRenew(sub.restaurantId, !sub.autoRenew);
+      if (!res.hasFailed) {
+        toast(sub.autoRenew ? 'Otomatik yenileme kapatildi' : 'Otomatik yenileme acildi', 'success');
+        mutate();
+      } else {
+        toast(res.messages?.[0]?.description || 'Hata olustu', 'error');
+      }
+    } catch (err) {
+      toast(err.response?.data?.messages?.[0]?.description || 'Hata olustu', 'error');
+    } finally {
+      setTogglingRenew(null);
     }
   };
 
@@ -129,10 +147,31 @@ export default function SubscriptionPage() {
                   )}
 
                   {s.statusId === 1 && (
+                    <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-gray-600">Otomatik Yenileme</span>
+                        <button
+                          onClick={() => handleToggleAutoRenew(s)}
+                          disabled={togglingRenew === s.id}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                            s.autoRenew ? 'bg-emerald-500' : 'bg-gray-300'
+                          } ${togglingRenew === s.id ? 'opacity-50' : ''}`}
+                        >
+                          <span
+                            className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${
+                              s.autoRenew ? 'translate-x-4' : 'translate-x-0.5'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {s.statusId === 1 && (
                     <Button
                       size="sm"
                       variant="danger"
-                      className="mt-4 w-full justify-center"
+                      className="mt-3 w-full justify-center"
                       loading={cancelling === s.id}
                       onClick={() => handleCancel(s.id)}
                     >

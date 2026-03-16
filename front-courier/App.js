@@ -7,9 +7,11 @@ import {
   requestLocationPermission,
   requestBatteryOptimizationExemption,
 } from './src/utils/locationPermission';
+import {initOneSignal} from './src/utils/onesignal';
 
 function App() {
   useEffect(() => {
+    initOneSignal();
     const initPermissions = async () => {
       const granted = await requestLocationPermission();
       if (granted) {

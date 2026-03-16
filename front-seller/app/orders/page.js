@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import useSWR from 'swr';
 import SellerLayout from '@/components/layout/SellerLayout';
 import Badge from '@/components/ui/Badge';
@@ -9,6 +9,7 @@ import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import fetcher from '@/lib/fetcher';
 import api, { getRestaurantCouriers, getRestaurantCourierCompanies } from '@/lib/api';
+import { createRestaurantConnection } from '@/lib/signalr';
 
 const STATUS_MAP = {
   4: { label: 'Onay Bekliyor', color: 'yellow' },
@@ -66,6 +67,31 @@ export default function OrdersPage() {
   const orders = ordersData?.data || [];
   const total = ordersData?.totalDataCount || 0;
   const totalPages = Math.ceil(total / 20) || 1;
+
+  // SignalR real-time updates
+  const connectionRef = useRef(null);
+  useEffect(() => {
+    if (!selectedRestaurant) return;
+
+    const conn = createRestaurantConnection(selectedRestaurant);
+    connectionRef.current = conn;
+
+    conn.on('NewOrder', () => {
+      toast('Yeni siparis geldi!', 'info');
+      mutate();
+    });
+
+    conn.on('OrderStatusChanged', () => {
+      mutate();
+    });
+
+    return () => {
+      if (connectionRef.current) {
+        connectionRef.current.stop().catch(() => {});
+        connectionRef.current = null;
+      }
+    };
+  }, [selectedRestaurant]);
 
   const handleStatusUpdate = async (orderId, statusId, courierId = null) => {
     setUpdating(orderId);

@@ -5,6 +5,9 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import {useAuth} from '../context/AuthContext';
 import LoginScreen from '../screens/Auth/LoginScreen';
 import RegisterScreen from '../screens/Auth/RegisterScreen';
+import ForgotPasswordScreen from '../screens/Auth/ForgotPasswordScreen';
+import VerifyCodeScreen from '../screens/Auth/VerifyCodeScreen';
+import ResetPasswordScreen from '../screens/Auth/ResetPasswordScreen';
 import ActiveOrdersScreen from '../screens/Orders/ActiveOrdersScreen';
 import OrderHistoryScreen from '../screens/Orders/OrderHistoryScreen';
 import PickupScreen from '../screens/Orders/PickupScreen';
@@ -201,6 +204,9 @@ export default function AppNavigator() {
         <>
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+          <Stack.Screen name="VerifyCode" component={VerifyCodeScreen} />
+          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
           <Stack.Screen
             name="CompanyRegistration"
             component={CompanyRegistrationScreen}

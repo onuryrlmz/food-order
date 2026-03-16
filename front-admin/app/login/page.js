@@ -6,7 +6,7 @@ import { login } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ email: 'admin@esnaftan.com', password: 'Admin123!' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -63,6 +63,10 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400"
               />
+            </div>
+
+            <div className="text-right">
+              <a href="/forgot-password" className="text-sm text-orange-500 hover:underline">Sifremi Unuttum</a>
             </div>
 
             {error && (

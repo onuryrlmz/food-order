@@ -71,6 +71,12 @@ export default function LoginScreen({navigation}) {
           />
 
           <TouchableOpacity
+            style={styles.forgotLink}
+            onPress={() => navigation.navigate('ForgotPassword')}>
+            <Text style={styles.forgotText}>Sifremi Unuttum</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={loading}
@@ -181,5 +187,14 @@ const styles = StyleSheet.create({
   registerTextBold: {
     color: '#FF6B00',
     fontWeight: '700',
+  },
+  forgotLink: {
+    alignSelf: 'flex-end',
+    marginBottom: 16,
+  },
+  forgotText: {
+    fontSize: 14,
+    color: '#FF6B00',
+    fontWeight: '600',
   },
 });

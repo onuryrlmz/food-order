@@ -1,6 +1,7 @@
 import React, {createContext, useContext, useState, useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {login as loginApi} from '../api/courierService';
+import {setOneSignalUserId, clearOneSignalUserId} from '../utils/onesignal';
 
 const AuthContext = createContext(null);
 
@@ -45,6 +46,9 @@ export const AuthProvider = ({children}) => {
         } = result.data;
 
         await AsyncStorage.setItem('courier_token', newToken);
+        if (result.data.refreshToken) {
+          await AsyncStorage.setItem('courier_refresh_token', result.data.refreshToken);
+        }
         await AsyncStorage.setItem(
           'courier_info',
           JSON.stringify({userId, email: userEmail, phoneNumber, firstName, lastName, userRoleId}),
@@ -53,6 +57,7 @@ export const AuthProvider = ({children}) => {
         setToken(newToken);
         setCourier({userId, email: userEmail, phoneNumber, firstName, lastName, userRoleId});
         setIsAuthenticated(true);
+        setOneSignalUserId(userId);
         return {success: true};
       }
       const errMsg =
@@ -65,8 +70,8 @@ export const AuthProvider = ({children}) => {
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem('courier_token');
-    await AsyncStorage.removeItem('courier_info');
+    clearOneSignalUserId();
+    await AsyncStorage.multiRemove(['courier_token', 'courier_refresh_token', 'courier_info']);
     setToken(null);
     setCourier(null);
     setIsAuthenticated(false);

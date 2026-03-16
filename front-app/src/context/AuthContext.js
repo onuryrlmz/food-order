@@ -1,6 +1,7 @@
 import React, {createContext, useContext, useState, useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {authService} from '../api';
+import {setOneSignalUserId, clearOneSignalUserId} from '../utils/onesignal';
 
 const AuthContext = createContext(null);
 
@@ -39,10 +40,17 @@ export const AuthProvider = ({children}) => {
         if (response.data.token) {
           await AsyncStorage.setItem('auth_token', response.data.token);
         }
+        if (response.data.refreshToken) {
+          await AsyncStorage.setItem('refresh_token', response.data.refreshToken);
+        }
         const profileResponse = await authService.getProfile();
         if (!profileResponse.data.hasFailed) {
-          setUser(profileResponse.data.data);
+          const userData = profileResponse.data.data;
+          setUser(userData);
           setIsAuthenticated(true);
+          if (userData?.userId) {
+            setOneSignalUserId(userData.userId);
+          }
           return {success: true};
         }
       }
@@ -70,9 +78,11 @@ export const AuthProvider = ({children}) => {
 
   const logout = async () => {
     try {
-      await authService.logout();
+      const refreshToken = await AsyncStorage.getItem('refresh_token');
+      await authService.logout(refreshToken);
     } catch (e) {}
-    await AsyncStorage.removeItem('auth_token');
+    clearOneSignalUserId();
+    await AsyncStorage.multiRemove(['auth_token', 'refresh_token']);
     setUser(null);
     setIsAuthenticated(false);
   };

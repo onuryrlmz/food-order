@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import {useToast} from '../../context/ToastContext';
 import {ORDER_STATUS, PAYMENT_OPTIONS} from '../../utils/constants';
 import OrderStatusBadge from '../../components/OrderStatusBadge';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import {createOrderConnection} from '../../utils/signalr';
 
 const OrderDetailScreen = ({route, navigation}) => {
   const {showToast, showConfirm} = useToast();
@@ -27,11 +28,52 @@ const OrderDetailScreen = ({route, navigation}) => {
   const [cancelling, setCancelling] = useState(false);
   const [courierLocation, setCourierLocation] = useState(null);
 
+  const connectionRef = useRef(null);
+
   useEffect(() => {
     loadOrder();
   }, [orderId]);
 
-  // Poll courier location when order is OnTheWay
+  // SignalR real-time updates for order status and courier location
+  useEffect(() => {
+    let conn = null;
+
+    const setupSignalR = async () => {
+      try {
+        conn = await createOrderConnection(orderId);
+        connectionRef.current = conn;
+
+        conn.on('OrderStatusChanged', (changedOrderId, newStatus) => {
+          if (changedOrderId === orderId) {
+            loadOrder();
+          }
+        });
+
+        conn.on('CourierLocationUpdated', (changedOrderId, lat, lng) => {
+          if (changedOrderId === orderId) {
+            setCourierLocation(prev => ({
+              ...prev,
+              latitude: lat,
+              longitude: lng,
+            }));
+          }
+        });
+      } catch (e) {
+        console.log('SignalR setup error:', e);
+      }
+    };
+
+    setupSignalR();
+
+    return () => {
+      if (connectionRef.current) {
+        connectionRef.current.stop().catch(() => {});
+        connectionRef.current = null;
+      }
+    };
+  }, [orderId]);
+
+  // Initial courier location fetch (fallback if SignalR not yet connected)
   useEffect(() => {
     if (order?.statusId !== 7) return;
 
@@ -52,8 +94,6 @@ const OrderDetailScreen = ({route, navigation}) => {
     };
 
     fetchLocation();
-    const interval = setInterval(fetchLocation, 30000);
-    return () => clearInterval(interval);
   }, [order?.statusId, orderId]);
 
   const loadOrder = async () => {

@@ -16,6 +16,9 @@ import SplashScreen from '../screens/Auth/SplashScreen';
 import OnboardingScreen from '../screens/Onboarding/OnboardingScreen';
 import LoginScreen from '../screens/Auth/LoginScreen';
 import RegisterScreen from '../screens/Auth/RegisterScreen';
+import ForgotPasswordScreen from '../screens/Auth/ForgotPasswordScreen';
+import VerifyCodeScreen from '../screens/Auth/VerifyCodeScreen';
+import ResetPasswordScreen from '../screens/Auth/ResetPasswordScreen';
 
 import HomeScreen from '../screens/Home/HomeScreen';
 import RestaurantDetailScreen from '../screens/Restaurant/RestaurantDetailScreen';
@@ -181,6 +184,9 @@ const AppNavigator = () => {
         <Stack.Screen name="RestaurantDetail" component={RestaurantDetailScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="VerifyCode" component={VerifyCodeScreen} />
+        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
         <Stack.Screen
           name="Cart"
           component={CartScreen}

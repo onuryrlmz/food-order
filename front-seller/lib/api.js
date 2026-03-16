@@ -49,4 +49,27 @@ export const getCourierOrderHistory = async (courierId, month, year) => {
   return res.data;
 };
 
+// Subscription Usage
+export const getSubscriptionUsage = (restaurantId) =>
+  api.get(`/v1/subscription/usage?restaurantId=${restaurantId}`).then(r => r.data);
+
+export const getUpgradePreview = (restaurantId, planId) =>
+  api.get(`/v1/subscription/upgrade/preview?restaurantId=${restaurantId}&planId=${planId}`).then(r => r.data);
+
+export const upgradeSubscription = (data) =>
+  api.post('/v1/subscription/upgrade', data).then(r => r.data);
+
+// Courier Companies
+export const getRestaurantCourierCompanies = (restaurantId) =>
+  api.get(`/v1/seller/restaurant/${restaurantId}/courier-companies`).then(r => r.data);
+
+export const inviteCourierCompany = (restaurantId, companyId) =>
+  api.post(`/v1/seller/restaurant/${restaurantId}/courier-company/add`, { companyId }).then(r => r.data);
+
+export const removeCourierCompany = (restaurantId, companyId) =>
+  api.delete(`/v1/seller/restaurant/${restaurantId}/courier-company/${companyId}`).then(r => r.data);
+
+export const searchCourierCompanies = (query) =>
+  api.get(`/v1/seller/courier-companies/search?q=${encodeURIComponent(query)}`).then(r => r.data);
+
 export default api;

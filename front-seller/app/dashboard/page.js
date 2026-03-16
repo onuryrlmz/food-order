@@ -4,7 +4,9 @@ import useSWR from 'swr';
 import SellerLayout from '@/components/layout/SellerLayout';
 import Badge from '@/components/ui/Badge';
 import fetcher from '@/lib/fetcher';
+import { getSubscriptionUsage } from '@/lib/api';
 import Link from 'next/link';
+import { useState, useEffect }  from 'react';
 
 const ORDER_STATUS = {
   1: { label: 'Beklemede', color: 'yellow' },
@@ -22,6 +24,23 @@ export default function DashboardPage() {
 
   const restaurants = restaurantsData?.data || [];
   const subscriptions = subscriptionsData?.data || [];
+
+  const [usageData, setUsageData] = useState({});
+
+  // Fetch usage for each restaurant that has an active subscription
+  useEffect(() => {
+    if (restaurants.length === 0) return;
+    restaurants.forEach(async (r) => {
+      try {
+        const res = await getSubscriptionUsage(r.id);
+        if (!res.hasFailed && res.data) {
+          setUsageData(prev => ({ ...prev, [r.id]: res.data }));
+        }
+      } catch {
+        // Usage data not available
+      }
+    });
+  }, [restaurants]);
 
   const activeRestaurants = restaurants.filter(r => r.isActive).length;
   const openRestaurants = restaurants.filter(r => r.isOpen).length;
@@ -47,6 +66,63 @@ export default function DashboardPage() {
             </Link>
           ))}
         </div>
+
+        {/* Subscription Usage Widget */}
+        {Object.keys(usageData).length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-gray-800">Aylık Sipariş Kullanımı</h2>
+            </div>
+            <div className="space-y-4">
+              {restaurants.filter(r => usageData[r.id]).map(r => {
+                const usage = usageData[r.id];
+                const used = usage.currentMonthOrders || 0;
+                const limit = usage.maxOrdersPerMonth || 0;
+                const pct = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
+                const isWarning = pct >= 80 && pct < 100;
+                const isDanger = pct >= 100;
+                const barColor = isDanger ? 'bg-red-500' : isWarning ? 'bg-yellow-500' : 'bg-emerald-500';
+                const daysRemaining = usage.daysRemaining ?? '—';
+
+                return (
+                  <div key={r.id} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-gray-700">{r.name}</p>
+                      <p className="text-xs text-gray-400">{daysRemaining} gün kaldı</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 bg-gray-100 rounded-full h-3">
+                        <div
+                          className={`h-3 rounded-full transition-all ${barColor}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className={`text-sm font-semibold ${isDanger ? 'text-red-600' : isWarning ? 'text-yellow-600' : 'text-gray-700'}`}>
+                        {used}/{limit === 0 ? '∞' : limit}
+                      </span>
+                    </div>
+                    {isDanger && (
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-red-600 font-medium">Sipariş limitine ulaştınız!</p>
+                        <Link href="/subscription" className="text-xs text-emerald-600 font-medium hover:underline">
+                          Paket Yükselt →
+                        </Link>
+                      </div>
+                    )}
+                    {isWarning && !isDanger && (
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-yellow-600 font-medium">Limite yaklaşıyorsunuz</p>
+                        <Link href="/subscription" className="text-xs text-emerald-600 font-medium hover:underline">
+                          Paket Yükselt →
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Restoranlar */}

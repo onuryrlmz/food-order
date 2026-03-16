@@ -12,6 +12,9 @@ public class Subscription : Entity<Guid>
     public DateTime EndDate { get; set; }
     public decimal PaidAmount { get; set; }
     public string? Notes { get; set; }
+    public bool AutoRenew { get; set; } = true;
+    public int RenewalAttempts { get; set; } = 0;
+    public DateTime? LastRenewalAttemptAt { get; set; }
 
     public virtual Seller Seller { get; set; }
     public virtual Restaurant Restaurant { get; set; }

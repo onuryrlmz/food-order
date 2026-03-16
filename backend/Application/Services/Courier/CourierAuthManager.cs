@@ -1,3 +1,4 @@
+using Application.Services.Common.AuthService;
 using Base.Enums;
 using Base.Entities;
 using Base.Security;
@@ -12,10 +13,12 @@ namespace Application.Services.Courier;
 public class CourierAuthManager : ICourierAuthService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IAuthTokenService _authTokenService;
 
-    public CourierAuthManager(IUserRepository userRepository)
+    public CourierAuthManager(IUserRepository userRepository, IAuthTokenService authTokenService)
     {
         _userRepository = userRepository;
+        _authTokenService = authTokenService;
     }
 
     public async Task<ServiceObjectResult<bool>> RegisterAsync(CourierRegisterRequestDto request)
@@ -92,19 +95,7 @@ public class CourierAuthManager : ICourierAuthService
                 return result;
             }
 
-            var token = Guid.NewGuid();
-            var expiration = DateTime.UtcNow.AddDays(30);
-
-            var tokenDto = new TokenDto
-            {
-                UserId = user.Id,
-                Token = token,
-                Expiration = expiration,
-                Role = AuthorizationServiceEnums.UserRoleEnums.Courier
-            };
-
-            var tokenStringData = JsonConvert.SerializeObject(tokenDto);
-            var encryptedToken = tokenStringData.Encrypt();
+            var tokenPair = await _authTokenService.GenerateTokenPairAsync(user);
 
             var response = new CourierLoginResponseDto
             {
@@ -113,8 +104,9 @@ public class CourierAuthManager : ICourierAuthService
                 PhoneNumber = user.PhoneNumber,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Token = encryptedToken,
-                Expiration = expiration
+                Token = tokenPair.AccessToken,
+                RefreshToken = tokenPair.RefreshToken,
+                Expiration = tokenPair.AccessTokenExpiration
             };
 
             result.SetData(response);

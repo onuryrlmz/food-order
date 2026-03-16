@@ -151,6 +151,12 @@ public class AuthorizationServiceEnums
         AutoUpgrade = 2
     }
 
+    public enum PasswordResetMethodEnums : short
+    {
+        Email = 1,
+        Sms = 2
+    }
+
     public enum PaymentOptionEnums : short
     {
         CreditCard = 1,

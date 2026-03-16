@@ -35,6 +35,11 @@ public class Payment : Entity<Guid>
     
     public DateTime? CompletedAt { get; set; }
     public DateTime? FailedAt { get; set; }
+
+    // Refund
+    public DateTime? RefundedAt { get; set; }
+    public string? RefundTransactionId { get; set; }
+    public string? RefundReason { get; set; }
     
     // Navigation
     public virtual Order Order { get; set; }

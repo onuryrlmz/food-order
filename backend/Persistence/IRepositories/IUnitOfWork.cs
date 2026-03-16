@@ -45,6 +45,10 @@ public interface IUnitOfWork : IDisposable
     // Subscription Usage
     ISubscriptionUsageRepository SubscriptionUsageRepository { get; }
 
+    // Auth
+    IRefreshTokenRepository RefreshTokenRepository { get; }
+    IPasswordResetTokenRepository PasswordResetTokenRepository { get; }
+
     Task<int> CompleteAsync();
     Task BeginTransactionAsync();
     Task CommitTransactionAsync();

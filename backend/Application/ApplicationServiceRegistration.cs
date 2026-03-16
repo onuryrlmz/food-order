@@ -3,6 +3,8 @@ using System.Security.Authentication;
 using Application.Services.Buyer.BasketService;
 using Application.Services.Buyer.OrderService;
 using Application.Services.Common.AddressService;
+using Application.Services.Common.AuthService;
+using Application.Services.Common.PasswordResetService;
 using Application.Services.Common.RedisService;
 using Application.Services.Common.TokenService;
 using Application.Services.Common.UserService;
@@ -87,6 +89,8 @@ public static class ApplicationServiceRegistration
         services.AddScoped<IUserService, UserManager>();
         services.AddScoped<IAddressService, AddressManager>();
         services.AddScoped<ICuisineService, CuisineManager>();
+        services.AddScoped<IAuthTokenService, AuthTokenManager>();
+        services.AddScoped<IPasswordResetService, PasswordResetManager>();
 
         //Seller
         services.AddScoped<ISellerService, SellerManager>();

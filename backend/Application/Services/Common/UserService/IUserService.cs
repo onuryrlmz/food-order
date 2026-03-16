@@ -6,7 +6,7 @@ namespace Application.Services.Common.UserService;
 public abstract class IUserService
 {
     public abstract Task<ServiceObjectResult<bool>> Register(UserRegisterDto requestDto);
-    public abstract Task<ServiceObjectResult<bool>> Login(UserLoginDto requestDto);
+    public abstract Task<ServiceObjectResult<TokenPairDto>> Login(UserLoginDto requestDto);
     public abstract Task<ServiceObjectResult<GetUserProfileDto>> GetProfile();
     public abstract Task<ServiceObjectResult<bool>> UpdateProfile(UpdateUserProfileDto requestDto);
     public abstract Task<ServiceObjectResult<bool>> ChangePassword(ChangePasswordDto requestDto);

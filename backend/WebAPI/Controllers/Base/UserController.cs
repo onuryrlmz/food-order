@@ -1,3 +1,5 @@
+using Application.Services.Common.AuthService;
+using Application.Services.Common.PasswordResetService;
 using Application.Services.Common.UserService;
 using Base.Enums;
 using Domain.Dto.Common;
@@ -13,10 +15,14 @@ namespace WebAPI.Controllers.Base;
 public class UserController : BaseController
 {
     private readonly IUserService _userService;
+    private readonly IAuthTokenService _authTokenService;
+    private readonly IPasswordResetService _passwordResetService;
 
-    public UserController(IUserService userService)
+    public UserController(IUserService userService, IAuthTokenService authTokenService, IPasswordResetService passwordResetService)
     {
         _userService = userService;
+        _authTokenService = authTokenService;
+        _passwordResetService = passwordResetService;
     }
 
     private CookieOptions AuthCookieOptions => new CookieOptions
@@ -34,21 +40,47 @@ public class UserController : BaseController
 
     [HttpPost("login")]
     [EnableRateLimiting("auth")]
-    public async Task<ServiceObjectResult<bool>> Login([FromBody] UserLoginDto requestDto)
+    public async Task<ServiceObjectResult<TokenPairDto>> Login([FromBody] UserLoginDto requestDto)
     {
         var result = await _userService.Login(requestDto);
-        if (!result.HasFailed && !string.IsNullOrEmpty(result.Token))
-            Response.Cookies.Append("auth_token", result.Token, AuthCookieOptions);
+        if (!result.HasFailed && result.Data != null)
+            Response.Cookies.Append("auth_token", result.Data.AccessToken, AuthCookieOptions);
+        return result;
+    }
+
+    [HttpPost("refresh")]
+    [EnableRateLimiting("auth")]
+    public async Task<ServiceObjectResult<TokenPairDto>> Refresh([FromBody] RefreshRequestDto request)
+    {
+        var result = await _authTokenService.RefreshTokenAsync(request.RefreshToken);
+        if (!result.HasFailed && result.Data != null)
+            Response.Cookies.Append("auth_token", result.Data.AccessToken, AuthCookieOptions);
         return result;
     }
 
     [HttpPost("logout")]
-    public IActionResult Logout()
+    [AuthorizeAPIRequest(true, false,
+        AuthorizationServiceEnums.UserRoleEnums.User,
+        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
+        AuthorizationServiceEnums.UserRoleEnums.SellerUser,
+        AuthorizationServiceEnums.UserRoleEnums.Admin,
+        AuthorizationServiceEnums.UserRoleEnums.Courier)]
+    public async Task<ServiceObjectResult<bool>> Logout([FromBody] LogoutRequestDto request)
     {
-        var opts = AuthCookieOptions;
-        opts.Expires = DateTimeOffset.UtcNow.AddDays(-1);
-        Response.Cookies.Append("auth_token", "", opts);
-        return Ok();
+        var response = new ServiceObjectResult<bool>();
+        try
+        {
+            await _authTokenService.RevokeRefreshTokenAsync(request.RefreshToken);
+            var opts = AuthCookieOptions;
+            opts.Expires = DateTimeOffset.UtcNow.AddDays(-1);
+            Response.Cookies.Append("auth_token", "", opts);
+            response.SetData(true);
+        }
+        catch (Exception e)
+        {
+            response.Fail(e);
+        }
+        return response;
     }
 
     [HttpGet("profile")]
@@ -80,4 +112,19 @@ public class UserController : BaseController
         AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceObjectResult<bool>> ChangePassword([FromBody] ChangePasswordDto requestDto)
         => await _userService.ChangePassword(requestDto);
+
+    [HttpPost("forgot-password")]
+    [EnableRateLimiting("password-reset")]
+    public async Task<ServiceObjectResult<bool>> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
+        => await _passwordResetService.SendResetCodeAsync(request.EmailOrPhone);
+
+    [HttpPost("verify-reset-code")]
+    [EnableRateLimiting("password-reset")]
+    public async Task<ServiceObjectResult<bool>> VerifyCode([FromBody] VerifyResetCodeRequestDto request)
+        => await _passwordResetService.VerifyCodeAsync(request.EmailOrPhone, request.Code);
+
+    [HttpPost("reset-password")]
+    [EnableRateLimiting("password-reset")]
+    public async Task<ServiceObjectResult<bool>> ResetPassword([FromBody] ResetPasswordRequestDto request)
+        => await _passwordResetService.ResetPasswordAsync(request.EmailOrPhone, request.Code, request.NewPassword);
 }

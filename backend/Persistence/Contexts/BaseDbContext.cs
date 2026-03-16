@@ -39,6 +39,10 @@ public sealed class BaseDbContext : DbContext
     public DbSet<CourierCompanyMember> CourierCompanyMembers { get; set; }
     public DbSet<RestaurantCourierCompany> RestaurantCourierCompanies { get; set; }
 
+    // Auth
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+
     // Seller - Subscription
     public DbSet<SubscriptionUsage> SubscriptionUsages { get; set; }
 

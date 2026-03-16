@@ -68,6 +68,13 @@ builder.Services.AddRateLimiter(options =>
         limiterOptions.QueueLimit = 0;
     });
 
+    options.AddFixedWindowLimiter("password-reset", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 3;
+        limiterOptions.Window = TimeSpan.FromMinutes(10);
+        limiterOptions.QueueLimit = 0;
+    });
+
     options.RejectionStatusCode = 429;
 });
 

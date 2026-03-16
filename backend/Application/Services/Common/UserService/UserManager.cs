@@ -1,3 +1,4 @@
+using Application.Services.Common.AuthService;
 using Application.Services.Common.TokenService;
 using AutoMapper;
 using Base.Entities;
@@ -18,13 +19,15 @@ public class UserManager : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IRestaurantRepository _restaurantRepository;
     private readonly ITokenAccessor _tokenAccessor;
+    private readonly IAuthTokenService _authTokenService;
 
-    public UserManager(IUserRepository userRepository, IMapper mapper, IRestaurantRepository restaurantRepository, ITokenAccessor tokenAccessor)
+    public UserManager(IUserRepository userRepository, IMapper mapper, IRestaurantRepository restaurantRepository, ITokenAccessor tokenAccessor, IAuthTokenService authTokenService)
     {
         _userRepository = userRepository;
         _mapper = mapper;
         _restaurantRepository = restaurantRepository;
         _tokenAccessor = tokenAccessor;
+        _authTokenService = authTokenService;
     }
 
     public override async Task<ServiceObjectResult<bool>> Register(UserRegisterDto requestDto)
@@ -57,9 +60,9 @@ public class UserManager : IUserService
         return response;
     }
 
-    public override async Task<ServiceObjectResult<bool>> Login(UserLoginDto requestDto)
+    public override async Task<ServiceObjectResult<TokenPairDto>> Login(UserLoginDto requestDto)
     {
-        var response = new ServiceObjectResult<bool>();
+        var response = new ServiceObjectResult<TokenPairDto>();
         try
         {
             var user = await _userRepository.GetAsync(x =>
@@ -72,25 +75,11 @@ public class UserManager : IUserService
                 return response;
             }
 
-            var tokenDto = new TokenDto
-            {
-                UserId = user.Id,
-                Token = Guid.NewGuid(),
-                Expiration = DateTime.UtcNow.AddDays(30),
-                Role = AuthorizationServiceEnums.UserRoleEnumList[user.UserRoleId]
-            };
+            var tokenPair = await _authTokenService.GenerateTokenPairAsync(user);
 
-            if (user.UserRoleId is (short)AuthorizationServiceEnums.UserRoleEnums.SellerAdmin or (short)AuthorizationServiceEnums.UserRoleEnums.SellerUser)
-            {
-                tokenDto.SellerId = user.SellerId;
-                var restaurants = _restaurantRepository.GetList(x => x.SellerId == user.SellerId && !x.DeletedDate.HasValue, size: 100);
-                tokenDto.RestaurantIds = restaurants?.Items?.Select(x => x.Id)?.ToList();
-            }
-
-            var tokenStringData = JsonConvert.SerializeObject(tokenDto);
-            var tokenString = tokenStringData.Encrypt();
-            response.Token = tokenString;
-            response.SetData(true);
+            // Keep backward compatibility: set Token on response for cookie-based auth
+            response.Token = tokenPair.AccessToken;
+            response.SetData(tokenPair);
         }
         catch (Exception e)
         {

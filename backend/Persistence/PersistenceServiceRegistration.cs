@@ -29,6 +29,8 @@ public static class PersistenceServiceRegistration
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IAddressRepository, AddressRepository>();
         services.AddScoped<IScheduledTaskRepository, ScheduledTaskRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
 
         //Seller
         services.AddScoped<ICuisineRepository, CuisineRepository>();

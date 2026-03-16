@@ -52,6 +52,10 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     // Subscription Usage
     public ISubscriptionUsageRepository SubscriptionUsageRepository { get; }
 
+    // Auth
+    public IRefreshTokenRepository RefreshTokenRepository { get; }
+    public IPasswordResetTokenRepository PasswordResetTokenRepository { get; }
+
     public UnitOfWork(BaseDbContext context,
         ICuisineRepository cuisineRepository,
         ISellerRepository sellerRepository,
@@ -85,7 +89,9 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         ICourierCompanyRepository courierCompanyRepository,
         ICourierCompanyMemberRepository courierCompanyMemberRepository,
         IRestaurantCourierCompanyRepository restaurantCourierCompanyRepository,
-        ISubscriptionUsageRepository subscriptionUsageRepository)
+        ISubscriptionUsageRepository subscriptionUsageRepository,
+        IRefreshTokenRepository refreshTokenRepository,
+        IPasswordResetTokenRepository passwordResetTokenRepository)
     {
         _context = context;
         CuisineRepository = cuisineRepository;
@@ -121,6 +127,8 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         CourierCompanyMemberRepository = courierCompanyMemberRepository;
         RestaurantCourierCompanyRepository = restaurantCourierCompanyRepository;
         SubscriptionUsageRepository = subscriptionUsageRepository;
+        RefreshTokenRepository = refreshTokenRepository;
+        PasswordResetTokenRepository = passwordResetTokenRepository;
     }
 
     public async Task BeginTransactionAsync()

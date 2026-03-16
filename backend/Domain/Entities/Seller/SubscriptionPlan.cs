@@ -10,6 +10,8 @@ public class SubscriptionPlan : Entity<Guid>
     public decimal MonthlyPrice { get; set; }
     public int MaxRestaurants { get; set; }
     public bool IsActive { get; set; } = true;
+    public int MaxOrdersPerMonth { get; set; } = int.MaxValue;
+    public short OverageAction { get; set; } = (short)Base.Enums.AuthorizationServiceEnums.OverageActionEnums.Block;
 
     public virtual ICollection<Subscription> Subscriptions { get; set; }
 }

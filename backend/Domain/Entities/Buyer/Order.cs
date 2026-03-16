@@ -26,7 +26,12 @@ public class Order : Entity<Guid>
 
     // Courier
     public Guid? CourierId { get; set; }
+    public Guid? CourierCompanyId { get; set; }
+    public Guid? PickedUpByCourierId { get; set; }
+    public DateTime? PickedUpAt { get; set; }
+    public DateTime? DeliveredAt { get; set; }
     public decimal? DeliveryDistanceKm { get; set; }
+    public virtual Courier.CourierCompany? CourierCompany { get; set; }
 
     public virtual ICollection<OrderItem> OrderItems { get; set; }
     public virtual ICollection<Payment> Payments { get; set; }

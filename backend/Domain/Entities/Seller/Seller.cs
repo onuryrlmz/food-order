@@ -14,4 +14,5 @@ public class Seller : Entity<Guid>
     public string? ApiKey { get; set; }
     public string? ApiSecret { get; set; }
     public bool IsEInvoiceAvaible { get; set; }
+    public string? IdentityNumber { get; set; }
 }

@@ -100,7 +100,7 @@ CourierCompanyAdmin = 7  (UserRoleEnums'a eklenir)
 3. "Bu benim kuryem" talebi → CourierCompanyMember (PendingApproval)
 4. Kurye app'te talebi görür → Onaylar veya Reddeder
 5. Onaylarsa → Active, kurye artık o firmanın üyesi
-6. Bir kurye aynı anda sadece bir firmaya bağlı olabilir (DB unique constraint: CourierId + Active status)
+6. Bir kurye aynı anda sadece bir firmaya bağlı olabilir. MySQL filtered index desteklemediği için bu kısıt application-level'da enforce edilir: sahiplenme talebi gönderilmeden önce kurye'nin aktif veya bekleyen başka üyeliği var mı kontrol edilir (SELECT COUNT). Ayrıca INSERT öncesi tekrar kontrol yapılır (double-check pattern).
 
 #### 2.3.3 Restoran ↔ Firma Anlaşması
 1. Satıcı panelinden "Kurumsal Firma Ekle" → sadece Active firmalar aranabilir
@@ -153,7 +153,7 @@ PUT    /v1/courier/company/restaurant-invites/{id}/accept
 PUT    /v1/courier/company/restaurant-invites/{id}/reject
 
 # Sipariş teslim alma (Courier + CourierCompanyAdmin)
-GET    /v1/courier/pickup/{restaurantId}/pending?page=1&size=20  — Bekleyen siparişler (paginated)
+GET    /v1/courier/pickup/{restaurantId}/pending?page=1&size=20  — Bekleyen siparişler (paginated, ORDER BY CreatedDate ASC)
 PUT    /v1/courier/pickup/{orderId}/confirm                       — Teslim aldım
 
 # Admin
@@ -230,8 +230,11 @@ WHERE SubscriptionId = @subscriptionId
 Eğer ilgili ay için SubscriptionUsage kaydı yoksa (yeni ay başlangıcı), önce get-or-create pattern ile kayıt oluşturulur:
 
 ```sql
-INSERT IGNORE INTO SubscriptionUsages (Id, SubscriptionId, Year, Month, OrderCount, UpdatedAt)
-VALUES (@id, @subscriptionId, @year, @month, 0, @now);
+INSERT INTO SubscriptionUsages (Id, SubscriptionId, Year, Month, OrderCount, UpdatedAt)
+VALUES (@id, @subscriptionId, @year, @month, 0, @now)
+ON DUPLICATE KEY UPDATE OrderCount = OrderCount;
+-- ON DUPLICATE KEY UPDATE: sadece duplicate key hatasini yutulur,
+-- FK violation gibi gercek hatalar yine firlatilir (INSERT IGNORE'dan farki budur)
 ```
 
 Ardından atomik increment çalıştırılır. Bu sayede background job scheduler olmadan da yeni ay kaydı lazy olarak oluşur.
@@ -303,6 +306,8 @@ iyzico mapping:
 - `Individual (1)` → `subMerchantType = "PERSONAL"` → IdentityNumber kullanılır
 - `Company (2)` → `subMerchantType = "LIMITED_OR_JOINT_STOCK_COMPANY"` → TaxCode kullanılır
 
+> **Breaking change:** Mevcut kod Individual tipi için `PRIVATE_COMPANY` kullanıyor, bu `PERSONAL` olarak değiştirilecek. PERSONAL tipi için `taxOffice` ve `legalCompanyTitle` gönderilmez, sadece `identityNumber`, `iban`, `contactName`, `contactSurname`, `email` yeterlidir. iyzico sandbox'ta PERSONAL tipi test edilmelidir.
+
 UI'da Limited/Anonim ayrımı gösterilmez çünkü iyzico'da ikisi de aynı tipe map edilir.
 
 ### 4.4 DTO Güncelleme
@@ -312,8 +317,15 @@ UI'da Limited/Anonim ayrımı gösterilmez çünkü iyzico'da ikisi de aynı tip
 - IdentityNumber (string?) — bireysel satıcılar için TC kimlik no (TaxCode'dan ayrı)
 ```
 
+Guncellenmesi gereken tum DTO'lar:
+- `CreateSubMerchantDto` → + IdentityNumber
+- Seller registration request DTO → + IdentityNumber (Individual secildiginde zorunlu)
+- Seller update request DTO → + IdentityNumber
+- Admin seller detail response DTO → + IdentityNumber (masked: "***12345678")
+
 `IyzicoServiceAdapter` güncellenir:
 - `Individual` tipi için `IdentityNumber` alanı kullanılır (mevcut kod TaxCode'u IdentityNumber olarak gönderiyor, bu düzeltilir)
+- Seller address bilgisi: mevcut kodda hardcoded "Test Adres" gönderiliyor. Seller'ın kayıtlı adres bilgisi (User → Address tablosundan default adres) kullanılacak. Adres yoksa seller kayıt formunda adres zorunlu hale getirilecek.
 
 ### 4.5 Veri Saklama
 
@@ -462,6 +474,8 @@ Kurye "Teslim Ettim" → Order.StatusId = Delivered, DeliveredAt = now
 → Müşteri tarafında "Teslim Edildi" olarak güncellenir
 ```
 
+**Yetki doğrulaması:** Deliver endpoint'i çağrıldığında, istekte bulunan kurye'nin userId'si `Order.CourierId` veya `Order.PickedUpByCourierId` ile eşleşmeli. Eşleşmezse 403 Forbidden döner.
+
 > Not: Kurye teslim yetkisi yeni bir trust model değişikliğidir. Mevcut durumda sadece seller status değiştirebiliyordu. Faz 1'de sadece Delivered statüsü kurye tarafından set edilebilir, diğer tüm geçişler seller'da kalır.
 
 ### 5.8 API Endpoint'leri
@@ -508,6 +522,14 @@ GET  /v1/customer/order/{orderId}/courier-location  — kurye konumu (polling)
 
 ### Yeni User Role
 - `CourierCompanyAdmin = 7` — firma yöneticisi rolü (Courier yetkilerini kapsar)
+
+### Yetkilendirme Güncelleme Checklist
+CourierCompanyAdmin rolünün kabul edilmesi gereken mevcut controller'lar:
+- `CourierAuthController` — login/register/profile
+- `CourierOrderController` — active orders, history
+- `CourierLocationController` — location update
+- `CourierRestaurantController` (mevcut) — restaurant invites, accept/reject
+- Tüm bu controller'lardaki `[AuthorizeAPIRequest]` role check'leri `Courier || CourierCompanyAdmin` olarak güncellenir
 
 ---
 

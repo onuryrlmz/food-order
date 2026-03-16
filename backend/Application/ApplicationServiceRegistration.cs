@@ -27,6 +27,7 @@ using Application.Services.Seller.CouponService;
 using Application.Services.Seller.CourierService;
 using Application.Services.Seller.OptionTemplateService;
 using Application.Services.Seller.SubscriptionService;
+using Application.Services.Courier.CourierCompanyService;
 using Application.Services.Buyer.CardService;
 using Application.Services.Buyer.CouponService;
 using Application.Services.Buyer.PaymentService;
@@ -125,6 +126,7 @@ public static class ApplicationServiceRegistration
         services.AddScoped<ICourierLocationService, CourierLocationManager>();
         services.AddScoped<ICourierRestaurantService, CourierRestaurantManager>();
         services.AddScoped<IAdminCourierService, AdminCourierManager>();
+        services.AddScoped<ICourierCompanyService, CourierCompanyManager>();
 
         //Global
         services.AddScoped<ITokenAccessor, TokenAccessor>();

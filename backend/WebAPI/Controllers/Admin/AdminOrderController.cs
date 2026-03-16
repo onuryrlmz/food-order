@@ -1,4 +1,5 @@
 using Application.Services.Buyer.OrderService;
+using Application.Services.Buyer.PaymentService;
 using Base.Enums;
 using Domain.Dto.Admin.Order;
 using Domain.Service;
@@ -12,8 +13,13 @@ namespace WebAPI.Controllers.Admin;
 public class AdminOrderController : BaseController
 {
     private readonly IOrderService _orderService;
+    private readonly IPaymentService _paymentService;
 
-    public AdminOrderController(IOrderService orderService) => _orderService = orderService;
+    public AdminOrderController(IOrderService orderService, IPaymentService paymentService)
+    {
+        _orderService = orderService;
+        _paymentService = paymentService;
+    }
 
     [HttpGet("list")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
@@ -32,4 +38,9 @@ public class AdminOrderController : BaseController
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> UpdateStatus(Guid orderId, [FromQuery] short statusId)
         => await _orderService.UpdateOrderStatus(orderId, statusId);
+
+    [HttpPost("{orderId}/refund")]
+    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    public async Task<ServiceObjectResult<bool>> RefundOrder(Guid orderId, [FromQuery] string? reason = null)
+        => await _paymentService.RefundOrderAsync(orderId, reason);
 }

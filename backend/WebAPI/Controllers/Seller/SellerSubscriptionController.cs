@@ -64,4 +64,9 @@ public class SellerSubscriptionController : BaseController
     public async Task<ServiceObjectResult<bool>> Upgrade(
         [FromBody] UpgradeRequestDto request)
         => await _subscriptionService.UpgradePlanAsync(Client!._tokenDto!.SellerId ?? Guid.Empty, request);
+
+    [HttpPut("auto-renew")]
+    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    public async Task<ServiceObjectResult<bool>> ToggleAutoRenew([FromQuery] Guid restaurantId, [FromQuery] bool enabled)
+        => await _subscriptionService.ToggleAutoRenewAsync(restaurantId, enabled);
 }

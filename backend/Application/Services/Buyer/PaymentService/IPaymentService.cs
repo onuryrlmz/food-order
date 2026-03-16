@@ -8,4 +8,5 @@ public interface IPaymentService
 {
     Task<Payment> CreatePendingPayment(Guid orderId, Guid userId, Guid sellerId, decimal amount, int paymentOptionId, string? providerConversationId, string? cardAlias = null);
     Task<ServiceObjectResult<bool>> HandlePaymentCallback(string conversationId, string paymentId, string conversationData, bool isSuccess, string? errorMessage = null);
+    Task<ServiceObjectResult<bool>> RefundOrderAsync(Guid orderId, string? reason = null);
 }

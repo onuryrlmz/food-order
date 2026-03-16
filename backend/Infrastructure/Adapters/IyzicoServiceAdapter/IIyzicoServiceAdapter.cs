@@ -11,6 +11,9 @@ public interface IIyzicoServiceAdapter
     Task<ServiceObjectResult<InitiatePaymentResponseDto>> InitiatePayment(IyzicoPaymentRequestDto requestDto);
     Task<ServiceObjectResult<ThreeDsCompleteResultDto>> CompleteThreeDsPayment(string conversationId, string paymentId, string conversationData);
 
+    // Refund
+    ServiceObjectResult<RefundResultDto> RefundPayment(string paymentTransactionId, decimal amount);
+
     // Card storage
     ServiceObjectResult<CardStorageResultDto> CreateCard(string externalId, string email, string? cardUserKey, string cardAlias, string cardNumber, string expireYear, string expireMonth, string cardHolderName);
     ServiceObjectResult<List<CardDetailDto>> GetCards(string cardUserKey);
@@ -26,6 +29,13 @@ public class ThreeDsCompleteResultDto
     public string? LastFourDigits { get; set; }
     public string? CardType { get; set; }
     public string? CardAssociation { get; set; }
+}
+
+public class RefundResultDto
+{
+    public bool Success { get; set; }
+    public string? TransactionId { get; set; }
+    public string? ErrorMessage { get; set; }
 }
 
 public class CardStorageResultDto

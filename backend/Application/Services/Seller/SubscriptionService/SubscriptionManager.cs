@@ -573,6 +573,44 @@ public class SubscriptionManager : ISubscriptionService
         return result;
     }
 
+    public async Task<ServiceObjectResult<bool>> ToggleAutoRenewAsync(Guid restaurantId, bool enabled)
+    {
+        var result = new ServiceObjectResult<bool>();
+        try
+        {
+            var token = _tokenAccessor.GetToken();
+            if (token?.SellerId == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
+            var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(
+                s => s.RestaurantId == restaurantId
+                    && s.SellerId == token.SellerId.Value
+                    && s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active,
+                enableTracking: true);
+
+            if (subscription == null)
+            {
+                result.Fail("Aktif abonelik bulunamadı.");
+                return result;
+            }
+
+            subscription.AutoRenew = enabled;
+            _unitOfWork.SubscriptionRepository.Update(subscription);
+            await _unitOfWork.CompleteAsync();
+
+            result.SetData(true);
+            result.AddSuccessMessage(enabled ? "Otomatik yenileme açıldı." : "Otomatik yenileme kapatıldı.");
+        }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+        return result;
+    }
+
     private static GetSubscriptionPlanResponseDto MapPlanToDto(SubscriptionPlan plan) => new()
     {
         Id = plan.Id,

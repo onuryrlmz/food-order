@@ -95,6 +95,48 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
         return result;
     }
 
+    public ServiceObjectResult<RefundResultDto> RefundPayment(string paymentTransactionId, decimal amount)
+    {
+        var result = new ServiceObjectResult<RefundResultDto>();
+        try
+        {
+            var request = new CreateRefundRequest
+            {
+                Locale = Locale.TR.ToString(),
+                ConversationId = Guid.NewGuid().ToString(),
+                PaymentTransactionId = paymentTransactionId,
+                Price = amount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+                Ip = "85.34.78.112",
+                Currency = Currency.TRY.ToString()
+            };
+
+            var refund = Refund.Create(request, options);
+
+            if (refund.Status == Status.SUCCESS.ToString())
+            {
+                result.SetData(new RefundResultDto
+                {
+                    Success = true,
+                    TransactionId = refund.PaymentTransactionId
+                });
+            }
+            else
+            {
+                result.SetData(new RefundResultDto
+                {
+                    Success = false,
+                    ErrorMessage = refund.ErrorMessage
+                });
+            }
+        }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
+        return result;
+    }
+
     public async Task<ServiceObjectResult<InitiatePaymentResponseDto>> InitiatePayment(IyzicoPaymentRequestDto requestDto)
     {
         var result = new ServiceObjectResult<InitiatePaymentResponseDto>();

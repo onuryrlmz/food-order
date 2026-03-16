@@ -20,4 +20,5 @@ public interface ISubscriptionService
     Task<ServiceObjectResult<UpgradePreviewDto>> GetUpgradePreviewAsync(Guid sellerId, Guid restaurantId, Guid targetPlanId);
     Task<ServiceObjectResult<bool>> UpgradePlanAsync(Guid sellerId, UpgradeRequestDto request);
     Task<ServiceObjectResult<bool>> IncrementOrderCountAsync(Guid restaurantId);
+    Task<ServiceObjectResult<bool>> ToggleAutoRenewAsync(Guid restaurantId, bool enabled);
 }

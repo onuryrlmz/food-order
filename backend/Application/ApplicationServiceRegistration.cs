@@ -33,6 +33,7 @@ using Application.Services.Courier.CourierCompanyService;
 using Application.Services.Buyer.CardService;
 using Application.Services.Buyer.CouponService;
 using Application.Services.Buyer.PaymentService;
+using Application.Services.Common.BackgroundJobs;
 using Base.Constant;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -138,6 +139,10 @@ public static class ApplicationServiceRegistration
 
         //Background Workers
         services.AddHostedService<RestaurantCdnWorker>();
+
+        //Background Jobs (Hangfire)
+        services.AddScoped<ISubscriptionJobService, SubscriptionJobService>();
+        services.AddScoped<ICleanupJobService, CleanupJobService>();
 
         return services;
     }

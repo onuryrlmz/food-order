@@ -1,3 +1,4 @@
+using Application.Services.Common.NotificationService;
 using Domain.Dto.Courier;
 using Domain.Entities.Courier;
 using Domain.Service;
@@ -8,10 +9,14 @@ namespace Application.Services.Courier;
 public class CourierLocationManager : ICourierLocationService
 {
     private readonly ICourierLocationRepository _courierLocationRepository;
+    private readonly IRealtimeNotifier _realtimeNotifier;
 
-    public CourierLocationManager(ICourierLocationRepository courierLocationRepository)
+    public CourierLocationManager(
+        ICourierLocationRepository courierLocationRepository,
+        IRealtimeNotifier realtimeNotifier)
     {
         _courierLocationRepository = courierLocationRepository;
+        _realtimeNotifier = realtimeNotifier;
     }
 
     public async Task<ServiceObjectResult<bool>> UpdateLocationAsync(Guid courierId, decimal latitude, decimal longitude, Guid? orderId = null)
@@ -31,8 +36,11 @@ public class CourierLocationManager : ICourierLocationService
 
             await _courierLocationRepository.AddAsync(location);
 
-            // Rate limiting için eski kayıtları temizle (son 24 saatten eskiler)
-            // Bu işlem bir background job ile yapılabilir
+            // Push courier location via SignalR to order group
+            if (orderId.HasValue)
+            {
+                _ = _realtimeNotifier.NotifyCourierLocationUpdated(orderId.Value, latitude, longitude);
+            }
 
             result.SetData(true);
             return result;

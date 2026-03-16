@@ -12,7 +12,9 @@ using Domain.Entities.Common;
 using Domain.Entities.Courier;
 using Domain.Entities.Seller;
 using Domain.Service;
+using Application.Services.Common.NotificationService;
 using Infrastructure.Adapters.IyzicoServiceAdapter;
+using Infrastructure.Adapters.OneSignalAdapter;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -39,6 +41,8 @@ public class OrderManager : IOrderService
     private readonly IRestaurantCourierRepository _restaurantCourierRepository;
     private readonly ICourierLocationRepository _courierLocationRepository;
     private readonly ISubscriptionService _subscriptionService;
+    private readonly INotificationService _notificationService;
+    private readonly IRealtimeNotifier _realtimeNotifier;
 
     public OrderManager(
         IUnitOfWork unitOfWork,
@@ -53,7 +57,9 @@ public class OrderManager : IOrderService
         IConfiguration configuration,
         IRestaurantCourierRepository restaurantCourierRepository,
         ICourierLocationRepository courierLocationRepository,
-        ISubscriptionService subscriptionService)
+        ISubscriptionService subscriptionService,
+        INotificationService notificationService,
+        IRealtimeNotifier realtimeNotifier)
     {
         _unitOfWork = unitOfWork;
         _tokenAccessor = tokenAccessor;
@@ -68,6 +74,8 @@ public class OrderManager : IOrderService
         _restaurantCourierRepository = restaurantCourierRepository;
         _courierLocationRepository = courierLocationRepository;
         _subscriptionService = subscriptionService;
+        _notificationService = notificationService;
+        _realtimeNotifier = realtimeNotifier;
     }
 
     public async Task<ServiceObjectResult<PlaceOrderResponseDto>> PlaceOrder(PlaceOrderRequestDto requestDto)
@@ -648,6 +656,13 @@ public class OrderManager : IOrderService
             await AddStatusHistory(order.Id, AuthorizationServiceEnums.OrderStatusEnums.CancelledByBuyer, reason);
             await _unitOfWork.CompleteAsync();
 
+            // Auto-refund on cancellation
+            _ = Task.Run(async () =>
+            {
+                try { await _paymentService.RefundOrderAsync(order.Id, "Müşteri tarafından iptal"); }
+                catch { /* best effort */ }
+            });
+
             result.SetData(true);
         }
         catch (Exception e)
@@ -743,6 +758,32 @@ public class OrderManager : IOrderService
             await AddStatusHistory(order.Id, (AuthorizationServiceEnums.OrderStatusEnums)statusId,
                 courierId.HasValue ? $"Kurye atanmıştır: {courierId.Value}" : null);
             await _unitOfWork.CompleteAsync();
+
+            // Push notification + SignalR
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var statusName = ((AuthorizationServiceEnums.OrderStatusEnums)statusId) switch
+                    {
+                        AuthorizationServiceEnums.OrderStatusEnums.Preparing => "Siparişiniz hazırlanıyor",
+                        AuthorizationServiceEnums.OrderStatusEnums.OnTheWay => "Siparişiniz yola çıktı",
+                        AuthorizationServiceEnums.OrderStatusEnums.Delivered => "Siparişiniz teslim edildi",
+                        AuthorizationServiceEnums.OrderStatusEnums.RejectedByRestaurant => "Siparişiniz restoran tarafından reddedildi",
+                        _ => "Sipariş durumu güncellendi"
+                    };
+
+                    await _notificationService.SendToUserAsync(order.UserId, "Sipariş Güncelleme", statusName,
+                        new Dictionary<string, string> { { "orderId", order.Id.ToString() } });
+
+                    await _realtimeNotifier.NotifyOrderStatusChanged(order.Id, statusId);
+
+                    // Auto-refund on rejection
+                    if (statusId == (short)AuthorizationServiceEnums.OrderStatusEnums.RejectedByRestaurant)
+                        await _paymentService.RefundOrderAsync(order.Id, "Restoran tarafından reddedildi");
+                }
+                catch { /* best effort */ }
+            });
 
             result.SetData(true);
         }

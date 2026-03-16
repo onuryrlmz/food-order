@@ -1,5 +1,9 @@
 using Application;
+using Application.Services.Common.BackgroundJobs;
+using Application.Services.Common.NotificationService;
 using Base.Constant;
+using Hangfire;
+using Hangfire.MySql;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
@@ -11,6 +15,8 @@ using Persistence;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System.Threading.RateLimiting;
 using WebAPI.Helpers;
+using WebAPI.Hubs;
+using WebAPI.Services;
 using TokenOptions = NArchitecture.Core.Security.JWT.TokenOptions;
 
 // .env dosyasını yükle (önce yükle ki diğer config'ler override edebilsin)
@@ -29,6 +35,17 @@ builder.Services.AddApplicationServices();
 builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddInfrastructureServices();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IRealtimeNotifier, SignalRRealtimeNotifier>();
+
+// Hangfire
+var connectionString = builder.Configuration.GetConnectionString("FoodOrderApp");
+builder.Services.AddHangfire(config => config
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseStorage(new MySqlStorage(connectionString, new MySqlStorageOptions())));
+builder.Services.AddHangfireServer();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -138,4 +155,18 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<OrderHub>("/hubs/order");
+app.MapHub<RestaurantHub>("/hubs/restaurant");
+
+// Hangfire dashboard (admin only in production)
+app.UseHangfireDashboard("/hangfire");
+
+// Register recurring jobs
+RecurringJob.AddOrUpdate<ISubscriptionJobService>("check-expired", s => s.CheckExpiredSubscriptions(), Cron.Hourly);
+RecurringJob.AddOrUpdate<ISubscriptionJobService>("expiry-reminder", s => s.SendExpiryReminders(), Cron.Daily);
+RecurringJob.AddOrUpdate<ISubscriptionJobService>("auto-renew", s => s.AutoRenewSubscriptions(), Cron.Daily);
+RecurringJob.AddOrUpdate<ISubscriptionJobService>("usage-warnings", s => s.CheckUsageWarnings(), Cron.Hourly);
+RecurringJob.AddOrUpdate<ICleanupJobService>("cleanup-reset-tokens", s => s.CleanupExpiredResetTokens(), Cron.Daily);
+RecurringJob.AddOrUpdate<ICleanupJobService>("cleanup-refresh-tokens", s => s.CleanupExpiredRefreshTokens(), Cron.Weekly);
+
 app.Run();

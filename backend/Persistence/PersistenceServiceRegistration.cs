@@ -64,6 +64,8 @@ public static class PersistenceServiceRegistration
         services.AddScoped<IOrderItemRepository, OrderItemRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IOrderStatusHistoryRepository, OrderStatusHistoryRepository>();
+        services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<IFavoriteRestaurantRepository, FavoriteRestaurantRepository>();
         services.AddScoped<IRestaurantCdnUpdateQueueRepository, RestaurantCdnUpdateQueueRepository>();
         services.AddScoped<IRestaurantWorkingHourRepository, RestaurantWorkingHourRepository>();
 

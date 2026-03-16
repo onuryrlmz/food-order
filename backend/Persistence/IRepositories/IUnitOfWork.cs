@@ -45,6 +45,10 @@ public interface IUnitOfWork : IDisposable
     // Subscription Usage
     ISubscriptionUsageRepository SubscriptionUsageRepository { get; }
 
+    // Buyer - Reviews & Favorites
+    IReviewRepository ReviewRepository { get; }
+    IFavoriteRestaurantRepository FavoriteRestaurantRepository { get; }
+
     // Auth
     IRefreshTokenRepository RefreshTokenRepository { get; }
     IPasswordResetTokenRepository PasswordResetTokenRepository { get; }

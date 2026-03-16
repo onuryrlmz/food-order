@@ -52,6 +52,10 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     // Subscription Usage
     public ISubscriptionUsageRepository SubscriptionUsageRepository { get; }
 
+    // Buyer - Reviews & Favorites
+    public IReviewRepository ReviewRepository { get; }
+    public IFavoriteRestaurantRepository FavoriteRestaurantRepository { get; }
+
     // Auth
     public IRefreshTokenRepository RefreshTokenRepository { get; }
     public IPasswordResetTokenRepository PasswordResetTokenRepository { get; }
@@ -90,6 +94,8 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         ICourierCompanyMemberRepository courierCompanyMemberRepository,
         IRestaurantCourierCompanyRepository restaurantCourierCompanyRepository,
         ISubscriptionUsageRepository subscriptionUsageRepository,
+        IReviewRepository reviewRepository,
+        IFavoriteRestaurantRepository favoriteRestaurantRepository,
         IRefreshTokenRepository refreshTokenRepository,
         IPasswordResetTokenRepository passwordResetTokenRepository)
     {
@@ -127,6 +133,8 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         CourierCompanyMemberRepository = courierCompanyMemberRepository;
         RestaurantCourierCompanyRepository = restaurantCourierCompanyRepository;
         SubscriptionUsageRepository = subscriptionUsageRepository;
+        ReviewRepository = reviewRepository;
+        FavoriteRestaurantRepository = favoriteRestaurantRepository;
         RefreshTokenRepository = refreshTokenRepository;
         PasswordResetTokenRepository = passwordResetTokenRepository;
     }

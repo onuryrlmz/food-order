@@ -11,6 +11,7 @@ import Input from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
 import fetcher from '@/lib/fetcher';
 import api from '@/lib/api';
+import { retryIyzicoRegistration } from '@/lib/api';
 
 const COMPANY_TYPES = [
   { value: 1, label: 'Şahıs Şirketi' },
@@ -59,6 +60,7 @@ export default function SellersPage() {
   const [saving, setSaving] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [retrying, setRetrying] = useState(null);
 
   const { data, isLoading, mutate } = useSWR(
     `/v1/admin/seller/list?page=${page}&pageSize=20`,
@@ -136,6 +138,23 @@ export default function SellersPage() {
     }
   };
 
+  const handleRetryIyzico = async (sellerId) => {
+    setRetrying(sellerId);
+    try {
+      const res = await retryIyzicoRegistration(sellerId);
+      if (res.hasFailed) {
+        toast(res.messages?.[0]?.description || 'iyzico kaydı başarısız', 'error');
+      } else {
+        toast('iyzico kaydı başarılı', 'success');
+        mutate();
+      }
+    } catch (err) {
+      toast(err.response?.data?.messages?.[0]?.description || 'iyzico kaydı başarısız', 'error');
+    } finally {
+      setRetrying(null);
+    }
+  };
+
   const columns = [
     {
       title: 'Firma',
@@ -175,6 +194,29 @@ export default function SellersPage() {
       title: 'Kayıt',
       key: 'createdDate',
       render: (v) => v ? new Date(v).toLocaleDateString('tr-TR') : '—',
+    },
+    {
+      title: 'iyzico',
+      key: 'subMerchantKey',
+      width: 140,
+      render: (v, row) => {
+        if (v) return <Badge label="Kayıtlı" color="green" />;
+        if (row.companyStatus === 2) {
+          return (
+            <div className="flex items-center gap-1.5">
+              <Badge label="Kayıtsız" color="gray" />
+              <button
+                onClick={() => handleRetryIyzico(row.id)}
+                disabled={retrying === row.id}
+                className="text-xs text-orange-600 hover:text-orange-800 font-medium disabled:opacity-50"
+              >
+                {retrying === row.id ? '...' : 'Tekrar Dene'}
+              </button>
+            </div>
+          );
+        }
+        return <Badge label="Kayıtsız" color="gray" />;
+      },
     },
     {
       title: 'İşlem',

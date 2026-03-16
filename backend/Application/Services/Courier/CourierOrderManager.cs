@@ -114,4 +114,44 @@ public class CourierOrderManager : ICourierOrderService
             return result;
         }
     }
+
+    public async Task<ServiceObjectResult<bool>> DeliverOrderAsync(Guid courierId, Guid orderId)
+    {
+        var result = new ServiceObjectResult<bool>();
+        try
+        {
+            var order = await _unitOfWork.OrderRepository.GetAsync(o => o.Id == orderId, enableTracking: true);
+            if (order == null)
+            {
+                result.Fail("Sipariş bulunamadı.");
+                return result;
+            }
+
+            // Validate courier ownership
+            if (order.CourierId != courierId && order.PickedUpByCourierId != courierId)
+            {
+                result.Fail("Bu siparişi teslim etme yetkiniz yok.");
+                return result;
+            }
+
+            if (order.StatusId != (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay)
+            {
+                result.Fail("Sipariş 'Yolda' durumunda değil.");
+                return result;
+            }
+
+            order.StatusId = (short)AuthorizationServiceEnums.OrderStatusEnums.Delivered;
+            order.DeliveredAt = DateTime.UtcNow;
+            _unitOfWork.OrderRepository.Update(order);
+            await _unitOfWork.CompleteAsync();
+
+            result.SetData(true);
+            result.AddSuccessMessage("Sipariş teslim edildi.");
+        }
+        catch (Exception ex)
+        {
+            result.Fail($"Hata: {ex.Message}");
+        }
+        return result;
+    }
 }

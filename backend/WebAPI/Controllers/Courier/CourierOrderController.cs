@@ -31,4 +31,11 @@ public class CourierOrderController : BaseController
         [FromQuery] int month,
         [FromQuery] int year)
         => await _courierOrderService.GetOrderHistoryAsync(Client!._tokenDto!.UserId, month, year);
+
+    [HttpPut("{orderId}/deliver")]
+    [AuthorizeAPIRequest(true, false,
+        AuthorizationServiceEnums.UserRoleEnums.Courier,
+        AuthorizationServiceEnums.UserRoleEnums.CourierCompanyAdmin)]
+    public async Task<ServiceObjectResult<bool>> DeliverOrder(Guid orderId)
+        => await _courierOrderService.DeliverOrderAsync(Client!._tokenDto!.UserId, orderId);
 }

@@ -7,4 +7,5 @@ public interface ICourierOrderService
 {
     Task<ServiceCollectionResult<CourierOrderDto>> GetActiveOrdersAsync(Guid courierId);
     Task<ServiceCollectionResult<CourierOrderDto>> GetOrderHistoryAsync(Guid courierId, int month, int year);
+    Task<ServiceObjectResult<bool>> DeliverOrderAsync(Guid courierId, Guid orderId);
 }

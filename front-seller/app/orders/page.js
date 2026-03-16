@@ -8,7 +8,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import fetcher from '@/lib/fetcher';
-import api, { getRestaurantCouriers } from '@/lib/api';
+import api, { getRestaurantCouriers, getRestaurantCourierCompanies } from '@/lib/api';
 
 const STATUS_MAP = {
   4: { label: 'Onay Bekliyor', color: 'yellow' },
@@ -51,6 +51,9 @@ export default function OrdersPage() {
   const [couriers, setCouriers] = useState([]);
   const [couriersLoading, setCouriersLoading] = useState(false);
   const [selectedCourierId, setSelectedCourierId] = useState(null);
+  const [courierCompanies, setCourierCompanies] = useState([]);
+  const [dispatchMode, setDispatchMode] = useState('individual'); // 'individual' | 'company'
+  const [selectedCompanyId, setSelectedCompanyId] = useState(null);
 
   const { data: restaurantsData } = useSWR('/v1/seller/restaurant/list', fetcher);
   const restaurants = restaurantsData?.data || [];
@@ -86,22 +89,46 @@ export default function OrdersPage() {
   const openCourierModal = async (orderId, restaurantId) => {
     setCourierModal({ orderId, restaurantId });
     setSelectedCourierId(null);
+    setSelectedCompanyId(null);
+    setDispatchMode('individual');
     setCouriersLoading(true);
     try {
-      const res = await getRestaurantCouriers(restaurantId);
-      const activeCouriers = (res?.data || []).filter(c => c.statusId === 1);
+      const [courierRes, companyRes] = await Promise.all([
+        getRestaurantCouriers(restaurantId),
+        getRestaurantCourierCompanies(restaurantId).catch(() => ({ data: [] })),
+      ]);
+      const activeCouriers = (courierRes?.data || []).filter(c => c.statusId === 1);
       setCouriers(activeCouriers);
+      const activeCompanies = (companyRes?.data || []).filter(c => c.statusId === 1);
+      setCourierCompanies(activeCompanies);
     } catch {
       setCouriers([]);
+      setCourierCompanies([]);
       toast('Kuryeler yüklenemedi', 'error');
     } finally {
       setCouriersLoading(false);
     }
   };
 
-  const confirmCourierAndSend = () => {
-    if (!selectedCourierId || !courierModal) return;
-    handleStatusUpdate(courierModal.orderId, 7, selectedCourierId);
+  const confirmCourierAndSend = async () => {
+    if (!courierModal) return;
+    if (dispatchMode === 'individual') {
+      if (!selectedCourierId) return;
+      handleStatusUpdate(courierModal.orderId, 7, selectedCourierId);
+    } else {
+      if (!selectedCompanyId) return;
+      setUpdating(courierModal.orderId);
+      try {
+        await api.put(`/v1/seller/order/${courierModal.orderId}/status?statusId=7&courierCompanyId=${selectedCompanyId}`);
+        toast('Sipariş kurye firmasına atandı', 'success');
+        mutate();
+        setCourierModal(null);
+      } catch (err) {
+        toast(err.response?.data?.messages?.[0]?.description || 'Hata oluştu', 'error');
+      } finally {
+        setUpdating(null);
+      }
+    }
   };
 
   const handleReject = (order) => {
@@ -339,42 +366,94 @@ export default function OrdersPage() {
       {/* Kurye Seçim Modal */}
       <Modal isOpen={!!courierModal} onClose={() => setCourierModal(null)} title="Kurye Seç" size="sm">
         <div className="space-y-4">
-          <p className="text-sm text-gray-500">Siparişi yola çıkarmak için bir kurye seçin:</p>
+          <p className="text-sm text-gray-500">Siparişi yola çıkarmak için bir kurye veya firma seçin:</p>
+
+          {/* Dispatch mode toggle */}
+          {courierCompanies.length > 0 && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setDispatchMode('individual'); setSelectedCompanyId(null); }}
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  dispatchMode === 'individual'
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Bireysel Kurye
+              </button>
+              <button
+                onClick={() => { setDispatchMode('company'); setSelectedCourierId(null); }}
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  dispatchMode === 'company'
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Kurumsal Firma
+              </button>
+            </div>
+          )}
+
           {couriersLoading ? (
             <div className="flex justify-center py-6">
               <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : couriers.length === 0 ? (
-            <div className="bg-yellow-50 rounded-lg p-4 text-sm text-yellow-700">
-              <p className="font-medium">Aktif kurye bulunamadı.</p>
-              <p className="text-xs text-yellow-500 mt-1">Önce Kuryelerim sayfasından kurye ekleyin ve kuryenin daveti kabul etmesini bekleyin.</p>
-            </div>
+          ) : dispatchMode === 'individual' ? (
+            couriers.length === 0 ? (
+              <div className="bg-yellow-50 rounded-lg p-4 text-sm text-yellow-700">
+                <p className="font-medium">Aktif kurye bulunamadı.</p>
+                <p className="text-xs text-yellow-500 mt-1">Önce Kuryelerim sayfasından kurye ekleyin ve kuryenin daveti kabul etmesini bekleyin.</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {couriers.map(c => (
+                  <button
+                    key={c.courierId}
+                    onClick={() => setSelectedCourierId(c.courierId)}
+                    className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
+                      selectedCourierId === c.courierId
+                        ? 'border-emerald-500 bg-emerald-50'
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    <p className="text-sm font-medium text-gray-800">
+                      {c.firstName || ''} {c.lastName || ''}
+                      {!c.firstName && !c.lastName && c.email}
+                    </p>
+                    <p className="text-xs text-gray-400">{c.email}{c.phoneNumber ? ` · ${c.phoneNumber}` : ''}</p>
+                  </button>
+                ))}
+              </div>
+            )
           ) : (
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {couriers.map(c => (
-                <button
-                  key={c.courierId}
-                  onClick={() => setSelectedCourierId(c.courierId)}
-                  className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
-                    selectedCourierId === c.courierId
-                      ? 'border-emerald-500 bg-emerald-50'
-                      : 'border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  <p className="text-sm font-medium text-gray-800">
-                    {c.firstName || ''} {c.lastName || ''}
-                    {!c.firstName && !c.lastName && c.email}
-                  </p>
-                  <p className="text-xs text-gray-400">{c.email}{c.phoneNumber ? ` · ${c.phoneNumber}` : ''}</p>
-                </button>
-              ))}
-            </div>
+            courierCompanies.length === 0 ? (
+              <div className="bg-yellow-50 rounded-lg p-4 text-sm text-yellow-700">
+                <p className="font-medium">Aktif kurye firması bulunamadı.</p>
+                <p className="text-xs text-yellow-500 mt-1">Önce Kurye Firmaları sayfasından firma ekleyin.</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {courierCompanies.map(c => (
+                  <button
+                    key={c.courierCompanyId}
+                    onClick={() => setSelectedCompanyId(c.courierCompanyId)}
+                    className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
+                      selectedCompanyId === c.courierCompanyId
+                        ? 'border-emerald-500 bg-emerald-50'
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    <p className="text-sm font-medium text-gray-800">{c.companyName}</p>
+                  </button>
+                ))}
+              </div>
+            )
           )}
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" onClick={() => setCourierModal(null)}>Vazgeç</Button>
             <Button
               variant="primary"
-              disabled={!selectedCourierId}
+              disabled={dispatchMode === 'individual' ? !selectedCourierId : !selectedCompanyId}
               loading={updating === courierModal?.orderId}
               onClick={confirmCourierAndSend}
             >

@@ -94,4 +94,25 @@ export const verifyResetCode = (emailOrPhone, code) =>
 export const resetPassword = (emailOrPhone, code, newPassword) =>
   api.post('/v1/auth/reset-password', { emailOrPhone, code, newPassword }).then(r => r.data);
 
+// Analytics
+export const getAdminAnalytics = (period = 'month') =>
+  api.get(`/v1/admin/analytics?period=${period}`).then(r => r.data);
+
+export const getAdminOrderTrends = (period = 'month') =>
+  api.get(`/v1/admin/analytics/orders?period=${period}`).then(r => r.data);
+
+export const getAdminTopRestaurants = (period = 'month') =>
+  api.get(`/v1/admin/analytics/top-restaurants?period=${period}`).then(r => r.data);
+
+// Overdue Orders
+export const getOverdueOrders = (page = 1) =>
+  api.get(`/v1/admin/order/overdue?page=${page}&pageSize=20`).then(r => r.data);
+
+// Reviews
+export const getReviews = (page = 1, status = '') =>
+  api.get(`/v1/admin/reviews?page=${page}&pageSize=20${status ? `&status=${status}` : ''}`).then(r => r.data);
+
+export const deleteReview = (reviewId) =>
+  api.delete(`/v1/admin/reviews/${reviewId}`).then(r => r.data);
+
 export default api;

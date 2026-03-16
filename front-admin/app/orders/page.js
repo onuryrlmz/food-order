@@ -9,7 +9,7 @@ import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import fetcher from '@/lib/fetcher';
-import api from '@/lib/api';
+import api, { getOverdueOrders } from '@/lib/api';
 
 const STATUS_MAP = {
   1: { label: 'Ödeme Bekliyor', color: 'yellow' },
@@ -44,14 +44,15 @@ const STATUS_OPTIONS = [
 ];
 
 const FILTER_TABS = [
-  { key: null, label: 'Tümü' },
-  { key: 1, label: 'Ödeme Bekliyor' },
+  { key: null, label: 'Tumu' },
+  { key: 'overdue', label: 'Geciken Siparisler' },
+  { key: 1, label: 'Odeme Bekliyor' },
   { key: 4, label: 'Onay Bekliyor' },
-  { key: 6, label: 'Hazırlanıyor' },
+  { key: 6, label: 'Hazirlaniyor' },
   { key: 7, label: 'Yolda' },
   { key: 8, label: 'Teslim Edildi' },
-  { key: 2, label: 'Ödeme Başarısız' },
-  { key: 3, label: 'İptal' },
+  { key: 2, label: 'Odeme Basarisiz' },
+  { key: 3, label: 'Iptal' },
 ];
 
 export default function OrdersPage() {
@@ -64,7 +65,10 @@ export default function OrdersPage() {
   const [newStatus, setNewStatus] = useState('');
   const [updating, setUpdating] = useState(false);
 
-  const swrKey = `/v1/admin/order/list?page=${page}&pageSize=20${statusFilter ? `&statusId=${statusFilter}` : ''}`;
+  const isOverdue = statusFilter === 'overdue';
+  const swrKey = isOverdue
+    ? `/v1/admin/order/overdue?page=${page}&pageSize=20`
+    : `/v1/admin/order/list?page=${page}&pageSize=20${statusFilter ? `&statusId=${statusFilter}` : ''}`;
   const { data, isLoading, mutate } = useSWR(swrKey, fetcher);
 
   const orders = data?.data || [];

@@ -6,19 +6,36 @@ import {
   FlatList,
   RefreshControl,
   ActivityIndicator,
+  TouchableOpacity,
+  Alert,
 } from 'react-native';
-import {getActiveOrders} from '../../api/courierService';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {getActiveOrders, deliverOrder} from '../../api/courierService';
+import {startTracking, stopTracking} from '../../services/locationTracker';
+import {openNavigation} from '../../services/navigationHelper';
 
-export default function ActiveOrdersScreen() {
+export default function ActiveOrdersScreen({navigation}) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [actionLoading, setActionLoading] = useState(null);
 
   const fetchOrders = useCallback(async () => {
     try {
       const result = await getActiveOrders();
       if (!result.hasFailed) {
-        setOrders(result.data || []);
+        const data = result.data || [];
+        setOrders(data);
+
+        // Start/stop location tracking based on picked-up orders
+        const hasPickedUp = data.some(
+          o => o.statusId === 7 && o.pickedUpByCourierId,
+        );
+        if (hasPickedUp) {
+          startTracking();
+        } else {
+          stopTracking();
+        }
       }
     } catch (error) {
       console.error('Fetch orders error:', error);
@@ -30,14 +47,47 @@ export default function ActiveOrdersScreen() {
 
   useEffect(() => {
     fetchOrders();
-    // 30 saniyede bir yenile
     const interval = setInterval(fetchOrders, 30000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      stopTracking();
+    };
   }, [fetchOrders]);
 
   const onRefresh = () => {
     setRefreshing(true);
     fetchOrders();
+  };
+
+  const handleDeliver = order => {
+    Alert.alert(
+      'Teslim Et',
+      `Siparis #${order.orderNumber || order.orderId?.slice(0, 8)} teslim edildi olarak isaretlensin mi?`,
+      [
+        {text: 'Iptal', style: 'cancel'},
+        {
+          text: 'Teslim Ettim',
+          onPress: async () => {
+            setActionLoading(order.orderId);
+            try {
+              const result = await deliverOrder(order.orderId);
+              if (!result.hasFailed) {
+                fetchOrders();
+              } else {
+                Alert.alert(
+                  'Hata',
+                  result.messages?.map(m => m.description).join(', ') || 'Teslim edilemedi.',
+                );
+              }
+            } catch {
+              Alert.alert('Hata', 'Bir hata olustu.');
+            } finally {
+              setActionLoading(null);
+            }
+          },
+        },
+      ],
+    );
   };
 
   const getStatusStyle = statusId => {
@@ -53,6 +103,9 @@ export default function ActiveOrdersScreen() {
 
   const renderOrder = ({item}) => {
     const statusStyle = getStatusStyle(item.statusId);
+    const isPickedUp = item.statusId === 7 && item.pickedUpByCourierId;
+    const isDelivering = actionLoading === item.orderId;
+
     return (
       <View style={styles.orderCard}>
         <View style={styles.orderHeader}>
@@ -78,6 +131,50 @@ export default function ActiveOrdersScreen() {
         <Text style={styles.timestamp}>
           {new Date(item.createdDate).toLocaleString('tr-TR')}
         </Text>
+
+        {isPickedUp && (
+          <View style={styles.actionRow}>
+            <TouchableOpacity
+              style={styles.mapButton}
+              onPress={() =>
+                navigation.navigate('OrderMap', {
+                  deliveryLat: item.deliveryLatitude,
+                  deliveryLng: item.deliveryLongitude,
+                  deliveryAddress: item.deliveryArea,
+                  orderId: item.orderId,
+                })
+              }
+              activeOpacity={0.7}>
+              <MaterialCommunityIcons name="map" size={16} color="#0C5460" />
+              <Text style={styles.mapButtonText}>Haritada Gor</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.navButton}
+              onPress={() =>
+                openNavigation(item.deliveryLatitude, item.deliveryLongitude)
+              }
+              activeOpacity={0.7}>
+              <MaterialCommunityIcons name="navigation" size={16} color="#fff" />
+              <Text style={styles.navButtonText}>Navigasyon</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.deliverButton, isDelivering && {opacity: 0.7}]}
+              onPress={() => handleDeliver(item)}
+              disabled={isDelivering}
+              activeOpacity={0.8}>
+              {isDelivering ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="check-circle" size={16} color="#fff" />
+                  <Text style={styles.deliverButtonText}>Teslim Ettim</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     );
   };
@@ -107,9 +204,9 @@ export default function ActiveOrdersScreen() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyIcon}>📦</Text>
-            <Text style={styles.emptyText}>Aktif siparişiniz yok</Text>
+            <Text style={styles.emptyText}>Aktif siparisiniz yok</Text>
             <Text style={styles.emptySubtext}>
-              Yeni siparişler burada görünecek
+              Yeni siparisler burada gorunecek
             </Text>
           </View>
         }
@@ -185,6 +282,54 @@ const styles = StyleSheet.create({
   timestamp: {
     fontSize: 12,
     color: '#999',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    marginTop: 12,
+    gap: 8,
+  },
+  mapButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#D1ECF1',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 4,
+  },
+  mapButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#0C5460',
+  },
+  navButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 4,
+  },
+  navButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  deliverButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#34C759',
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 4,
+  },
+  deliverButtonText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#fff',
   },
   empty: {
     alignItems: 'center',

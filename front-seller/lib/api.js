@@ -128,4 +128,27 @@ export const verifyResetCode = (emailOrPhone, code) =>
 export const resetPassword = (emailOrPhone, code, newPassword) =>
   api.post('/v1/auth/reset-password', { emailOrPhone, code, newPassword }).then(r => r.data);
 
+// Analytics
+export const getSellerAnalytics = (restaurantId, period = 'month') =>
+  api.get(`/v1/seller/analytics?restaurantId=${restaurantId}&period=${period}`).then(r => r.data);
+
+export const getSellerOrderTrends = (restaurantId, period = 'month') =>
+  api.get(`/v1/seller/analytics/orders?restaurantId=${restaurantId}&period=${period}`).then(r => r.data);
+
+export const getSellerTopProducts = (restaurantId, period = 'month') =>
+  api.get(`/v1/seller/analytics/top-products?restaurantId=${restaurantId}&period=${period}`).then(r => r.data);
+
+// Image Upload
+export const uploadProductImage = (productId, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('productId', productId);
+  return api.post('/v1/seller/product/image', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then(r => r.data);
+};
+
+export const deleteProductImage = (imageId) =>
+  api.delete(`/v1/seller/product/image/${imageId}`).then(r => r.data);
+
 export default api;

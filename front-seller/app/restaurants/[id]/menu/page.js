@@ -10,6 +10,82 @@ import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import fetcher from '@/lib/fetcher';
 import api from '@/lib/api';
+import { uploadProductImage, deleteProductImage } from '@/lib/api';
+
+// ─── Image Upload Section ────────────────────────────────────────────────────
+function ProductImageUpload({ productId, images = [], onUpdate }) {
+  const toast = useToast();
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast('Sadece JPG, PNG, WebP dosyalari yuklenebilir', 'error');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast('Dosya boyutu 5MB\'dan kucuk olmalidir', 'error');
+      return;
+    }
+    setUploading(true);
+    try {
+      await uploadProductImage(productId, file);
+      toast('Gorsel yuklendi', 'success');
+      onUpdate?.();
+    } catch (err) {
+      toast(err.response?.data?.messages?.[0]?.description || 'Yuklenirken hata olustu', 'error');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleDelete = async (imageId) => {
+    if (!confirm('Bu gorseli silmek istediginize emin misiniz?')) return;
+    try {
+      await deleteProductImage(imageId);
+      toast('Gorsel silindi', 'success');
+      onUpdate?.();
+    } catch (err) {
+      toast(err.response?.data?.messages?.[0]?.description || 'Silinirken hata olustu', 'error');
+    }
+  };
+
+  return (
+    <div className="col-span-2">
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">Urun Gorselleri</label>
+      <div className="flex gap-2 flex-wrap mb-2">
+        {images.map(img => (
+          <div key={img.id} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
+            <img src={img.url} alt="" className="w-full h-full object-cover" />
+            <button
+              type="button"
+              onClick={() => handleDelete(img.id)}
+              className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        ))}
+      </div>
+      <label className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 text-sm text-gray-600 hover:bg-gray-50 cursor-pointer transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+        {uploading ? (
+          <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        )}
+        {uploading ? 'Yukleniyor...' : 'Gorsel Yukle'}
+        <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFileChange} />
+      </label>
+    </div>
+  );
+}
 
 // ─── Products Tab ────────────────────────────────────────────────────────────
 function ProductsTab({ restaurantId }) {
@@ -142,6 +218,13 @@ function ProductsTab({ restaurantId }) {
               <textarea value={form.description || ''} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))}
                 rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-400 resize-none" />
             </div>
+            {modal && modal !== 'add' && modal.id && (
+              <ProductImageUpload
+                productId={modal.id}
+                images={modal.images || []}
+                onUpdate={() => mutate()}
+              />
+            )}
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="secondary" onClick={() => setModal(null)}>İptal</Button>

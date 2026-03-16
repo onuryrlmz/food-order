@@ -1,5 +1,6 @@
 using Application.Services.Buyer.PaymentService;
 using Application.Services.Common.TokenService;
+using Application.Services.Seller.SubscriptionService;
 using Application.Utils;
 using Base.Enums;
 using Domain.Dto.Admin.Order;
@@ -37,6 +38,7 @@ public class OrderManager : IOrderService
     private readonly string _callbackBaseUrl;
     private readonly IRestaurantCourierRepository _restaurantCourierRepository;
     private readonly ICourierLocationRepository _courierLocationRepository;
+    private readonly ISubscriptionService _subscriptionService;
 
     public OrderManager(
         IUnitOfWork unitOfWork,
@@ -50,7 +52,8 @@ public class OrderManager : IOrderService
         BaseDbContext context,
         IConfiguration configuration,
         IRestaurantCourierRepository restaurantCourierRepository,
-        ICourierLocationRepository courierLocationRepository)
+        ICourierLocationRepository courierLocationRepository,
+        ISubscriptionService subscriptionService)
     {
         _unitOfWork = unitOfWork;
         _tokenAccessor = tokenAccessor;
@@ -64,6 +67,7 @@ public class OrderManager : IOrderService
         _callbackBaseUrl = configuration["SiteSettings:ServiceUrl"] ?? "http://localhost:7276";
         _restaurantCourierRepository = restaurantCourierRepository;
         _courierLocationRepository = courierLocationRepository;
+        _subscriptionService = subscriptionService;
     }
 
     public async Task<ServiceObjectResult<PlaceOrderResponseDto>> PlaceOrder(PlaceOrderRequestDto requestDto)
@@ -112,6 +116,14 @@ public class OrderManager : IOrderService
             if (!hasActiveSubscription)
             {
                 result.Fail("Bu restoran şu an siparişe kapalı.");
+                return result;
+            }
+
+            // Subscription order limit check
+            var usageResult = await _subscriptionService.IncrementOrderCountAsync(requestDto.RestaurantId);
+            if (usageResult.HasFailed)
+            {
+                result.Fail(usageResult.Messages.First().Description);
                 return result;
             }
 

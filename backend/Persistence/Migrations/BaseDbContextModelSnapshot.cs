@@ -255,6 +255,9 @@ namespace Persistence.Migrations
                         .HasColumnType("char(36)")
                         .HasColumnName("CouponId");
 
+                    b.Property<Guid?>("CourierId")
+                        .HasColumnType("char(36)");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("CreatedDate");
@@ -266,6 +269,9 @@ namespace Persistence.Migrations
                     b.Property<Guid>("DeliveryAddressId")
                         .HasColumnType("char(36)")
                         .HasColumnName("DeliveryAddressId");
+
+                    b.Property<decimal?>("DeliveryDistanceKm")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<decimal>("DiscountAmount")
                         .HasPrecision(18, 2)
@@ -736,12 +742,12 @@ namespace Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("849a57af-f57d-44ab-912d-ed6ea7e989c6"),
+                            Id = new Guid("9a3dd2e3-990f-4c74-a5e8-80ab4aae43bc"),
                             AddressLine1 = "Ahmet Yesevi, Bey Sk. No:4/B",
                             AddressName = "Gönderim Adresi",
                             AddressType = (short)4,
                             CityId = new Guid("5d0c385c-810d-4dd6-9462-259183584992"),
-                            CreatedDate = new DateTime(2026, 3, 15, 0, 56, 13, 48, DateTimeKind.Local).AddTicks(190),
+                            CreatedDate = new DateTime(2026, 3, 15, 17, 30, 44, 146, DateTimeKind.Local).AddTicks(9880),
                             FirstName = "Pizzacı",
                             IsDefault = true,
                             LastName = "Ahmet",
@@ -755,13 +761,13 @@ namespace Persistence.Migrations
                         },
                         new
                         {
-                            Id = new Guid("30385ad5-6e3b-4fb8-91e8-5796dfc60d3e"),
+                            Id = new Guid("fad0aa27-367d-4eb7-98d9-988a14a50bc1"),
                             AddressLine1 = "Geçit Mah. 1. Begonya Sok. No: 57 Daire: 6",
                             AddressLine2 = "Oliva Sitesi B Blok",
                             AddressName = "Teslimat Adresi",
                             AddressType = (short)2,
                             CityId = new Guid("5d0c385c-810d-4dd6-9462-259183584992"),
-                            CreatedDate = new DateTime(2026, 3, 15, 0, 56, 13, 48, DateTimeKind.Local).AddTicks(2790),
+                            CreatedDate = new DateTime(2026, 3, 15, 17, 30, 44, 147, DateTimeKind.Local).AddTicks(2480),
                             FirstName = "Alıcı",
                             InvoiceType = (short)1,
                             IsDefault = true,
@@ -866,10 +872,10 @@ namespace Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("e64691af-b480-458a-aef2-5dd597945a11"),
-                            ActivationKey = new Guid("ff5267dc-28a9-4aeb-a67d-909b213f4cdc"),
+                            Id = new Guid("a84fb8a0-947c-4075-8e0c-51fdef4e63bc"),
+                            ActivationKey = new Guid("1858998e-4973-47ec-87fc-4d125bd8527a"),
                             BirthDate = new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedDate = new DateTime(2026, 3, 15, 0, 56, 13, 32, DateTimeKind.Local).AddTicks(7400),
+                            CreatedDate = new DateTime(2026, 3, 15, 17, 30, 44, 130, DateTimeKind.Local).AddTicks(8920),
                             Email = "admin@esnaftan.com",
                             FirstName = "Esnaftan",
                             LastName = "Admin",
@@ -881,10 +887,10 @@ namespace Persistence.Migrations
                         },
                         new
                         {
-                            Id = new Guid("5bb84ec7-6def-4bd8-8325-a952d36ee38d"),
-                            ActivationKey = new Guid("2bebe51a-6dbb-45f5-a7a4-130b6156377f"),
+                            Id = new Guid("f684cf9c-7086-488d-9166-dd278802fcbd"),
+                            ActivationKey = new Guid("2891fa77-ec96-498c-bbca-9e00315ef2c3"),
                             BirthDate = new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedDate = new DateTime(2026, 3, 15, 0, 56, 13, 40, DateTimeKind.Local).AddTicks(1760),
+                            CreatedDate = new DateTime(2026, 3, 15, 17, 30, 44, 138, DateTimeKind.Local).AddTicks(5980),
                             Email = "info@pizzaci.com",
                             FirstName = "Pizzacı",
                             LastName = "Ahmet",
@@ -898,9 +904,9 @@ namespace Persistence.Migrations
                         new
                         {
                             Id = new Guid("67d10056-c978-4e93-89d6-ab078cbab543"),
-                            ActivationKey = new Guid("506e8a02-2e4d-49d3-908e-79ec9ff10f48"),
+                            ActivationKey = new Guid("e08dcfd0-f4ba-4634-9aac-19d0fd6f467c"),
                             BirthDate = new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedDate = new DateTime(2026, 3, 15, 0, 56, 13, 40, DateTimeKind.Local).AddTicks(1980),
+                            CreatedDate = new DateTime(2026, 3, 15, 17, 30, 44, 138, DateTimeKind.Local).AddTicks(6190),
                             Email = "alici@gmail.com",
                             FirstName = "Alıcı",
                             LastName = "Mehmet",
@@ -947,6 +953,84 @@ namespace Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserExternalInfos");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Courier.CourierLocation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("CourierId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<decimal>("Latitude")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<decimal>("Longitude")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourierId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("CourierLocation", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Courier.RestaurantCourier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("AgreementEndDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("AgreementStartDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("CourierId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("RestaurantId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourierId");
+
+                    b.HasIndex("RestaurantId", "CourierId", "StatusId");
+
+                    b.ToTable("RestaurantCourier", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Seller.Category", b =>
@@ -2021,7 +2105,7 @@ namespace Persistence.Migrations
                             Id = new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"),
                             CompanyStatus = (short)1,
                             CompanyType = (short)2,
-                            CreatedDate = new DateTime(2026, 3, 15, 0, 56, 13, 40, DateTimeKind.Local).AddTicks(8130),
+                            CreatedDate = new DateTime(2026, 3, 15, 17, 30, 44, 139, DateTimeKind.Local).AddTicks(2550),
                             IBAN = "TR260006266822193294982978",
                             IsEInvoiceAvaible = true,
                             LegalName = "Pizzacı Ahmet Ltd. Şti.",
@@ -2438,6 +2522,28 @@ namespace Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Courier.CourierLocation", b =>
+                {
+                    b.HasOne("Domain.Entities.Common.User", "CourierUser")
+                        .WithMany()
+                        .HasForeignKey("CourierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CourierUser");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Courier.RestaurantCourier", b =>
+                {
+                    b.HasOne("Domain.Entities.Common.User", "CourierUser")
+                        .WithMany()
+                        .HasForeignKey("CourierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CourierUser");
                 });
 
             modelBuilder.Entity("Domain.Entities.Seller.Category", b =>

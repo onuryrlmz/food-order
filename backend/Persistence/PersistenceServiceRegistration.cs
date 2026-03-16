@@ -9,7 +9,9 @@ using Persistence.IRepositories.Seller;
 using Persistence.Repositories;
 using Persistence.Repositories.Buyer;
 using Persistence.Repositories.Common;
+using Persistence.Repositories.Courier;
 using Persistence.Repositories.Seller;
+using Persistence.IRepositories.Courier;
 
 namespace Persistence;
 
@@ -62,6 +64,10 @@ public static class PersistenceServiceRegistration
         services.AddScoped<IOrderStatusHistoryRepository, OrderStatusHistoryRepository>();
         services.AddScoped<IRestaurantCdnUpdateQueueRepository, RestaurantCdnUpdateQueueRepository>();
         services.AddScoped<IRestaurantWorkingHourRepository, RestaurantWorkingHourRepository>();
+
+        //Courier
+        services.AddScoped<IRestaurantCourierRepository, RestaurantCourierRepository>();
+        services.AddScoped<ICourierLocationRepository, CourierLocationRepository>();
 
         return services;
     }

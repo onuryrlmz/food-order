@@ -4,6 +4,9 @@ export const orderService = {
   placeOrder: (data) =>
     apiClient.post('/customer/order/place', data),
 
+  getActiveOrders: () =>
+    apiClient.get('/customer/order/active'),
+
   getHistory: (page = 1, pageSize = 20) =>
     apiClient.get('/customer/order/history', {params: {page, pageSize}}),
 

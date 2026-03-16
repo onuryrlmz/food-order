@@ -8,7 +8,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import fetcher from '@/lib/fetcher';
-import api from '@/lib/api';
+import api, { getRestaurantCouriers } from '@/lib/api';
 
 const STATUS_MAP = {
   4: { label: 'Onay Bekliyor', color: 'yellow' },
@@ -47,6 +47,10 @@ export default function OrdersPage() {
   const [detailModal, setDetailModal] = useState(null);
   const [updating, setUpdating] = useState(null);
   const [rejectModal, setRejectModal] = useState(null);
+  const [courierModal, setCourierModal] = useState(null); // { orderId, restaurantId }
+  const [couriers, setCouriers] = useState([]);
+  const [couriersLoading, setCouriersLoading] = useState(false);
+  const [selectedCourierId, setSelectedCourierId] = useState(null);
 
   const { data: restaurantsData } = useSWR('/v1/seller/restaurant/list', fetcher);
   const restaurants = restaurantsData?.data || [];
@@ -60,20 +64,44 @@ export default function OrdersPage() {
   const total = ordersData?.totalDataCount || 0;
   const totalPages = Math.ceil(total / 20) || 1;
 
-  const handleStatusUpdate = async (orderId, statusId) => {
+  const handleStatusUpdate = async (orderId, statusId, courierId = null) => {
     setUpdating(orderId);
     try {
-      await api.put(`/v1/seller/order/${orderId}/status?statusId=${statusId}`);
+      let url = `/v1/seller/order/${orderId}/status?statusId=${statusId}`;
+      if (courierId) url += `&courierId=${courierId}`;
+      await api.put(url);
       const statusLabel = STATUS_MAP[statusId]?.label || 'Güncellendi';
       toast(`Sipariş durumu: ${statusLabel}`, 'success');
       mutate();
       if (detailModal?.id === orderId) setDetailModal(prev => ({ ...prev, statusId }));
       if (rejectModal?.id === orderId) setRejectModal(null);
+      if (courierModal?.orderId === orderId) setCourierModal(null);
     } catch (err) {
       toast(err.response?.data?.messages?.[0]?.description || 'Hata oluştu', 'error');
     } finally {
       setUpdating(null);
     }
+  };
+
+  const openCourierModal = async (orderId, restaurantId) => {
+    setCourierModal({ orderId, restaurantId });
+    setSelectedCourierId(null);
+    setCouriersLoading(true);
+    try {
+      const res = await getRestaurantCouriers(restaurantId);
+      const activeCouriers = (res?.data || []).filter(c => c.statusId === 1);
+      setCouriers(activeCouriers);
+    } catch {
+      setCouriers([]);
+      toast('Kuryeler yüklenemedi', 'error');
+    } finally {
+      setCouriersLoading(false);
+    }
+  };
+
+  const confirmCourierAndSend = () => {
+    if (!selectedCourierId || !courierModal) return;
+    handleStatusUpdate(courierModal.orderId, 7, selectedCourierId);
   };
 
   const handleReject = (order) => {
@@ -179,7 +207,7 @@ export default function OrdersPage() {
                             size="sm"
                             variant={ns.variant}
                             loading={updating === order.id}
-                            onClick={() => ns.id === 5 ? handleReject(order) : handleStatusUpdate(order.id, ns.id)}
+                            onClick={() => ns.id === 5 ? handleReject(order) : ns.id === 7 ? openCourierModal(order.id, order.restaurantId) : handleStatusUpdate(order.id, ns.id)}
                           >
                             {ns.label}
                           </Button>
@@ -298,7 +326,7 @@ export default function OrdersPage() {
                   size="sm"
                   variant={ns.variant}
                   loading={updating === detailModal.id}
-                  onClick={() => ns.id === 5 ? handleReject(detailModal) : handleStatusUpdate(detailModal.id, ns.id)}
+                  onClick={() => ns.id === 5 ? handleReject(detailModal) : ns.id === 7 ? openCourierModal(detailModal.id, detailModal.restaurantId) : handleStatusUpdate(detailModal.id, ns.id)}
                 >
                   {ns.label}
                 </Button>
@@ -306,6 +334,54 @@ export default function OrdersPage() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Kurye Seçim Modal */}
+      <Modal isOpen={!!courierModal} onClose={() => setCourierModal(null)} title="Kurye Seç" size="sm">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500">Siparişi yola çıkarmak için bir kurye seçin:</p>
+          {couriersLoading ? (
+            <div className="flex justify-center py-6">
+              <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : couriers.length === 0 ? (
+            <div className="bg-yellow-50 rounded-lg p-4 text-sm text-yellow-700">
+              <p className="font-medium">Aktif kurye bulunamadı.</p>
+              <p className="text-xs text-yellow-500 mt-1">Önce Kuryelerim sayfasından kurye ekleyin ve kuryenin daveti kabul etmesini bekleyin.</p>
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {couriers.map(c => (
+                <button
+                  key={c.courierId}
+                  onClick={() => setSelectedCourierId(c.courierId)}
+                  className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
+                    selectedCourierId === c.courierId
+                      ? 'border-emerald-500 bg-emerald-50'
+                      : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <p className="text-sm font-medium text-gray-800">
+                    {c.firstName || ''} {c.lastName || ''}
+                    {!c.firstName && !c.lastName && c.email}
+                  </p>
+                  <p className="text-xs text-gray-400">{c.email}{c.phoneNumber ? ` · ${c.phoneNumber}` : ''}</p>
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => setCourierModal(null)}>Vazgeç</Button>
+            <Button
+              variant="primary"
+              disabled={!selectedCourierId}
+              loading={updating === courierModal?.orderId}
+              onClick={confirmCourierAndSend}
+            >
+              Yola Çıkar
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       {/* Reddetme Onay Modal */}

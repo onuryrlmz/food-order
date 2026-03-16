@@ -2,6 +2,7 @@
 using Infrastructure.Adapters.GetirAdapter;
 using Infrastructure.Adapters.IyzicoServiceAdapter;
 using Infrastructure.Adapters.YemekSepetiAdapter;
+using Infrastructure.Sms;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure;
@@ -14,6 +15,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IIyzicoServiceAdapter, IyzicoServiceAdapter>();
         services.AddScoped<IGetirServiceAdapter, GetirServiceAdapter>();
         services.AddScoped<IYemekSepetiAdapter, YemekSepetiAdapter>();
+        services.AddScoped<ISmsSender, NetGsmSmsSender>();
 
         return services;
     }

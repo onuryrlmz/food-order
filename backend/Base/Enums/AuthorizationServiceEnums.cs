@@ -57,7 +57,8 @@ public class AuthorizationServiceEnums
         User = 2,
         Anonymous = 3,
         SellerAdmin = 4,
-        SellerUser = 5
+        SellerUser = 5,
+        Courier = 6
     }
 
     public enum UserStatusEnums : short
@@ -78,6 +79,22 @@ public class AuthorizationServiceEnums
         Preparing = 6,
         OnTheWay = 7,
         Delivered = 8
+    }
+
+    public enum CourierStatusEnums : short
+    {
+        Offline = 1,
+        Online = 2,
+        OnDelivery = 3
+    }
+
+    public enum RestaurantCourierStatusEnums : short
+    {
+        PendingApproval = 0,
+        Active = 1,
+        RejectedByCourier = 2,
+        TerminatedByCourier = 3,
+        TerminatedByRestaurant = 4,
     }
 
     public enum PaymentStatusEnums : short

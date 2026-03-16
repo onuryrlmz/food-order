@@ -56,7 +56,8 @@ public class UserController : BaseController
         AuthorizationServiceEnums.UserRoleEnums.User,
         AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
         AuthorizationServiceEnums.UserRoleEnums.SellerUser,
-        AuthorizationServiceEnums.UserRoleEnums.Admin)]
+        AuthorizationServiceEnums.UserRoleEnums.Admin,
+        AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceObjectResult<GetUserProfileDto>> GetProfile()
         => await _userService.GetProfile();
 
@@ -65,7 +66,8 @@ public class UserController : BaseController
         AuthorizationServiceEnums.UserRoleEnums.User,
         AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
         AuthorizationServiceEnums.UserRoleEnums.SellerUser,
-        AuthorizationServiceEnums.UserRoleEnums.Admin)]
+        AuthorizationServiceEnums.UserRoleEnums.Admin,
+        AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceObjectResult<bool>> UpdateProfile([FromBody] UpdateUserProfileDto requestDto)
         => await _userService.UpdateProfile(requestDto);
 
@@ -74,7 +76,8 @@ public class UserController : BaseController
         AuthorizationServiceEnums.UserRoleEnums.User,
         AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
         AuthorizationServiceEnums.UserRoleEnums.SellerUser,
-        AuthorizationServiceEnums.UserRoleEnums.Admin)]
+        AuthorizationServiceEnums.UserRoleEnums.Admin,
+        AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceObjectResult<bool>> ChangePassword([FromBody] ChangePasswordDto requestDto)
         => await _userService.ChangePassword(requestDto);
 }

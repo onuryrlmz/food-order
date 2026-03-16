@@ -2,18 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import useSWR from 'swr';
 import { logout } from '@/lib/auth';
+import fetcher from '@/lib/fetcher';
 
 const navItems = [
   {
     label: 'Dashboard',
     href: '/dashboard',
     icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />,
-  },
-  {
-    label: 'Restoranlarım',
-    href: '/restaurants',
-    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />,
   },
   {
     label: 'Siparişler',
@@ -32,8 +29,18 @@ const navItems = [
   },
 ];
 
+const restaurantSubItems = [
+  { label: 'Bilgiler', suffix: '' },
+  { label: 'Menü', suffix: '/menu' },
+  { label: 'Kuryeler', suffix: '/couriers' },
+];
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const { data: restaurantsData } = useSWR('/v1/seller/restaurant/list', fetcher);
+  const restaurants = restaurantsData?.data || [];
+
+  const isRestaurantsOpen = pathname.startsWith('/restaurants');
 
   return (
     <aside className="fixed top-0 left-0 h-full w-64 bg-gray-900 text-white flex flex-col z-40">
@@ -71,6 +78,69 @@ export default function Sidebar() {
               </li>
             );
           })}
+
+          {/* Restoranlarım — with dynamic sub-menu */}
+          <li>
+            <Link
+              href="/restaurants"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                isRestaurantsOpen ? 'bg-emerald-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              Restoranlarım
+              <svg className={`w-4 h-4 ml-auto transition-transform ${isRestaurantsOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+
+            {isRestaurantsOpen && restaurants.length > 0 && (
+              <ul className="mt-1 ml-4 pl-4 border-l border-gray-700 space-y-0.5">
+                {restaurants.map((r) => {
+                  const basePath = `/restaurants/${r.id}`;
+                  const isThisRestaurant = pathname.startsWith(basePath);
+                  return (
+                    <li key={r.id}>
+                      <Link
+                        href={basePath}
+                        className={`block px-3 py-1.5 rounded-md text-xs font-semibold truncate transition-colors ${
+                          isThisRestaurant ? 'text-emerald-400' : 'text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        {r.name}
+                      </Link>
+                      {isThisRestaurant && (
+                        <ul className="ml-2 space-y-0.5">
+                          {restaurantSubItems.map((sub) => {
+                            const subHref = basePath + sub.suffix;
+                            const isSubActive = sub.suffix === ''
+                              ? pathname === basePath
+                              : pathname.startsWith(subHref);
+                            return (
+                              <li key={sub.suffix}>
+                                <Link
+                                  href={subHref}
+                                  className={`block px-3 py-1 rounded-md text-xs transition-colors ${
+                                    isSubActive
+                                      ? 'text-white bg-gray-800'
+                                      : 'text-gray-500 hover:text-gray-300'
+                                  }`}
+                                >
+                                  {sub.label}
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </li>
         </ul>
       </nav>
 

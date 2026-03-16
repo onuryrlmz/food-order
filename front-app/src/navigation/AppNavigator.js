@@ -44,6 +44,8 @@ const HomeStackNavigator = () => (
   <HomeStack.Navigator screenOptions={{headerShown: false}}>
     <HomeStack.Screen name="Home" component={HomeScreen} />
     <HomeStack.Screen name="RestaurantDetail" component={RestaurantDetailScreen} />
+    <HomeStack.Screen name="OrderDetail" component={OrderDetailScreen} />
+    <HomeStack.Screen name="OrderHistory" component={OrderHistoryScreen} />
   </HomeStack.Navigator>
 );
 
@@ -62,6 +64,8 @@ const ProfileStackNavigator = () => (
     <ProfileStack.Screen name="AddressList" component={AddressListScreen} />
     <ProfileStack.Screen name="AddAddress" component={AddAddressScreen} />
     <ProfileStack.Screen name="SavedCards" component={SavedCardsScreen} />
+    <ProfileStack.Screen name="OrderHistory" component={OrderHistoryScreen} />
+    <ProfileStack.Screen name="OrderDetail" component={OrderDetailScreen} />
   </ProfileStack.Navigator>
 );
 

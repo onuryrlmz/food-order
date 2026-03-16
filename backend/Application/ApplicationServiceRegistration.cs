@@ -6,6 +6,8 @@ using Application.Services.Common.AddressService;
 using Application.Services.Common.RedisService;
 using Application.Services.Common.TokenService;
 using Application.Services.Common.UserService;
+using Application.Services.Admin.CourierService;
+using Application.Services.Courier;
 using Application.Services.Seller._0_CuisineService;
 using Application.Services.Seller._1_SellerService;
 using Application.Services.Seller._10_CategoryDetailService;
@@ -22,6 +24,7 @@ using Application.Services.Seller._9_CategoryService;
 using Application.Services.Seller._99_RestaurantTransferService;
 using Application.Services.Seller.CdnWorkerService;
 using Application.Services.Seller.CouponService;
+using Application.Services.Seller.CourierService;
 using Application.Services.Seller.OptionTemplateService;
 using Application.Services.Seller.SubscriptionService;
 using Application.Services.Buyer.CardService;
@@ -88,6 +91,7 @@ public static class ApplicationServiceRegistration
         services.AddScoped<ISellerService, SellerManager>();
         services.AddScoped<IRestaurantService, RestaurantManager>();
         services.AddScoped<IRestaurantTransferService, RestaurantTransferService>();
+        services.AddScoped<ICourierService, CourierManager>();
 
         services.AddScoped<IProductService, ProductManager>();
         services.AddScoped<IProductAttributeService, ProductAttributeManager>();
@@ -114,6 +118,13 @@ public static class ApplicationServiceRegistration
         //Coupon
         services.AddScoped<ICouponService, CouponManager>();
         services.AddScoped<ICouponValidationService, CouponValidationManager>();
+
+        //Courier
+        services.AddScoped<ICourierAuthService, CourierAuthManager>();
+        services.AddScoped<ICourierOrderService, CourierOrderManager>();
+        services.AddScoped<ICourierLocationService, CourierLocationManager>();
+        services.AddScoped<ICourierRestaurantService, CourierRestaurantManager>();
+        services.AddScoped<IAdminCourierService, AdminCourierManager>();
 
         //Global
         services.AddScoped<ITokenAccessor, TokenAccessor>();

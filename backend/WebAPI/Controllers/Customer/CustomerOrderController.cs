@@ -20,6 +20,11 @@ public class CustomerOrderController : BaseController
     public async Task<ServiceObjectResult<PlaceOrderResponseDto>> PlaceOrder([FromBody] PlaceOrderRequestDto requestDto)
         => await _orderService.PlaceOrder(requestDto);
 
+    [HttpGet("active")]
+    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    public async Task<ServiceCollectionResult<GetOrderResponseDto>> GetActive()
+        => await _orderService.GetActiveOrders();
+
     [HttpGet("history")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
     public async Task<ServiceCollectionResult<GetOrderResponseDto>> GetHistory(

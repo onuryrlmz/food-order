@@ -18,6 +18,8 @@ import RestaurantCard from '../../components/RestaurantCard';
 import SearchBar from '../../components/SearchBar';
 import CuisineFilter from '../../components/CuisineFilter';
 import EmptyState from '../../components/EmptyState';
+import ActiveOrderBanner, {ActiveOrdersSummary} from '../../components/ActiveOrderBanner';
+import {orderService} from '../../api';
 
 const HomeScreen = ({navigation}) => {
   const {user, isAuthenticated} = useAuth();
@@ -28,13 +30,32 @@ const HomeScreen = ({navigation}) => {
   const [selectedCuisine, setSelectedCuisine] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [activeOrders, setActiveOrders] = useState([]);
+
+  const loadActiveOrders = useCallback(async () => {
+    if (!isAuthenticated) {
+      setActiveOrders([]);
+      return;
+    }
+    try {
+      const res = await orderService.getActiveOrders();
+      if (res.data && !res.data.hasFailed) {
+        setActiveOrders(res.data.rawData || res.data.data || []);
+      }
+    } catch (e) {
+      console.log('Active orders error:', e);
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      if (isAuthenticated) refreshAddress();
+      if (isAuthenticated) {
+        refreshAddress();
+        loadActiveOrders();
+      }
     });
     return unsubscribe;
-  }, [navigation, isAuthenticated]);
+  }, [navigation, isAuthenticated, loadActiveOrders]);
 
   useEffect(() => {
     filterRestaurants();
@@ -42,9 +63,9 @@ const HomeScreen = ({navigation}) => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refreshRestaurants();
+    await Promise.all([refreshRestaurants(), loadActiveOrders()]);
     setRefreshing(false);
-  }, [refreshRestaurants]);
+  }, [refreshRestaurants, loadActiveOrders]);
 
   const filterRestaurants = () => {
     let filtered = [...restaurants];
@@ -108,6 +129,19 @@ const HomeScreen = ({navigation}) => {
           cuisines={cuisines}
           selectedCuisine={selectedCuisine}
           onSelect={setSelectedCuisine}
+        />
+      )}
+
+      {activeOrders.length === 1 && (
+        <ActiveOrderBanner
+          order={activeOrders[0]}
+          onPress={() => navigation.navigate('OrderDetail', {orderId: activeOrders[0].id})}
+        />
+      )}
+      {activeOrders.length > 1 && (
+        <ActiveOrdersSummary
+          orders={activeOrders}
+          onPress={() => navigation.navigate('OrderHistory')}
         />
       )}
 

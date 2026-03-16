@@ -18,4 +18,35 @@ api.interceptors.response.use(
   }
 );
 
+// Courier API functions
+export const addCourier = async (restaurantId, email) => {
+  const res = await api.post(`/v1/seller/restaurant/${restaurantId}/courier/add`, { email });
+  return res.data;
+};
+
+export const getRestaurantCouriers = async (restaurantId) => {
+  const res = await api.get(`/v1/seller/restaurant/${restaurantId}/couriers`);
+  return res.data;
+};
+
+export const removeCourier = async (restaurantId, courierId) => {
+  const res = await api.delete(`/v1/seller/restaurant/${restaurantId}/couriers/${courierId}`);
+  return res.data;
+};
+
+export const assignCourierToOrder = async (orderId, courierId) => {
+  const res = await api.put(`/v1/seller/order/${orderId}/assign-courier`, { courierId });
+  return res.data;
+};
+
+export const getCourierLocation = async (orderId) => {
+  const res = await api.get(`/v1/seller/order/${orderId}/courier-location`);
+  return res.data;
+};
+
+export const getCourierOrderHistory = async (courierId, month, year) => {
+  const res = await api.get(`/v1/seller/courier/${courierId}/orders?month=${month}&year=${year}`);
+  return res.data;
+};
+
 export default api;

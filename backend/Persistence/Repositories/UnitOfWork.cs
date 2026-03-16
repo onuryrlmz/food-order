@@ -4,6 +4,7 @@ using Persistence.Contexts;
 using Persistence.IRepositories;
 using Persistence.IRepositories.Buyer;
 using Persistence.IRepositories.Common;
+using Persistence.IRepositories.Courier;
 using Persistence.IRepositories.Seller;
 
 namespace Persistence.Repositories;
@@ -41,6 +42,10 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     public IRestaurantCdnUpdateQueueRepository RestaurantCdnUpdateQueueRepository { get; }
     public IRestaurantWorkingHourRepository RestaurantWorkingHourRepository { get; }
 
+    // Courier
+    public IRestaurantCourierRepository RestaurantCourierRepository { get; }
+    public ICourierLocationRepository CourierLocationRepository { get; }
+
     public UnitOfWork(BaseDbContext context,
         ICuisineRepository cuisineRepository,
         ISellerRepository sellerRepository,
@@ -68,7 +73,9 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         IOptionTemplateValueOptionRepository optionTemplateValueOptionRepository,
         IOptionTemplateValueOptionValueRepository optionTemplateValueOptionValueRepository,
         IRestaurantCdnUpdateQueueRepository restaurantCdnUpdateQueueRepository,
-        IRestaurantWorkingHourRepository restaurantWorkingHourRepository)
+        IRestaurantWorkingHourRepository restaurantWorkingHourRepository,
+        IRestaurantCourierRepository restaurantCourierRepository,
+        ICourierLocationRepository courierLocationRepository)
     {
         _context = context;
         CuisineRepository = cuisineRepository;
@@ -98,6 +105,8 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         OptionTemplateValueOptionValueRepository = optionTemplateValueOptionValueRepository;
         RestaurantCdnUpdateQueueRepository = restaurantCdnUpdateQueueRepository;
         RestaurantWorkingHourRepository = restaurantWorkingHourRepository;
+        RestaurantCourierRepository = restaurantCourierRepository;
+        CourierLocationRepository = courierLocationRepository;
     }
 
     public async Task BeginTransactionAsync()

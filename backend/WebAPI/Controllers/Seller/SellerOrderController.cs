@@ -39,6 +39,6 @@ public class SellerOrderController : BaseController
     [AuthorizeAPIRequest(true, false,
         AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
         AuthorizationServiceEnums.UserRoleEnums.Admin)]
-    public async Task<ServiceObjectResult<bool>> UpdateStatus(Guid orderId, [FromQuery] short statusId)
-        => await _orderService.UpdateOrderStatus(orderId, statusId);
+    public async Task<ServiceObjectResult<bool>> UpdateStatus(Guid orderId, [FromQuery] short statusId, [FromQuery] Guid? courierId = null)
+        => await _orderService.UpdateOrderStatus(orderId, statusId, courierId);
 }

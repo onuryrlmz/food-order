@@ -12,6 +12,8 @@ public class RestaurantCourierDto : IDto
     public string? LastName { get; set; }
     public short StatusId { get; set; }
     public string StatusName { get; set; }
+    public short? CourierStatusId { get; set; }
+    public string? CourierStatusName { get; set; }
     public DateTime? AgreementStartDate { get; set; }
     public DateTime? AgreementEndDate { get; set; }
     public DateTime CreatedDate { get; set; }

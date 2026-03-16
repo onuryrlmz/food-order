@@ -43,4 +43,11 @@ public class AdminOrderController : BaseController
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> RefundOrder(Guid orderId, [FromQuery] string? reason = null)
         => await _paymentService.RefundOrderAsync(orderId, reason);
+
+    [HttpGet("overdue")]
+    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    public async Task<ServiceCollectionResult<AdminGetOrderResponseDto>> GetOverdueOrders(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+        => await _orderService.GetOverdueOrdersForAdmin(page, pageSize);
 }

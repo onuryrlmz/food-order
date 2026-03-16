@@ -1,9 +1,11 @@
+using Application.Services.Buyer.BasketService;
 using Application.Services.Buyer.PaymentService;
 using Application.Services.Common.TokenService;
 using Application.Services.Seller.SubscriptionService;
 using Application.Utils;
 using Base.Enums;
 using Domain.Dto.Admin.Order;
+using Domain.Dto.Buyer;
 using Domain.Dto.Buyer.Order;
 using Domain.Dto.Payment;
 using Domain.Dto.Seller.Courier;
@@ -43,6 +45,7 @@ public class OrderManager : IOrderService
     private readonly ISubscriptionService _subscriptionService;
     private readonly INotificationService _notificationService;
     private readonly IRealtimeNotifier _realtimeNotifier;
+    private readonly IBasketService _basketService;
 
     public OrderManager(
         IUnitOfWork unitOfWork,
@@ -59,7 +62,8 @@ public class OrderManager : IOrderService
         ICourierLocationRepository courierLocationRepository,
         ISubscriptionService subscriptionService,
         INotificationService notificationService,
-        IRealtimeNotifier realtimeNotifier)
+        IRealtimeNotifier realtimeNotifier,
+        IBasketService basketService)
     {
         _unitOfWork = unitOfWork;
         _tokenAccessor = tokenAccessor;
@@ -76,6 +80,7 @@ public class OrderManager : IOrderService
         _subscriptionService = subscriptionService;
         _notificationService = notificationService;
         _realtimeNotifier = realtimeNotifier;
+        _basketService = basketService;
     }
 
     public async Task<ServiceObjectResult<PlaceOrderResponseDto>> PlaceOrder(PlaceOrderRequestDto requestDto)
@@ -1305,5 +1310,186 @@ public class OrderManager : IOrderService
             restaurant.Longitude.Value,
             addrLat,
             addrLon);
+    }
+
+    public async Task<ServiceCollectionResult<AdminGetOrderResponseDto>> GetOverdueOrdersForAdmin(int page = 1, int pageSize = 20)
+    {
+        var result = new ServiceCollectionResult<AdminGetOrderResponseDto>();
+        try
+        {
+            var now = DateTime.UtcNow;
+
+            var overdueOrders = await _context.Orders
+                .Where(o => o.StatusId == (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay
+                    && o.DeletedDate == null)
+                .Join(
+                    _context.Set<Restaurant>(),
+                    o => o.RestaurantId,
+                    r => r.Id,
+                    (o, r) => new { Order = o, Restaurant = r })
+                .Where(x => x.Order.CreatedDate.AddMinutes(x.Restaurant.MaxDeliveryTime) < now)
+                .OrderByDescending(x => x.Order.CreatedDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var totalCount = await _context.Orders
+                .Where(o => o.StatusId == (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay
+                    && o.DeletedDate == null)
+                .Join(
+                    _context.Set<Restaurant>(),
+                    o => o.RestaurantId,
+                    r => r.Id,
+                    (o, r) => new { Order = o, Restaurant = r })
+                .Where(x => x.Order.CreatedDate.AddMinutes(x.Restaurant.MaxDeliveryTime) < now)
+                .CountAsync();
+
+            var userIds = overdueOrders.Select(x => x.Order.UserId).Distinct().ToList();
+            var users = await _context.Set<Domain.Entities.Common.User>()
+                .Where(u => userIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id);
+
+            var dtos = overdueOrders.Select(x =>
+            {
+                var user = users.GetValueOrDefault(x.Order.UserId);
+                return new AdminGetOrderResponseDto
+                {
+                    Id = x.Order.Id,
+                    UserId = x.Order.UserId,
+                    CustomerName = user != null ? $"{user.FirstName} {user.LastName}" : null,
+                    CustomerEmail = user?.Email,
+                    CustomerPhone = user?.PhoneNumber,
+                    RestaurantId = x.Order.RestaurantId,
+                    RestaurantName = x.Restaurant.Name,
+                    SellerId = x.Order.SellerId,
+                    StatusId = x.Order.StatusId,
+                    StatusName = ((AuthorizationServiceEnums.OrderStatusEnums)x.Order.StatusId).ToString(),
+                    PaymentStatusId = x.Order.PaymentStatusId,
+                    PaymentStatusName = ((AuthorizationServiceEnums.PaymentStatusEnums)x.Order.PaymentStatusId).ToString(),
+                    PaymentOptionId = x.Order.PaymentOptionId,
+                    PaymentOptionName = ((AuthorizationServiceEnums.PaymentOptionEnums)x.Order.PaymentOptionId).ToString(),
+                    TotalProductPrice = x.Order.TotalProductPrice,
+                    ShipmentPrice = x.Order.ShipmentPrice,
+                    DiscountAmount = x.Order.DiscountAmount,
+                    TotalPrice = x.Order.TotalPrice,
+                    CouponId = x.Order.CouponId,
+                    CouponCode = x.Order.CouponCode,
+                    Notes = x.Order.Notes,
+                    CreatedDate = x.Order.CreatedDate
+                };
+            }).ToList();
+
+            result.SetData(totalCount, dtos);
+        }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+        return result;
+    }
+
+    public async Task<ServiceObjectResult<ReorderResponseDto>> ReorderAsync(Guid orderId)
+    {
+        var result = new ServiceObjectResult<ReorderResponseDto>();
+        try
+        {
+            var token = _tokenAccessor.GetToken();
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
+            var order = await _unitOfWork.OrderRepository.GetAsync(
+                o => o.Id == orderId && o.UserId == token.UserId,
+                include: q => q.Include(o => o.OrderItems));
+
+            if (order == null)
+            {
+                result.Fail("Sipariş bulunamadı.");
+                return result;
+            }
+
+            if (order.StatusId != (short)AuthorizationServiceEnums.OrderStatusEnums.Delivered)
+            {
+                result.Fail("Sadece teslim edilmiş siparişler tekrar sipariş edilebilir.");
+                return result;
+            }
+
+            var restaurant = await _restaurantRepository.GetAsync(r => r.Id == order.RestaurantId);
+            if (restaurant == null || !restaurant.IsActive)
+            {
+                result.Fail("Restoran artık aktif değil.");
+                return result;
+            }
+
+            var response = new ReorderResponseDto { Success = true };
+            var basketItems = new List<UpdateBasketDto.UpdateBasketItemDto>();
+
+            foreach (var item in order.OrderItems)
+            {
+                var menu = await _menuRepository.GetAsync(m => m.Id == item.MenuId);
+                if (menu == null || menu.DeletedDate != null)
+                {
+                    response.Warnings.Add(new ReorderWarningDto
+                    {
+                        MenuId = item.MenuId,
+                        MenuName = item.MenuId.ToString(),
+                        WarningType = "Unavailable",
+                        Message = "Bu ürün artık mevcut değil."
+                    });
+                    continue;
+                }
+
+                if (menu.Price != item.UnitPrice)
+                {
+                    response.Warnings.Add(new ReorderWarningDto
+                    {
+                        MenuId = item.MenuId,
+                        MenuName = menu.Name,
+                        WarningType = "PriceChanged",
+                        Message = $"Fiyat değişti: {item.UnitPrice:C2} → {menu.Price:C2}"
+                    });
+                }
+
+                basketItems.Add(new UpdateBasketDto.UpdateBasketItemDto
+                {
+                    MenuId = item.MenuId,
+                    Quantity = item.Quantity,
+                    BasketItemValues = new List<UpdateBasketDto.UpdateBasketItemDto.UpdateBasketItemValueDto>()
+                });
+            }
+
+            if (basketItems.Count == 0)
+            {
+                result.Fail("Siparişin hiçbir ürünü artık mevcut değil.");
+                return result;
+            }
+
+            // Build basket update DTO and add to Redis basket
+            var basketDto = new UpdateBasketDto
+            {
+                RestaurantId = order.RestaurantId,
+                SellerId = order.SellerId,
+                UserShippingAddressId = order.DeliveryAddressId,
+                UserInvoiceAddressId = order.InvoiceAddressId ?? Guid.Empty,
+                PaymentOptionId = order.PaymentOptionId,
+                BasketItems = basketItems
+            };
+
+            var updateResult = await _basketService.UpdateBasketForRedis(basketDto);
+            if (!updateResult.Data)
+            {
+                result.Fail("Sepet güncellenirken bir hata oluştu.");
+                return result;
+            }
+
+            result.SetData(response);
+        }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+        return result;
     }
 }

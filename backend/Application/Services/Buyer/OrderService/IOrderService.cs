@@ -19,4 +19,6 @@ public interface IOrderService
     Task<ServiceCollectionResult<AdminGetOrderResponseDto>> GetAllOrdersForAdmin(int page = 1, int pageSize = 20, short? statusId = null);
     Task<ServiceObjectResult<AdminGetOrderResponseDto>> GetOrderDetailForAdmin(Guid orderId);
     Task<ServiceObjectResult<InitiatePaymentResponseDto>> InitiatePayment(Guid orderId, InitiatePaymentRequestDto requestDto);
+    Task<ServiceCollectionResult<AdminGetOrderResponseDto>> GetOverdueOrdersForAdmin(int page = 1, int pageSize = 20);
+    Task<ServiceObjectResult<ReorderResponseDto>> ReorderAsync(Guid orderId);
 }

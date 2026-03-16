@@ -36,6 +36,7 @@ using Application.Services.Buyer.CouponService;
 using Application.Services.Buyer.PaymentService;
 using Application.Services.Buyer.FavoriteService;
 using Application.Services.Buyer.ReviewService;
+using Application.Services.Analytics;
 using Application.Services.Common.BackgroundJobs;
 using Base.Constant;
 using FluentValidation;
@@ -138,6 +139,10 @@ public static class ApplicationServiceRegistration
         services.AddScoped<ICourierRestaurantService, CourierRestaurantManager>();
         services.AddScoped<IAdminCourierService, AdminCourierManager>();
         services.AddScoped<ICourierCompanyService, CourierCompanyManager>();
+        services.AddScoped<ICourierEarningsService, CourierEarningsManager>();
+
+        //Analytics
+        services.AddScoped<IAnalyticsService, AnalyticsManager>();
 
         //Global
         services.AddScoped<ITokenAccessor, TokenAccessor>();
@@ -149,6 +154,7 @@ public static class ApplicationServiceRegistration
         //Background Jobs (Hangfire)
         services.AddScoped<ISubscriptionJobService, SubscriptionJobService>();
         services.AddScoped<ICleanupJobService, CleanupJobService>();
+        services.AddScoped<IDeliveryTimeoutJobService, DeliveryTimeoutJobService>();
 
         return services;
     }

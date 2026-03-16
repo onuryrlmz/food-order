@@ -168,5 +168,6 @@ RecurringJob.AddOrUpdate<ISubscriptionJobService>("auto-renew", s => s.AutoRenew
 RecurringJob.AddOrUpdate<ISubscriptionJobService>("usage-warnings", s => s.CheckUsageWarnings(), Cron.Hourly);
 RecurringJob.AddOrUpdate<ICleanupJobService>("cleanup-reset-tokens", s => s.CleanupExpiredResetTokens(), Cron.Daily);
 RecurringJob.AddOrUpdate<ICleanupJobService>("cleanup-refresh-tokens", s => s.CleanupExpiredRefreshTokens(), Cron.Weekly);
+RecurringJob.AddOrUpdate<IDeliveryTimeoutJobService>("check-delivery-timeouts", s => s.CheckDeliveryTimeouts(), "*/15 * * * *");
 
 app.Run();

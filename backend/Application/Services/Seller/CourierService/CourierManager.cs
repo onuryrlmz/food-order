@@ -114,6 +114,10 @@ public class CourierManager : ICourierService
                     LastName = user?.LastName,
                     StatusId = rc.StatusId,
                     StatusName = ((AuthorizationServiceEnums.RestaurantCourierStatusEnums)rc.StatusId).ToString(),
+                    CourierStatusId = user?.CourierStatusId,
+                    CourierStatusName = user?.CourierStatusId != null
+                        ? ((AuthorizationServiceEnums.CourierStatusEnums)user.CourierStatusId).ToString()
+                        : null,
                     AgreementStartDate = rc.AgreementStartDate,
                     AgreementEndDate = rc.AgreementEndDate,
                     CreatedDate = rc.CreatedDate

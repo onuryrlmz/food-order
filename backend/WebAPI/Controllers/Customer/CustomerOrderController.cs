@@ -53,4 +53,9 @@ public class CustomerOrderController : BaseController
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
     public async Task<ServiceObjectResult<CourierLocationDto?>> GetCourierLocation(Guid orderId)
         => await _orderService.GetCourierLocationAsync(orderId);
+
+    [HttpPost("{orderId}/reorder")]
+    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    public async Task<ServiceObjectResult<ReorderResponseDto>> Reorder(Guid orderId)
+        => await _orderService.ReorderAsync(orderId);
 }

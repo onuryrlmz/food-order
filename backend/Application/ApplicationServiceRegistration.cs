@@ -27,6 +27,7 @@ using Application.Services.Seller._99_RestaurantTransferService;
 using Application.Services.Seller.CdnWorkerService;
 using Application.Services.Seller.CouponService;
 using Application.Services.Seller.CourierService;
+using Application.Services.Seller.ImageUploadService;
 using Application.Services.Seller.OptionTemplateService;
 using Application.Services.Seller.SubscriptionService;
 using Application.Services.Courier.CourierCompanyService;
@@ -112,6 +113,7 @@ public static class ApplicationServiceRegistration
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ICategoryDetailService, CategoryDetailService>();
         services.AddScoped<IOptionTemplateService, OptionTemplateManager>();
+        services.AddScoped<IImageUploadService, ImageUploadManager>();
 
         //Buyer
         services.AddScoped<IBasketService, BasketManager>();

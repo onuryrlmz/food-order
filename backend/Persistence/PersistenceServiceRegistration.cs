@@ -37,6 +37,7 @@ public static class PersistenceServiceRegistration
         services.AddScoped<ISellerRepository, SellerRepository>();
         services.AddScoped<ISellerDetailRepository, SellerDetailRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IProductImageRepository, ProductImageRepository>();
         services.AddScoped<IProductAttributeRepository, ProductAttributeRepository>();
         services.AddScoped<IProductAttributeValueRepository, ProductAttributeValueRepository>();
         services.AddScoped<IRestaurantRepository, RestaurantRepository>();

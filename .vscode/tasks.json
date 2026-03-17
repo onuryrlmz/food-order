@@ -1,0 +1,96 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Backend",
+      "type": "shell",
+      "command": "dotnet run --launch-profile http",
+      "options": { "cwd": "${workspaceFolder}/backend/WebAPI" },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Seller (3000)",
+      "type": "shell",
+      "command": "npm run dev -- -p 3000",
+      "options": { "cwd": "${workspaceFolder}/front-seller" },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Admin (3001)",
+      "type": "shell",
+      "command": "npm run dev -- -p 3001",
+      "options": { "cwd": "${workspaceFolder}/front-admin" },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "App (8081)",
+      "type": "shell",
+      "command": "npx react-native start --port 8081 &  sleep 5 && npx react-native run-android --port 8081 ; wait",
+      "options": { "cwd": "${workspaceFolder}/front-app" },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Courier (8082)",
+      "type": "shell",
+      "command": "npx react-native start --port 8082 &  sleep 5 && npx react-native run-android --port 8082 ; wait",
+      "options": { "cwd": "${workspaceFolder}/front-courier" },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🚀 Dev: All",
+      "dependsOn": [
+        "Backend",
+        "Seller (3000)",
+        "Admin (3001)",
+        "App (8081)",
+        "Courier (8082)"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    },
+    {
+      "label": "🌐 Dev: Web Only",
+      "dependsOn": [
+        "Backend",
+        "Seller (3000)",
+        "Admin (3001)"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    },
+    {
+      "label": "📱 Dev: Mobile Only",
+      "dependsOn": [
+        "App (8081)",
+        "Courier (8082)"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    }
+  ]
+}

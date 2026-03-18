@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using Domain.Entities.Buyer;
 using Domain.Entities.Common;
-using Domain.Entities.Courier;
 using Domain.Entities.Seller;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -31,13 +30,6 @@ public sealed class BaseDbContext : DbContext
     public DbSet<OrderItemValueOption> OrderItemValueOptions { get; set; }
     public DbSet<Payment> Payments { get; set; }
     public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
-
-    // Courier
-    public DbSet<RestaurantCourier> RestaurantCouriers { get; set; }
-    public DbSet<CourierLocation> CourierLocations { get; set; }
-    public DbSet<CourierCompany> CourierCompanies { get; set; }
-    public DbSet<CourierCompanyMember> CourierCompanyMembers { get; set; }
-    public DbSet<RestaurantCourierCompany> RestaurantCourierCompanies { get; set; }
 
     // Buyer
     public DbSet<Review> Reviews { get; set; }

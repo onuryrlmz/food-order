@@ -16,7 +16,6 @@ public class User : Entity<Guid>
     public short? SexId { get; set; }
     public Guid? SellerId { get; set; }
     public Guid? ActivationKey { get; set; }
-    public short CourierStatusId { get; set; } = (short)AuthorizationServiceEnums.CourierStatusEnums.Offline;
     public virtual AuthorizationServiceEnums.UserRoleEnums UserRoleEnum => (AuthorizationServiceEnums.UserRoleEnums)UserRoleId;
     public virtual AuthorizationServiceEnums.UserStatusEnums UserStatusEnum => (AuthorizationServiceEnums.UserStatusEnums)UserStatusId;
 }

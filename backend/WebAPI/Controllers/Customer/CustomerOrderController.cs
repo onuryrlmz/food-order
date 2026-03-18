@@ -1,7 +1,6 @@
 using Application.Services.Buyer.OrderService;
 using Base.Enums;
 using Domain.Dto.Buyer.Order;
-using Domain.Dto.Seller.Courier;
 using Domain.Service;
 using Microsoft.AspNetCore.Mvc;
 using WebAPI.Helpers;
@@ -48,11 +47,6 @@ public class CustomerOrderController : BaseController
     public async Task<ServiceObjectResult<InitiatePaymentResponseDto>> InitiatePayment(
         Guid orderId, [FromBody] InitiatePaymentRequestDto requestDto)
         => await _orderService.InitiatePayment(orderId, requestDto);
-
-    [HttpGet("{orderId}/courier-location")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
-    public async Task<ServiceObjectResult<CourierLocationDto?>> GetCourierLocation(Guid orderId)
-        => await _orderService.GetCourierLocationAsync(orderId);
 
     [HttpPost("{orderId}/reorder")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]

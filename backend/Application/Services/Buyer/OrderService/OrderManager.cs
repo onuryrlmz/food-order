@@ -8,10 +8,8 @@ using Domain.Dto.Admin.Order;
 using Domain.Dto.Buyer;
 using Domain.Dto.Buyer.Order;
 using Domain.Dto.Payment;
-using Domain.Dto.Seller.Courier;
 using Domain.Entities.Buyer;
 using Domain.Entities.Common;
-using Domain.Entities.Courier;
 using Domain.Entities.Seller;
 using Domain.Service;
 using Application.Services.Common.NotificationService;
@@ -23,7 +21,6 @@ using Newtonsoft.Json;
 using Persistence.Contexts;
 using Persistence.IRepositories;
 using Persistence.IRepositories.Common;
-using Persistence.IRepositories.Courier;
 using Persistence.IRepositories.Seller;
 
 namespace Application.Services.Buyer.OrderService;
@@ -40,8 +37,6 @@ public class OrderManager : IOrderService
     private readonly IPaymentService _paymentService;
     private readonly BaseDbContext _context;
     private readonly string _callbackBaseUrl;
-    private readonly IRestaurantCourierRepository _restaurantCourierRepository;
-    private readonly ICourierLocationRepository _courierLocationRepository;
     private readonly ISubscriptionService _subscriptionService;
     private readonly INotificationService _notificationService;
     private readonly IRealtimeNotifier _realtimeNotifier;
@@ -58,8 +53,6 @@ public class OrderManager : IOrderService
         IPaymentService paymentService,
         BaseDbContext context,
         IConfiguration configuration,
-        IRestaurantCourierRepository restaurantCourierRepository,
-        ICourierLocationRepository courierLocationRepository,
         ISubscriptionService subscriptionService,
         INotificationService notificationService,
         IRealtimeNotifier realtimeNotifier,
@@ -75,8 +68,6 @@ public class OrderManager : IOrderService
         _paymentService = paymentService;
         _context = context;
         _callbackBaseUrl = configuration["SiteSettings:ServiceUrl"] ?? "http://localhost:7276";
-        _restaurantCourierRepository = restaurantCourierRepository;
-        _courierLocationRepository = courierLocationRepository;
         _subscriptionService = subscriptionService;
         _notificationService = notificationService;
         _realtimeNotifier = realtimeNotifier;
@@ -678,7 +669,7 @@ public class OrderManager : IOrderService
         return result;
     }
 
-    public async Task<ServiceObjectResult<bool>> UpdateOrderStatus(Guid orderId, short statusId, Guid? courierId = null)
+    public async Task<ServiceObjectResult<bool>> UpdateOrderStatus(Guid orderId, short statusId)
     {
         var result = new ServiceObjectResult<bool>();
         try
@@ -728,40 +719,13 @@ public class OrderManager : IOrderService
                     result.Fail("Bu durum geçişi için yetkiniz yok.");
                     return result;
                 }
-
-                // OnTheWay geçişinde kurye seçimi zorunlu
-                if (statusId == (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay)
-                {
-                    if (courierId == null)
-                    {
-                        result.Fail("Yola çıktı durumuna geçmek için kurye seçimi zorunludur.");
-                        return result;
-                    }
-
-                    var restaurantCourier = await _restaurantCourierRepository.GetAsync(
-                        rc => rc.RestaurantId == order.RestaurantId && rc.CourierId == courierId.Value
-                            && rc.StatusId == (short)AuthorizationServiceEnums.RestaurantCourierStatusEnums.Active);
-
-                    if (restaurantCourier == null)
-                    {
-                        result.Fail("Seçilen kurye bu restoranın aktif kuryesi değil.");
-                        return result;
-                    }
-
-                    order.CourierId = courierId.Value;
-
-                    var deliveryDistance = await CalculateDeliveryDistanceAsync(orderId);
-                    if (deliveryDistance.HasValue)
-                        order.DeliveryDistanceKm = deliveryDistance.Value;
-                }
             }
 
             order.StatusId = statusId;
             if (statusId == (short)AuthorizationServiceEnums.OrderStatusEnums.RejectedByRestaurant)
                 order.CancellationReason = "Restoran tarafından reddedildi.";
             _unitOfWork.OrderRepository.Update(order);
-            await AddStatusHistory(order.Id, (AuthorizationServiceEnums.OrderStatusEnums)statusId,
-                courierId.HasValue ? $"Kurye atanmıştır: {courierId.Value}" : null);
+            await AddStatusHistory(order.Id, (AuthorizationServiceEnums.OrderStatusEnums)statusId);
             await _unitOfWork.CompleteAsync();
 
             // Push notification + SignalR
@@ -1137,179 +1101,6 @@ public class OrderManager : IOrderService
             OccurredAt = DateTime.UtcNow
         };
         await _unitOfWork.OrderStatusHistoryRepository.AddAsync(history);
-    }
-
-    public async Task<ServiceObjectResult<bool>> AssignCourierAsync(Guid orderId, Guid courierId)
-    {
-        var result = new ServiceObjectResult<bool>();
-        try
-        {
-            var token = _tokenAccessor.GetToken();
-            if (token == null)
-            {
-                result.Fail("Kimlik doğrulama hatası.");
-                return result;
-            }
-
-            // Satıcı kontrolü
-            var isSeller = token.Role is AuthorizationServiceEnums.UserRoleEnums.SellerAdmin or AuthorizationServiceEnums.UserRoleEnums.SellerUser;
-            if (!isSeller)
-            {
-                result.Fail("Yetkiniz yok.");
-                return result;
-            }
-
-            var order = await _unitOfWork.OrderRepository.GetAsync(x => x.Id == orderId, enableTracking: true);
-            if (order == null)
-            {
-                result.Fail("Sipariş bulunamadı.");
-                return result;
-            }
-
-            // Restoran kontrolü
-            if (token.RestaurantIds == null || !token.RestaurantIds.Contains(order.RestaurantId))
-            {
-                result.Fail("Bu sipariş için yetkiniz yok.");
-                return result;
-            }
-
-            // Kurye bu restoranın aktif kuryesi mi?
-            var restaurantCourier = await _restaurantCourierRepository.GetAsync(
-                rc => rc.RestaurantId == order.RestaurantId && rc.CourierId == courierId
-                    && rc.StatusId == (short)AuthorizationServiceEnums.RestaurantCourierStatusEnums.Active);
-
-            if (restaurantCourier == null)
-            {
-                result.Fail("Kurye bu restoran için doğrulanmış değil.");
-                return result;
-            }
-
-            // Sadece Preparing durumunda kurye atanabilir
-            if (order.StatusId != (short)AuthorizationServiceEnums.OrderStatusEnums.Preparing)
-            {
-                result.Fail("Sipariş sadece Hazırlanıyor durumunda kurye atanabilir.");
-                return result;
-            }
-
-            // Kurye atama
-            order.CourierId = courierId;
-
-            // Mesafeyi hesapla
-            var deliveryDistance = await CalculateDeliveryDistanceAsync(orderId);
-            if (deliveryDistance.HasValue)
-            {
-                order.DeliveryDistanceKm = deliveryDistance.Value;
-            }
-
-            // Statüyü OnTheWay yap
-            order.StatusId = (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay;
-
-            await _unitOfWork.OrderRepository.UpdateAsync(order);
-            await AddStatusHistory(order.Id, AuthorizationServiceEnums.OrderStatusEnums.OnTheWay, $"Kurye atanmıştır: {courierId}");
-            await _unitOfWork.CompleteAsync();
-
-            result.SetData(true);
-            return result;
-        }
-        catch (Exception ex)
-        {
-            result.Fail($"Kurye atama hatası: {ex.Message}");
-            return result;
-        }
-    }
-
-    public async Task<ServiceObjectResult<CourierLocationDto?>> GetCourierLocationAsync(Guid orderId)
-    {
-        var result = new ServiceObjectResult<CourierLocationDto?>();
-        try
-        {
-            var token = _tokenAccessor.GetToken();
-            if (token == null)
-            {
-                result.Fail("Kimlik doğrulama hatası.");
-                return result;
-            }
-
-            var order = await _unitOfWork.OrderRepository.GetAsync(x => x.Id == orderId);
-            if (order == null)
-            {
-                result.Fail("Sipariş bulunamadı.");
-                return result;
-            }
-
-            // Restoran kontrolü
-            var isSeller = token.Role is AuthorizationServiceEnums.UserRoleEnums.SellerAdmin or AuthorizationServiceEnums.UserRoleEnums.SellerUser;
-            if (isSeller)
-            {
-                if (token.RestaurantIds == null || !token.RestaurantIds.Contains(order.RestaurantId))
-                {
-                    result.Fail("Bu sipariş için yetkiniz yok.");
-                    return result;
-                }
-            }
-
-            // Kurye atanmış mı?
-            if (order.CourierId == null)
-            {
-                result.SetData(null);
-                return result;
-            }
-
-            // Son konumu getir
-            var locations = await _courierLocationRepository.GetListAsync(
-                x => x.OrderId == orderId || (x.OrderId == null && x.CourierId == order.CourierId),
-                orderBy: q => q.OrderByDescending(l => l.UpdatedAt),
-                size: 1);
-
-            var location = locations.Items.FirstOrDefault();
-            if (location == null)
-            {
-                result.SetData(null);
-                return result;
-            }
-
-            var dto = new CourierLocationDto
-            {
-                Latitude = location.Latitude,
-                Longitude = location.Longitude,
-                UpdatedAt = location.UpdatedAt
-            };
-
-            result.SetData(dto);
-            return result;
-        }
-        catch (Exception ex)
-        {
-            result.Fail($"Konum getirme hatası: {ex.Message}");
-            return result;
-        }
-    }
-
-    private async Task<decimal?> CalculateDeliveryDistanceAsync(Guid orderId)
-    {
-        var order = await _unitOfWork.OrderRepository.GetAsync(o => o.Id == orderId);
-        if (order == null)
-            return null;
-
-        var restaurant = await _restaurantRepository.GetAsync(r => r.Id == order.RestaurantId);
-        if (restaurant == null)
-            return null;
-
-        var deliveryAddress = await _context.Set<Domain.Entities.Common.Address>()
-            .FirstOrDefaultAsync(a => a.Id == order.DeliveryAddressId);
-
-        if (deliveryAddress == null || restaurant.Latitude == null || restaurant.Longitude == null)
-            return null;
-
-        if (!decimal.TryParse(deliveryAddress.Latitude, out var addrLat) ||
-            !decimal.TryParse(deliveryAddress.Longitude, out var addrLon))
-            return null;
-
-        return DistanceHelper.CalculateDistanceKm(
-            restaurant.Latitude.Value,
-            restaurant.Longitude.Value,
-            addrLat,
-            addrLon);
     }
 
     public async Task<ServiceCollectionResult<AdminGetOrderResponseDto>> GetOverdueOrdersForAdmin(int page = 1, int pageSize = 20)

@@ -4,7 +4,6 @@ using Persistence.Contexts;
 using Persistence.IRepositories;
 using Persistence.IRepositories.Buyer;
 using Persistence.IRepositories.Common;
-using Persistence.IRepositories.Courier;
 using Persistence.IRepositories.Seller;
 
 namespace Persistence.Repositories;
@@ -41,13 +40,6 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     public IOptionTemplateValueOptionValueRepository OptionTemplateValueOptionValueRepository { get; }
     public IRestaurantCdnUpdateQueueRepository RestaurantCdnUpdateQueueRepository { get; }
     public IRestaurantWorkingHourRepository RestaurantWorkingHourRepository { get; }
-
-    // Courier
-    public IRestaurantCourierRepository RestaurantCourierRepository { get; }
-    public ICourierLocationRepository CourierLocationRepository { get; }
-    public ICourierCompanyRepository CourierCompanyRepository { get; }
-    public ICourierCompanyMemberRepository CourierCompanyMemberRepository { get; }
-    public IRestaurantCourierCompanyRepository RestaurantCourierCompanyRepository { get; }
 
     // Subscription Usage
     public ISubscriptionUsageRepository SubscriptionUsageRepository { get; }
@@ -88,11 +80,6 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         IOptionTemplateValueOptionValueRepository optionTemplateValueOptionValueRepository,
         IRestaurantCdnUpdateQueueRepository restaurantCdnUpdateQueueRepository,
         IRestaurantWorkingHourRepository restaurantWorkingHourRepository,
-        IRestaurantCourierRepository restaurantCourierRepository,
-        ICourierLocationRepository courierLocationRepository,
-        ICourierCompanyRepository courierCompanyRepository,
-        ICourierCompanyMemberRepository courierCompanyMemberRepository,
-        IRestaurantCourierCompanyRepository restaurantCourierCompanyRepository,
         ISubscriptionUsageRepository subscriptionUsageRepository,
         IReviewRepository reviewRepository,
         IFavoriteRestaurantRepository favoriteRestaurantRepository,
@@ -127,11 +114,6 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         OptionTemplateValueOptionValueRepository = optionTemplateValueOptionValueRepository;
         RestaurantCdnUpdateQueueRepository = restaurantCdnUpdateQueueRepository;
         RestaurantWorkingHourRepository = restaurantWorkingHourRepository;
-        RestaurantCourierRepository = restaurantCourierRepository;
-        CourierLocationRepository = courierLocationRepository;
-        CourierCompanyRepository = courierCompanyRepository;
-        CourierCompanyMemberRepository = courierCompanyMemberRepository;
-        RestaurantCourierCompanyRepository = restaurantCourierCompanyRepository;
         SubscriptionUsageRepository = subscriptionUsageRepository;
         ReviewRepository = reviewRepository;
         FavoriteRestaurantRepository = favoriteRestaurantRepository;

@@ -24,14 +24,9 @@ public class Order : Entity<Guid>
     public string? Notes { get; set; }
     public string? CancellationReason { get; set; }
 
-    // Courier
-    public Guid? CourierId { get; set; }
-    public Guid? CourierCompanyId { get; set; }
-    public Guid? PickedUpByCourierId { get; set; }
     public DateTime? PickedUpAt { get; set; }
     public DateTime? DeliveredAt { get; set; }
     public decimal? DeliveryDistanceKm { get; set; }
-    public virtual Courier.CourierCompany? CourierCompany { get; set; }
 
     public virtual ICollection<OrderItem> OrderItems { get; set; }
     public virtual ICollection<Payment> Payments { get; set; }

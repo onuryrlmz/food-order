@@ -58,8 +58,6 @@ public class AuthorizationServiceEnums
         Anonymous = 3,
         SellerAdmin = 4,
         SellerUser = 5,
-        Courier = 6,
-        CourierCompanyAdmin = 7
     }
 
     public enum UserStatusEnums : short
@@ -80,22 +78,6 @@ public class AuthorizationServiceEnums
         Preparing = 6,
         OnTheWay = 7,
         Delivered = 8
-    }
-
-    public enum CourierStatusEnums : short
-    {
-        Offline = 1,
-        Online = 2,
-        OnDelivery = 3
-    }
-
-    public enum RestaurantCourierStatusEnums : short
-    {
-        PendingApproval = 0,
-        Active = 1,
-        RejectedByCourier = 2,
-        TerminatedByCourier = 3,
-        TerminatedByRestaurant = 4,
     }
 
     public enum PaymentStatusEnums : short
@@ -119,30 +101,6 @@ public class AuthorizationServiceEnums
         Basic = 1,
         Pro = 2,
         Premium = 3
-    }
-
-    public enum CourierCompanyStatusEnums : short
-    {
-        PendingApproval = 0,
-        Active = 1,
-        Suspended = 2,
-        Banned = 3
-    }
-
-    public enum CourierCompanyMemberStatusEnums : short
-    {
-        PendingApproval = 0,
-        Active = 1,
-        RemovedByCompany = 2,
-        LeftByChoice = 3
-    }
-
-    public enum RestaurantCourierCompanyStatusEnums : short
-    {
-        PendingApproval = 0,
-        Active = 1,
-        TerminatedByRestaurant = 2,
-        TerminatedByCompany = 3
     }
 
     public enum OverageActionEnums : short

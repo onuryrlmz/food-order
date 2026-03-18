@@ -1,6 +1,5 @@
 using Persistence.IRepositories.Buyer;
 using Persistence.IRepositories.Common;
-using Persistence.IRepositories.Courier;
 using Persistence.IRepositories.Seller;
 
 namespace Persistence.IRepositories;
@@ -34,13 +33,6 @@ public interface IUnitOfWork : IDisposable
     IOptionTemplateValueOptionValueRepository OptionTemplateValueOptionValueRepository { get; }
     IRestaurantCdnUpdateQueueRepository RestaurantCdnUpdateQueueRepository { get; }
     IRestaurantWorkingHourRepository RestaurantWorkingHourRepository { get; }
-
-    // Courier
-    IRestaurantCourierRepository RestaurantCourierRepository { get; }
-    ICourierLocationRepository CourierLocationRepository { get; }
-    ICourierCompanyRepository CourierCompanyRepository { get; }
-    ICourierCompanyMemberRepository CourierCompanyMemberRepository { get; }
-    IRestaurantCourierCompanyRepository RestaurantCourierCompanyRepository { get; }
 
     // Subscription Usage
     ISubscriptionUsageRepository SubscriptionUsageRepository { get; }

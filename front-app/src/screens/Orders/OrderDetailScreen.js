@@ -6,12 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Dimensions,
-  Linking,
   Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import MapView, {Marker} from 'react-native-maps';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {orderService, reviewService} from '../../api';
 import {useToast} from '../../context/ToastContext';
@@ -27,7 +24,6 @@ const OrderDetailScreen = ({route, navigation}) => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
-  const [courierLocation, setCourierLocation] = useState(null);
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [reordering, setReordering] = useState(false);
 
@@ -37,7 +33,7 @@ const OrderDetailScreen = ({route, navigation}) => {
     loadOrder();
   }, [orderId]);
 
-  // SignalR real-time updates for order status and courier location
+  // SignalR real-time updates for order status
   useEffect(() => {
     let conn = null;
 
@@ -52,15 +48,6 @@ const OrderDetailScreen = ({route, navigation}) => {
           }
         });
 
-        conn.on('CourierLocationUpdated', (changedOrderId, lat, lng) => {
-          if (changedOrderId === orderId) {
-            setCourierLocation(prev => ({
-              ...prev,
-              latitude: lat,
-              longitude: lng,
-            }));
-          }
-        });
       } catch (e) {
         console.log('SignalR setup error:', e);
       }
@@ -75,29 +62,6 @@ const OrderDetailScreen = ({route, navigation}) => {
       }
     };
   }, [orderId]);
-
-  // Initial courier location fetch (fallback if SignalR not yet connected)
-  useEffect(() => {
-    if (order?.statusId !== 7) return;
-
-    const fetchLocation = async () => {
-      try {
-        const res = await orderService.getCourierLocation(orderId);
-        if (res.data && !res.data.hasFailed && res.data.data) {
-          setCourierLocation({
-            latitude: res.data.data.latitude,
-            longitude: res.data.data.longitude,
-            courierName: res.data.data.courierName,
-            courierPhone: res.data.data.courierPhone,
-          });
-        }
-      } catch (e) {
-        console.log('Courier location error:', e);
-      }
-    };
-
-    fetchLocation();
-  }, [order?.statusId, orderId]);
 
   const loadOrder = async () => {
     try {
@@ -251,67 +215,6 @@ const OrderDetailScreen = ({route, navigation}) => {
             })}
           </View>
         </View>
-
-        {order.statusId === 7 && courierLocation && (
-          <View style={styles.courierTrackingSection}>
-            <View style={styles.sectionHeader}>
-              <Icon name="bike-fast" size={20} color={Colors.primary} />
-              <Text style={styles.sectionTitle}>Kurye Takibi</Text>
-            </View>
-            <View style={styles.mapContainer}>
-              <MapView
-                style={styles.map}
-                initialRegion={{
-                  latitude: courierLocation.latitude,
-                  longitude: courierLocation.longitude,
-                  latitudeDelta: 0.02,
-                  longitudeDelta: 0.02,
-                }}
-                region={{
-                  latitude: courierLocation.latitude,
-                  longitude: courierLocation.longitude,
-                  latitudeDelta: 0.02,
-                  longitudeDelta: 0.02,
-                }}>
-                <Marker
-                  coordinate={{
-                    latitude: courierLocation.latitude,
-                    longitude: courierLocation.longitude,
-                  }}
-                  title="Kurye"
-                  pinColor="blue"
-                />
-                {order.deliveryLatitude && order.deliveryLongitude && (
-                  <Marker
-                    coordinate={{
-                      latitude: order.deliveryLatitude,
-                      longitude: order.deliveryLongitude,
-                    }}
-                    title="Teslimat Adresi"
-                    pinColor="red"
-                  />
-                )}
-              </MapView>
-            </View>
-            {courierLocation.courierName && (
-              <View style={styles.courierInfo}>
-                <View style={styles.courierNameRow}>
-                  <Icon name="account" size={18} color={Colors.text} />
-                  <Text style={styles.courierName}>{courierLocation.courierName}</Text>
-                </View>
-                {courierLocation.courierPhone && (
-                  <TouchableOpacity
-                    style={styles.callButton}
-                    onPress={() => Linking.openURL(`tel:${courierLocation.courierPhone}`)}
-                    activeOpacity={0.7}>
-                    <Icon name="phone" size={16} color="#fff" />
-                    <Text style={styles.callButtonText}>Ara</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            )}
-          </View>
-        )}
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -817,56 +720,6 @@ const styles = StyleSheet.create({
   errorButtonText: {
     color: '#FFF',
     fontSize: Fonts.sizes.base,
-    fontWeight: Fonts.weights.bold,
-  },
-  courierTrackingSection: {
-    backgroundColor: Colors.surface,
-    marginHorizontal: Spacing.base,
-    marginTop: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.base,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  mapContainer: {
-    borderRadius: BorderRadius.md,
-    overflow: 'hidden',
-    height: 200,
-    marginBottom: Spacing.md,
-  },
-  map: {
-    flex: 1,
-  },
-  courierInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  courierNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  courierName: {
-    fontSize: Fonts.sizes.md,
-    fontWeight: Fonts.weights.semibold,
-    color: Colors.text,
-  },
-  callButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#34C759',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-    gap: 4,
-  },
-  callButtonText: {
-    color: '#fff',
-    fontSize: Fonts.sizes.sm,
     fontWeight: Fonts.weights.bold,
   },
   deliveredActions: {

@@ -29,9 +29,4 @@ public class SignalRRealtimeNotifier : IRealtimeNotifier
             .SendAsync("NewOrder", new { orderId, amount = totalPrice, createdAt = DateTime.UtcNow });
     }
 
-    public async Task NotifyCourierLocationUpdated(Guid orderId, decimal latitude, decimal longitude)
-    {
-        await _orderHubContext.Clients.Group($"order-{orderId}")
-            .SendAsync("CourierLocationUpdated", orderId, latitude, longitude, DateTime.UtcNow);
-    }
 }

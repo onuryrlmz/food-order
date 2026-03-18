@@ -13,6 +13,4 @@ public class TokenDto : IDto
     public Guid? SellerId { get; set; }
     public List<Guid>? RestaurantIds { get; set; }
 
-    // For Courier Properties
-    public Guid? CourierId { get; set; }
 }

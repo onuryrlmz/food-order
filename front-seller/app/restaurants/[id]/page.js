@@ -112,12 +112,6 @@ export default function RestaurantDetailPage({ params }) {
         >
           Menü Yönetimi →
         </Link>
-        <Link
-          href={`/restaurants/${id}/couriers`}
-          className="px-4 py-2 rounded-lg text-sm font-medium text-emerald-600 border border-emerald-200 hover:bg-emerald-50 transition-colors"
-        >
-          Kuryelerim →
-        </Link>
       </div>
 
       {/* Info Tab */}

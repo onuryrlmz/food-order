@@ -1,6 +1,5 @@
 using Domain.Dto.Admin.Order;
 using Domain.Dto.Buyer.Order;
-using Domain.Dto.Seller.Courier;
 using Domain.Service;
 
 namespace Application.Services.Buyer.OrderService;
@@ -12,9 +11,7 @@ public interface IOrderService
     Task<ServiceCollectionResult<GetOrderResponseDto>> GetActiveOrders();
     Task<ServiceCollectionResult<GetOrderResponseDto>> GetOrderHistory(int page = 1, int pageSize = 20);
     Task<ServiceObjectResult<bool>> CancelOrder(Guid orderId, string reason);
-    Task<ServiceObjectResult<bool>> UpdateOrderStatus(Guid orderId, short statusId, Guid? courierId = null);
-    Task<ServiceObjectResult<bool>> AssignCourierAsync(Guid orderId, Guid courierId);
-    Task<ServiceObjectResult<CourierLocationDto?>> GetCourierLocationAsync(Guid orderId);
+    Task<ServiceObjectResult<bool>> UpdateOrderStatus(Guid orderId, short statusId);
     Task<ServiceCollectionResult<GetOrderResponseDto>> GetRestaurantOrders(Guid restaurantId, short? statusId = null, int page = 1, int pageSize = 20);
     Task<ServiceCollectionResult<AdminGetOrderResponseDto>> GetAllOrdersForAdmin(int page = 1, int pageSize = 20, short? statusId = null);
     Task<ServiceObjectResult<AdminGetOrderResponseDto>> GetOrderDetailForAdmin(Guid orderId);

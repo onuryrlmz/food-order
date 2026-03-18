@@ -19,9 +19,6 @@ export const orderService = {
   initiatePayment: (orderId, paymentData) =>
     apiClient.post(`/customer/order/${orderId}/payment/initiate`, paymentData),
 
-  getCourierLocation: (orderId) =>
-    apiClient.get(`/v1/customer/order/${orderId}/courier-location`),
-
   reorder: (orderId) =>
     apiClient.post(`/customer/order/${orderId}/reorder`),
 };

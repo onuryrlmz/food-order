@@ -42,8 +42,6 @@ const navItems = [
 const restaurantSubItems = [
   { label: 'Bilgiler', suffix: '' },
   { label: 'Menü', suffix: '/menu' },
-  { label: 'Kuryeler', suffix: '/couriers' },
-  { label: 'Kurye Firmaları', suffix: '/courier-companies' },
 ];
 
 export default function Sidebar() {

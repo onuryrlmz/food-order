@@ -15,7 +15,7 @@ public class SellerTransferController : BaseController
         => _transferService = transferService;
 
     [HttpPost("getir")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<IActionResult> TransferFromGetir([FromBody] TransferRequestDto request)
     {
         try
@@ -30,7 +30,7 @@ public class SellerTransferController : BaseController
     }
 
     [HttpPost("yemeksepeti")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<IActionResult> TransferFromYemekSepeti([FromBody] TransferRequestDto request)
     {
         try

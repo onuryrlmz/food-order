@@ -843,12 +843,12 @@ namespace Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("be1289c3-2d1c-44bf-a932-9aa001232741"),
+                            Id = new Guid("d5e0f36d-4830-432d-83f0-e6bc994c68f3"),
                             AddressLine1 = "Ahmet Yesevi, Bey Sk. No:4/B",
                             AddressName = "Gönderim Adresi",
                             AddressType = (short)4,
                             CityId = new Guid("5d0c385c-810d-4dd6-9462-259183584992"),
-                            CreatedDate = new DateTime(2026, 3, 17, 23, 26, 49, 593, DateTimeKind.Local).AddTicks(6150),
+                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 631, DateTimeKind.Local).AddTicks(5330),
                             FirstName = "Pizzacı",
                             IsDefault = true,
                             LastName = "Ahmet",
@@ -862,13 +862,13 @@ namespace Persistence.Migrations
                         },
                         new
                         {
-                            Id = new Guid("2f9743dd-099a-43a9-8c7b-c4fb49122e6e"),
+                            Id = new Guid("b0ae82b5-e00c-496f-951f-84ea5dfecbbb"),
                             AddressLine1 = "Geçit Mah. 1. Begonya Sok. No: 57 Daire: 6",
                             AddressLine2 = "Oliva Sitesi B Blok",
                             AddressName = "Teslimat Adresi",
                             AddressType = (short)2,
                             CityId = new Guid("5d0c385c-810d-4dd6-9462-259183584992"),
-                            CreatedDate = new DateTime(2026, 3, 17, 23, 26, 49, 593, DateTimeKind.Local).AddTicks(8650),
+                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 631, DateTimeKind.Local).AddTicks(8240),
                             FirstName = "Alıcı",
                             InvoiceType = (short)1,
                             IsDefault = true,
@@ -1079,11 +1079,10 @@ namespace Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("dfa44941-d156-4b89-aa5d-08edd2722737"),
-                            ActivationKey = new Guid("4418ea72-c6fc-47ce-bef4-883f682f7698"),
+                            Id = new Guid("9e9d19c8-a7f9-4ac3-aa51-12bff18cd608"),
+                            ActivationKey = new Guid("001a20ef-22a9-40f1-930b-f0e3feb73a9c"),
                             BirthDate = new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-
-                            CreatedDate = new DateTime(2026, 3, 17, 23, 26, 49, 578, DateTimeKind.Local).AddTicks(4960),
+                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 615, DateTimeKind.Local).AddTicks(9740),
                             Email = "admin@esnaftan.com",
                             FirstName = "Esnaftan",
                             LastName = "Admin",
@@ -1095,11 +1094,10 @@ namespace Persistence.Migrations
                         },
                         new
                         {
-                            Id = new Guid("5daec9bd-fdfa-4af6-9404-969352162722"),
-                            ActivationKey = new Guid("ad9bf370-9440-4992-a6e2-3c51c64cf77e"),
+                            Id = new Guid("7440c259-33db-4335-a3fa-b6aeb650146c"),
+                            ActivationKey = new Guid("242a2995-96f9-402f-9c7f-c0023ac8a5c0"),
                             BirthDate = new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-
-                            CreatedDate = new DateTime(2026, 3, 17, 23, 26, 49, 585, DateTimeKind.Local).AddTicks(8340),
+                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 623, DateTimeKind.Local).AddTicks(4080),
                             Email = "info@pizzaci.com",
                             FirstName = "Pizzacı",
                             LastName = "Ahmet",
@@ -1113,10 +1111,9 @@ namespace Persistence.Migrations
                         new
                         {
                             Id = new Guid("67d10056-c978-4e93-89d6-ab078cbab543"),
-                            ActivationKey = new Guid("0cd8b8aa-36f6-4e66-ac43-e22ef9372bc0"),
+                            ActivationKey = new Guid("fb06e86b-4f9c-432a-9d67-ceb511435a38"),
                             BirthDate = new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-
-                            CreatedDate = new DateTime(2026, 3, 17, 23, 26, 49, 585, DateTimeKind.Local).AddTicks(8550),
+                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 623, DateTimeKind.Local).AddTicks(4290),
                             Email = "alici@gmail.com",
                             FirstName = "Alıcı",
                             LastName = "Mehmet",
@@ -2240,7 +2237,7 @@ namespace Persistence.Migrations
                             Id = new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"),
                             CompanyStatus = (short)1,
                             CompanyType = (short)2,
-                            CreatedDate = new DateTime(2026, 3, 17, 23, 26, 49, 586, DateTimeKind.Local).AddTicks(4720),
+                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 624, DateTimeKind.Local).AddTicks(710),
                             IBAN = "TR260006266822193294982978",
                             IsEInvoiceAvaible = true,
                             LegalName = "Pizzacı Ahmet Ltd. Şti.",

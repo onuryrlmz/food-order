@@ -1,0 +1,946 @@
+[
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe15841d7c367",
+    "Name": "Küçük Boy Patates",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "56ED96F40BB1832DC3BDC24AB48F679D"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67642848ceac63ceac316298",
+    "Name": "Acı Sos (20 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "2129DA28207331550D8BF3DCFCE83A40"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "66f656bfceac63ceac5edb9d",
+    "Name": "Mercimek Çorbası (Az)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "2266BD6904DDBD81AC7A7542ED7AFA94"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "652682ce90dd69b12a28db39",
+    "Name": "Köfteci Yusuf (Fermente) Sucuk (1 kg)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "DB6FC0E0BD31F322BF1BB0AD88016D7D"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe1f9c2d7c34a",
+    "Name": "Duble 3'lü Çıtır",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "AF217F41FA5369615FAC4DF41C006219"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "68dcb824ceac63ceaceaa8aa",
+    "Name": "Coca Cola (330 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "E3FD06E7C1CCF402AE75480C3678202E"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69aab45dceac63ceacedcb04",
+    "Name": "Köfteci Yusuf Pastırma (180 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "5C59791E47C3F7F8E0742ACCAACECA9B"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6969d4c6ceac63ceaca1d2ef",
+    "Name": "Köfteci Yusuf Soslu Piliç Kanat (800 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "23FB29FFB8CAA98BC84501E907CDB564"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe14881d7c2e8",
+    "Name": "Ballı Hardal Sos (22 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "6B679848471B4F11ECE049C7D8EF6E22"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69946cc4ceac63ceacd610cc",
+    "Name": "Acılı Şalgam Suyu (300 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "24B3D7A1D6685115E14B071FDA5975B8"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69aac705ceac63ceacee274b",
+    "Name": "Çiğ Kuzu Pirzola (500 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "96CADD606C130D4641BE2E21F87F4A1E"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67642848ceac63ceac316292",
+    "Name": "Çıtır 3'lü (İçli Köfte, Küçük Boy Patates, 6 Soğan Halkası)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "DE52446B673A6E4A8AE70E8EFE380ACB"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "65169bfc44fed0be6b8da370",
+    "Name": "Dana Kıyma (1 kg)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "80F06253F9D2E3255F61026571DF9958"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69aab479ceac63ceacedcb6b",
+    "Name": "Köfteci Yusuf Pastırma (350 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "0E678A4571377F5EBEA542662EEDC003"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "66f656f9ceac63ceac5edc63",
+    "Name": "Et Suyu Çorbası (Porsiyon)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "8C64FE7A79ABB3F2ACAD5409754FE901"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6710b116ceac63ceac4454a1",
+    "Name": "Sade Şalgam Suyu (300 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "A8126893CE73BEE799C03221D23F65A4"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67beb341ceac63ceacc93e5b",
+    "Name": "Az Patates",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "F8C46E7697B19304CD263A3486B82BBC"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6994716aceac63ceacd61e74",
+    "Name": "Az Yoğurt",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "966CB9FB422A514B33BF15007A08D74D"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "676426bcceac63ceac313056",
+    "Name": "Mercimek Çorbası Az",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "416D7357AECF9352C08C1DF512C6B1EC"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67642848ceac63ceac316299",
+    "Name": "Köfteci Yusuf Acılı Köfte Sosu (22 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "86A9E4C3759395D0F9B760A6BC7A4753"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "65268319aa93f2eb0fb790ab",
+    "Name": "Dana Kavurma (1000 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "2153A9D529C9D3FBFF25BCF0E73B7D27"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "690455c0ceac63ceac1991e0",
+    "Name": "Köfteci Yusuf Kuzu Kol Parça (800 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "8C1568DB9EBE51C2141E56EEE56483A0"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69946cc4ceac63ceacd610d0",
+    "Name": "Ayran (250 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "361E56D53C3C7580E127C3B4EB465A83"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6661b24dceac63ceac6e49b1",
+    "Name": "Yarım Porsiyon Ekmek Arası Sucuk",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "1B81F541AB6FA26BB8F981D36151021A"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "692547e2ceac63ceac4f6b51",
+    "Name": "Küçük Boy Patates",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "45C76ADEFF424B6A6E87DC04F62E88EC"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "676554bcceac63ceac32b229",
+    "Name": "Ekstra Çorba İstemiyorum",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "BD1448DF5F47F430E6DE72D0EED309E1"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe16a79d7c249",
+    "Name": "Kaymaklı Az Ekmek Kadayıfı (140 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "F92872B03FD6FE4678C7C30CC77AF70F"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6661b24dceac63ceac6e4c41",
+    "Name": "Tam Porsiyon Ekmek Arası Sucuk",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "A169321B4A1E4BD9B74B6FB58E558986"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "692547e2ceac63ceac4f6b53",
+    "Name": "Soğan Halkası (3 Adet)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "FF544D6B2E1C9CDBA6B9F9A6E2CC6C3E"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67bd9f43ceac63ceacc783f0",
+    "Name": "Et Suyu Çorbası",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "9107446EE9249F9EA77918E81AE420B3"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6661b24dceac63ceac6e4884",
+    "Name": "Yarım Porsiyon Ekmek Arası Köfte",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "7A284DD0DE06F5DEF9014103EDE9229C"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe1e791d7c3df",
+    "Name": "İlik Kemik Suyu (600 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "0A4B57EC915429A1880FABC39978A8D0"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69946c23ceac63ceacd60e3c",
+    "Name": "Köfte (200 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "4590852B306FE3F20587DF4A0072EC60"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67642848ceac63ceac316294",
+    "Name": "Duble 3'lü Çıtır",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "D67A065B82EDA7A82A7191DF3E98DFA6"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "676426bcceac63ceac313054",
+    "Name": "Mercimek Çorbası",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "28FC74A6922DA23104F0281F5BDE4810"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe18d7fd7c319",
+    "Name": "Köfte (500 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "F73224C049A9B8C499CF03D0B285AECF"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67bd9fc2ceac63ceacc78588",
+    "Name": "Trileçe",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "6454719CCF83B7D2BD6656E0663E5C9F"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6994782aceac63ceacd62c59",
+    "Name": "Fanta (330 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "609B4921D94FBDA77340FB3F3445578F"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe1ec36d7c30d",
+    "Name": "Çıtır 3'lü (Porsiyon)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "4AF09BDDF0EA570AEE927E0D02031142"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6661b24dceac63ceac6e482c",
+    "Name": "Ayran (250 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "25CE5CE081F1D552244381F3DC1AABAD"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6839b614ceac63ceac41ea9d",
+    "Name": "Dana Sosis (500 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "C0CD2DD7A67C042885C9A90F17195247"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "65a532b092884c4f7dec9f34",
+    "Name": "Acılı Parmak Sucuk (Fermente) (500 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "36078FB58C0EA348625D024BFF739B11"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69946c3eceac63ceacd60ec6",
+    "Name": "Az Yoğurt",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "18B713E30ADA4946AFE76BA5B28C3CCB"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "682606c8ceac63ceac243ccb",
+    "Name": "Heinz Ketçap (570 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "875BC719CB655E1241D61EC989663809"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe1ae4dd7c3d9",
+    "Name": "Köfteci Yusuf (Fermente) Sucuk (600 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "F164FE2FD5A8BC37DA59B4518D3DAD07"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6763ce3fceac63ceac2fdfbd",
+    "Name": "Köfte - Sucuk (200 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "C19DA67DF2BA610BCA0E488D9668E93F"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "676427f2ceac63ceac315474",
+    "Name": "Kaymaklı Az Ekmek Kadayıfı (140 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "3805542DC4477F3FDE21E41E605BC220"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe1da01d7c2a0",
+    "Name": "Çıtır 3'lü (İçli Köfte, Küçük Boy Patates, 6 Soğan Halkası)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "74D720B01DEE39A6E28C0C7A99D17963"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6710b116ceac63ceac4454a0",
+    "Name": "Acılı Şalgam Suyu (300 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "2FB7EAB45F6995DD95DD057873C969B0"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67dd5290ceac63ceace06108",
+    "Name": "Trileçe",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "7ED2E04FF98EDB031F003BBE199C74CC"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "65a532c9df1d6d11b8d4a995",
+    "Name": "Acılı Parmak Sucuk (Fermente) (1 kg)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "B877018825FA7353A10325C81C917EFB"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "676554a9ceac63ceac32b1b0",
+    "Name": "Promosyon İstemiyorum",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "944D4FF8E5D929730BA36E21D7ADA88E"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe166dfd7c349",
+    "Name": "Köfte (1 kg)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "BC6A3851A914B693CB4AED039E7FEA8D"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6661b24dceac63ceac6e4ac2",
+    "Name": "Tam Porsiyon Ekmek Arası Köfte",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "DB65678EA83564F0E8AC0DA71A98C6F6"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6826073bceac63ceac243ec9",
+    "Name": "Heinz Acılı Mayonez (405 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "3E2C8D15B5E3EFC28417F2047655E92E"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe16452d7c31a",
+    "Name": "Su (500 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "31BF4252F32AB84260F5156C79E062D1"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67bec2e4ceac63ceacc96543",
+    "Name": "Tam Porsiyon Ekmek Arası Köfte",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "4C9E75A7200F5C4A42220A5FA413A5BF"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe1daf9d7c248",
+    "Name": "Acı Sos (20 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "E60DD3B53CC012AAA380FA64E372FF5E"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "692547e2ceac63ceac4f6b52",
+    "Name": "Porsiyon Patates",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "7FA16E7E73A7777037916BC9FAF42AEC"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67beb327ceac63ceacc93da7",
+    "Name": "İçli Köfte (Adet)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "7E0257C3E0DBD647AE070CCA88974460"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6661b24dceac63ceac6e4a7a",
+    "Name": "Küçük Boy Patates",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "E2C6940D3F296A5B0463A864B356A45D"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "68ee0692ceac63ceac050e66",
+    "Name": "Sade Soda (200 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "157898109AC8070DDE6F343FA08978DD"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63d91b6c1f28519e912a0602",
+    "Name": "Ayran (250 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "9D845C8DF269C27BB083157E06606E9C"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69aac6e5ceac63ceacee26c3",
+    "Name": "Çiğ Kuzu Pirzola (1 kg)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "6542769420FCDE67C4F3303A0D96B2F3"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69946cc4ceac63ceacd610ca",
+    "Name": "Su (500 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "2D3A2122D7837B6D1247FB9E3894987A"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "65169bd6a86392a484620648",
+    "Name": "Köfte (1 kg) (Pişmemiş)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "CEB82EE393586B22050CF67EE209957F"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69946cc4ceac63ceacd610cd",
+    "Name": "Coca Cola (330 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "71A3D4E750C49ECE3E7EF11CD307445F"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "65169c1fa863929b06621416",
+    "Name": "Dana Kuşbaşı (1 kg)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "A6E8ED4DA813CC24F19D400E55ADE103"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67beb385ceac63ceacc93f94",
+    "Name": "Su (500 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "DD929C5C59E6E02D4DBE61F47A47F99D"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67bf028dceac63ceacca0526",
+    "Name": "Kaymaklı Az Ekmek Kadayıfı (140 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "4D12567D823DA6B205A4E637C06E1B53"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69946cc4ceac63ceacd610ce",
+    "Name": "Fanta (330 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "99FAA179635D2CA72E901B7768198738"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "66f656d5ceac63ceac5edbea",
+    "Name": "Et Suyu Çorbası (Az)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "B19780D7070BE1BCD7A2DD5640C9E470"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe1ec70d7c3da",
+    "Name": "Dana Kıyma (500 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "905CFCD5271B69BCE601D9EAE70048A0"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe17cc9d7c270",
+    "Name": "1 Porsiyon Köfte (200 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "F48FEAEC22E97D4F6D92A3C4A0D498DA"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69aab4b5ceac63ceacedcc72",
+    "Name": "Köfteci Yusuf Sucuk Dilimli Baton (500 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "50205A7F0AFA01468B86CF5EF481F5F9"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6763ce09ceac63ceac2fdf77",
+    "Name": "Sucuk (300 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "B87054D10071D67FAFC6144E55DF5EEC"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "692547e2ceac63ceac4f6b50",
+    "Name": "İçli Köfte (Adet)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "4811044A66C932AA4FE6548B70614D19"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "652682ff90dd69f4c528e733",
+    "Name": "Dana Kavurma (250 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "692A5C4396627FD7F3618B0BDD887694"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "68dcb7dfceac63ceaceaa834",
+    "Name": "Coca Cola (330 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "44BC462A6D1DBFB8C1C527294D8C7F56"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "676426bcceac63ceac313053",
+    "Name": "Et Suyu Çorbası",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "0D8CEE0D11034C62ADC2FDB20B59295D"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe169d0d7c3b0",
+    "Name": "Acı Ezme Sos",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "8AF98D4A7722DB77769ADF031F9B6B10"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "676426bcceac63ceac313055",
+    "Name": "Et Suyu Çorbası (Az)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "AA832426723B20D7CD0018C7480100A8"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6711fb8dceac63ceac45c316",
+    "Name": "Acılı Şalgam Suyu (300 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "ED8F3B293E1AA038B2BA7CD748A3F9EF"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "690455aeceac63ceac1991a6",
+    "Name": "Köfteci Yusuf Kuzu Kol Parça (1 kg)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "69B030DA3A0C3D5EB863FF0E19C54467"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69946cc4ceac63ceacd610d1",
+    "Name": "Sade Şalgam Suyu (300 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "41CE925C7D75425AE26F17A2B424F331"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67bec31eceac63ceacc96651",
+    "Name": "Yarım Porsiyon Ekmek Arası Sucuk",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "86BE2FF9E0B3C557EECDE99F0A98C38E"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69946d56ceac63ceacd61475",
+    "Name": "1.5 Porsiyon Köfte (300 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "5754A0F48552F88574767415C8DE10E5"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67beb731ceac63ceacc9517b",
+    "Name": "Az Patates",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "378BE4944F28D00EE83148A0FA8D9459"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67bd9f43ceac63ceacc783f1",
+    "Name": "Mercimek Çorbası",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "CD3A67885EAA648069AC03CC5663D47F"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe1da59d7c377",
+    "Name": "İçli Köfte (Adet)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "3745C67D3C77F375CE707AA0BA28A8B3"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "65a5329c3f82b3306242e8ee",
+    "Name": "Acılı Parmak Sucuk (Fermente) (250 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "F65D98DA77C67A6391E952FFD8BC9058"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6661b24dceac63ceac6e4daa",
+    "Name": "Kaymaklı Az Ekmek Kadayıfı (140 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "193D035EB022E369B2EDD8CDC569A2AD"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "68260700ceac63ceac243dc3",
+    "Name": "Heinz Mayonez (505 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "A83BCA42031FF200CF32D121D4ED13FA"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67642638ceac63ceac312ce7",
+    "Name": "Köfteci Yusuf Acılı Köfte Sosu (22 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "9BBAB2596DAEC1CBB06FA0D78A9DE47E"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "68f0fb73ceac63ceac09f5ab",
+    "Name": "Kutu Meyve Suyu Vişne (330 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "40D6E9239DD3A14848169D543C1C0CD5"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe131ead7c3dd",
+    "Name": "Dana Kuşbaşı (500 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "3AC58168A2B95FAAF40BBC14EF9C19E1"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69946cc4ceac63ceacd610cb",
+    "Name": "Sade Soda (200 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "52D289A1E9BBFE4C4D1DFE1AA3F42CDC"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67655552ceac63ceac32b349",
+    "Name": "Ekstra Tatlı İstemiyorum",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "AEEF925D656B8D742E3DAB18D5E58222"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6969d4a9ceac63ceaca1d210",
+    "Name": "Köfteci Yusuf Soslu Piliç Kanat (1 kg)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "CE8D22C66947D50D78E3F6000213E9C8"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "699478f2ceac63ceacd62e97",
+    "Name": "Fanta (330 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "B597EDBB91914565AE06038C9992D23F"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "692547e2ceac63ceac4f6b4f",
+    "Name": "Duble Patates",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "A88F1904225567150B788375200597C5"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe1bfc3d7c2ac",
+    "Name": "Köfte (300 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "B4D32FD72296759CE079B53A45C4CDF2"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67642848ceac63ceac316293",
+    "Name": "Çıtır 3'lü (Porsiyon)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "87F26CAE5A8DF9102E25E522270634DD"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69aab49cceac63ceacedcc23",
+    "Name": "Köfteci Yusuf Sucuk Dilimli Baton (1 kg)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "D4EB731F340AAA523D8E99EC9E8A4959"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "69aab48bceac63ceacedcbbe",
+    "Name": "Köfteci Yusuf Pastırma (550 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "0FBA05C221AD1FC6D7158F6161AD9053"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "68f0fb87ceac63ceac09f5fa",
+    "Name": "Sade Soda (200 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "BFD25B2633BFFDFB51DC8FFB6E689531"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "692547e2ceac63ceac4f6b54",
+    "Name": "Soğan Halkası (6 Adet)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "A3FD610D6DCB219521A73DB55F3627BD"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "678e2a1eceac63ceac8136f0",
+    "Name": "Porsiyon Yoğurt",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "187C1EAF8DE2AB070DE4101ACDB19C38"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe141f9d7c3b1",
+    "Name": "Soğan Halkası (3 Adet)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "AD764988FBC2E3971323C57C993AAF83"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67bec2e4ceac63ceacc96544",
+    "Name": "Tam Porsiyon Ekmek Arası Sucuk",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "867F19F9FC764072132B7C2E0112E55D"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67642848ceac63ceac316296",
+    "Name": "Ballı Hardal Sos (22 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "BB8D378B07515C9CCA86A9F185BF305E"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "66f656e6ceac63ceac5edc24",
+    "Name": "Mercimek Çorbası (Porsiyon)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "385FDCE214670F71777ED139BBC0D817"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe1667dd7c3dc",
+    "Name": "Dana Kavurma (500 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "6A2206561CF07D1C532C987E594CA8CC"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6763cdfeceac63ceac2fdf3d",
+    "Name": "Sucuk (200 g)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "0B3BAFDCFA6546F42739EC5458456D0A"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "63be58ec2f2fe136a1d7c38b",
+    "Name": "Soğan Halkası (6 Adet)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "5DF6CAAF8B399B255C481F12DDB922FF"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "68ee0692ceac63ceac050e64",
+    "Name": "Kutu Meyve Suyu Vişne (330 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "2C2D596B05CE396E97C35CEEA79785BE"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "67bec31eceac63ceacc96650",
+    "Name": "Yarım Porsiyon Ekmek Arası Köfte",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "DD590F47BAD30E89CE9A596122BEE351"
+  },
+  {
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "ReferenceId": "6711fb83ceac63ceac45c2e0",
+    "Name": "Sade Şalgam Suyu (300 ml)",
+    "Price": 0.0,
+    "ProductType": 1,
+    "Hash": "5F02A2EE30B26678934006BE4A038C78"
+  }
+]

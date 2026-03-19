@@ -79,12 +79,16 @@ namespace Persistence.Migrations
                     ShipmentPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     DiscountAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     TotalPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    CouponId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    CouponCode = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     Notes = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     CancellationReason = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    ConfirmedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    PickedUpAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     DeliveredAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeliveryDistanceKm = table.Column<decimal>(type: "decimal(65,30)", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
@@ -198,6 +202,8 @@ namespace Persistence.Migrations
                     ApiSecret = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     IsEInvoiceAvaible = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    IdentityNumber = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
@@ -245,6 +251,9 @@ namespace Persistence.Migrations
                     MonthlyPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     MaxRestaurants = table.Column<int>(type: "int", nullable: false),
                     IsActive = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    MaxOrdersPerMonth = table.Column<int>(type: "int", nullable: false),
+                    OverageAction = table.Column<short>(type: "smallint", nullable: false),
+                    CommissionRate = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
@@ -307,6 +316,88 @@ namespace Persistence.Migrations
                     table.PrimaryKey("PK_OrderItem", x => x.Id);
                     table.ForeignKey(
                         name: "FK_OrderItem_Order_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Order",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "OrderStatusHistories",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    OrderId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    StatusId = table.Column<short>(type: "smallint", nullable: false),
+                    Note = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    OccurredAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderStatusHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderStatusHistories_Order_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Order",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Payments",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    OrderId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    SellerId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Amount = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
+                    SellerPayoutAmount = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
+                    CommissionAmount = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
+                    StatusId = table.Column<short>(type: "smallint", nullable: false),
+                    ProviderPaymentId = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ProviderConversationId = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ProviderTransactionId = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ProviderFraudStatus = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    PaymentOptionId = table.Column<int>(type: "int", nullable: false),
+                    CardLastFourDigits = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CardType = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CardAssociation = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CardAlias = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ErrorMessage = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ErrorCode = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CompletedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    FailedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    RefundedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    RefundTransactionId = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    RefundReason = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Payments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Payments_Order_OrderId",
                         column: x => x.OrderId,
                         principalTable: "Order",
                         principalColumn: "Id",
@@ -453,6 +544,52 @@ namespace Persistence.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Coupon",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    SellerId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    RestaurantId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    Code = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Name = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Description = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Type = table.Column<short>(type: "smallint", nullable: false),
+                    Value = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    MaxDiscountAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    BuyQuantity = table.Column<int>(type: "int", nullable: false),
+                    GetQuantity = table.Column<int>(type: "int", nullable: false),
+                    MinOrderAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    ApplicableType = table.Column<short>(type: "smallint", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UsageLimit = table.Column<int>(type: "int", nullable: true),
+                    UsagePerUser = table.Column<int>(type: "int", nullable: true),
+                    CurrentUsageCount = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Coupon", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Coupon_Restaurant_RestaurantId",
+                        column: x => x.RestaurantId,
+                        principalTable: "Restaurant",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Coupon_Seller_SellerId",
+                        column: x => x.SellerId,
+                        principalTable: "Seller",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Subscription",
                 columns: table => new
                 {
@@ -466,6 +603,9 @@ namespace Persistence.Migrations
                     PaidAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     Notes = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    AutoRenew = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    RenewalAttempts = table.Column<int>(type: "int", nullable: false),
+                    LastRenewalAttemptAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
@@ -550,6 +690,152 @@ namespace Persistence.Migrations
                         column: x => x.UserId,
                         principalTable: "User",
                         principalColumn: "Id");
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "FavoriteRestaurant",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    RestaurantId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FavoriteRestaurant", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FavoriteRestaurant_Restaurant_RestaurantId",
+                        column: x => x.RestaurantId,
+                        principalTable: "Restaurant",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_FavoriteRestaurant_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "PasswordResetToken",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Code = table.Column<string>(type: "varchar(10)", maxLength: 10, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Method = table.Column<short>(type: "smallint", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UsedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    FailedAttempts = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PasswordResetToken", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PasswordResetToken_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "RefreshToken",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Token = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    RevokedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    ReplacedByToken = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RefreshToken", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RefreshToken_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Review",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    OrderId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    RestaurantId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Rating = table.Column<short>(type: "smallint", nullable: false),
+                    Comment = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Review", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Review_Restaurant_RestaurantId",
+                        column: x => x.RestaurantId,
+                        principalTable: "Restaurant",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Review_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "UserExternalInfos",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Provider = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Key = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Value = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserExternalInfos", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserExternalInfos_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -700,6 +986,118 @@ namespace Persistence.Migrations
                         name: "FK_ProductAttribute_Product_ProductId",
                         column: x => x.ProductId,
                         principalTable: "Product",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "CouponCategory",
+                columns: table => new
+                {
+                    CouponId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    CategoryId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CouponCategory", x => new { x.CouponId, x.CategoryId });
+                    table.ForeignKey(
+                        name: "FK_CouponCategory_Category_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Category",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CouponCategory_Coupon_CouponId",
+                        column: x => x.CouponId,
+                        principalTable: "Coupon",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "CouponMenu",
+                columns: table => new
+                {
+                    CouponId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    MenuId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CouponMenu", x => new { x.CouponId, x.MenuId });
+                    table.ForeignKey(
+                        name: "FK_CouponMenu_Coupon_CouponId",
+                        column: x => x.CouponId,
+                        principalTable: "Coupon",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CouponMenu_Menu_MenuId",
+                        column: x => x.MenuId,
+                        principalTable: "Menu",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "UserCoupon",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    CouponId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    OrderId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    UsedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    UsageCount = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserCoupon", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserCoupon_Coupon_CouponId",
+                        column: x => x.CouponId,
+                        principalTable: "Coupon",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserCoupon_Order_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Order",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_UserCoupon_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "SubscriptionUsage",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    SubscriptionId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Year = table.Column<int>(type: "int", nullable: false),
+                    Month = table.Column<int>(type: "int", nullable: false),
+                    OrderCount = table.Column<int>(type: "int", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SubscriptionUsage", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SubscriptionUsage_Subscription_SubscriptionId",
+                        column: x => x.SubscriptionId,
+                        principalTable: "Subscription",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 })
@@ -872,6 +1270,52 @@ namespace Persistence.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "OrderItemValues",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    OrderItemId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    MenuOptionId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    MenuOptionValueId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    ProductId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
+                    TotalPrice = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderItemValues", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderItemValues_MenuOptionValue_MenuOptionValueId",
+                        column: x => x.MenuOptionValueId,
+                        principalTable: "MenuOptionValue",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_OrderItemValues_MenuOption_MenuOptionId",
+                        column: x => x.MenuOptionId,
+                        principalTable: "MenuOption",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_OrderItemValues_OrderItem_OrderItemId",
+                        column: x => x.OrderItemId,
+                        principalTable: "OrderItem",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_OrderItemValues_Product_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Product",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "OptionTemplateValueOptionValue",
                 columns: table => new
                 {
@@ -980,6 +1424,52 @@ namespace Persistence.Migrations
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
+            migrationBuilder.CreateTable(
+                name: "OrderItemValueOptions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    OrderItemValueId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    MenuOptionValueOptionId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    MenuOptionValueOptionValueId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    ProductId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
+                    TotalPrice = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderItemValueOptions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderItemValueOptions_MenuOptionValueOptionValue_MenuOptionV~",
+                        column: x => x.MenuOptionValueOptionValueId,
+                        principalTable: "MenuOptionValueOptionValue",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_OrderItemValueOptions_MenuOptionValueOption_MenuOptionValueO~",
+                        column: x => x.MenuOptionValueOptionId,
+                        principalTable: "MenuOptionValueOption",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_OrderItemValueOptions_OrderItemValues_OrderItemValueId",
+                        column: x => x.OrderItemValueId,
+                        principalTable: "OrderItemValues",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_OrderItemValueOptions_Product_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Product",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
             migrationBuilder.InsertData(
                 table: "Restaurant",
                 columns: new[] { "Id", "CoverImage", "CreatedDate", "DeletedDate", "Description", "Email", "IsActive", "IsOpen", "Latitude", "Longitude", "MaxDeliveryTime", "MinDeliveryTime", "MinimumOrderPrice", "Name", "Phone", "Rating", "RatingCount", "SellerId", "ServiceAreaPolygonWkt", "UpdatedDate" },
@@ -987,17 +1477,17 @@ namespace Persistence.Migrations
 
             migrationBuilder.InsertData(
                 table: "Seller",
-                columns: new[] { "Id", "ApiKey", "ApiSecret", "CompanyStatus", "CompanyType", "CreatedDate", "DeletedDate", "IBAN", "IsEInvoiceAvaible", "LegalName", "Name", "TaxArea", "TaxCode", "UpdatedDate" },
-                values: new object[] { new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), null, null, (short)1, (short)2, new DateTime(2026, 3, 12, 0, 33, 13, 131, DateTimeKind.Local).AddTicks(2150), null, "TR260006266822193294982978", true, "Pizzacı Ahmet Ltd. Şti.", "Pizzacı Ahmet", "Nilüfer", "1234567890", null });
+                columns: new[] { "Id", "ApiKey", "ApiSecret", "CompanyStatus", "CompanyType", "CreatedDate", "DeletedDate", "IBAN", "IdentityNumber", "IsEInvoiceAvaible", "LegalName", "Name", "TaxArea", "TaxCode", "UpdatedDate" },
+                values: new object[] { new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), null, null, (short)1, (short)2, new DateTime(2026, 3, 18, 22, 42, 1, 624, DateTimeKind.Local).AddTicks(710), null, "TR260006266822193294982978", null, true, "Pizzacı Ahmet Ltd. Şti.", "Pizzacı Ahmet", "Nilüfer", "1234567890", null });
 
             migrationBuilder.InsertData(
                 table: "User",
                 columns: new[] { "Id", "ActivationKey", "BirthDate", "CreatedDate", "DeletedDate", "Email", "FirstName", "LastName", "Password", "PhoneNumber", "SellerId", "SexId", "UpdatedDate", "UserRoleId", "UserStatusId" },
                 values: new object[,]
                 {
-                    { new Guid("110a400e-0e1c-4df9-90d4-8e6a3394df2b"), new Guid("3a4b0b37-ed9f-4229-ab79-2c9ef35bbd0c"), new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 12, 0, 33, 13, 128, DateTimeKind.Local).AddTicks(9290), null, "info@pizzaci.com", "Pizzacı", "Ahmet", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05519684748", new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), (short)1, null, (short)4, (short)1 },
-                    { new Guid("67d10056-c978-4e93-89d6-ab078cbab543"), new Guid("cee9f111-d19f-4ec1-bb76-ae33b7a370bb"), new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 12, 0, 33, 13, 128, DateTimeKind.Local).AddTicks(9490), null, "alici@gmail.com", "Alıcı", "Mehmet", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05556667788", null, (short)1, null, (short)2, (short)1 },
-                    { new Guid("770cd221-bcd5-4b45-a9ba-458f55f50859"), new Guid("7d5858f0-b090-4177-9eaf-1f0b9fde7137"), new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 12, 0, 33, 13, 120, DateTimeKind.Local).AddTicks(7610), null, "admin@esnaftan.com", "Esnaftan", "Admin", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05519684748", null, (short)1, null, (short)1, (short)1 }
+                    { new Guid("67d10056-c978-4e93-89d6-ab078cbab543"), new Guid("fb06e86b-4f9c-432a-9d67-ceb511435a38"), new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 18, 22, 42, 1, 623, DateTimeKind.Local).AddTicks(4290), null, "alici@gmail.com", "Alıcı", "Mehmet", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05556667788", null, (short)1, null, (short)2, (short)1 },
+                    { new Guid("7440c259-33db-4335-a3fa-b6aeb650146c"), new Guid("242a2995-96f9-402f-9c7f-c0023ac8a5c0"), new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 18, 22, 42, 1, 623, DateTimeKind.Local).AddTicks(4080), null, "info@pizzaci.com", "Pizzacı", "Ahmet", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05519684748", new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), (short)1, null, (short)4, (short)1 },
+                    { new Guid("9e9d19c8-a7f9-4ac3-aa51-12bff18cd608"), new Guid("001a20ef-22a9-40f1-930b-f0e3feb73a9c"), new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 18, 22, 42, 1, 615, DateTimeKind.Local).AddTicks(9740), null, "admin@esnaftan.com", "Esnaftan", "Admin", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05519684748", null, (short)1, null, (short)1, (short)1 }
                 });
 
             migrationBuilder.InsertData(
@@ -1005,8 +1495,8 @@ namespace Persistence.Migrations
                 columns: new[] { "Id", "AddressLine1", "AddressLine2", "AddressName", "AddressType", "CityId", "CreatedDate", "DeletedDate", "FirstName", "InvoiceType", "IsDefault", "LastName", "Latitude", "Longitude", "NeighbourhoodId", "Phone", "RestaurantId", "SellerId", "TaxArea", "TaxCode", "TownId", "UpdatedDate", "UserId" },
                 values: new object[,]
                 {
-                    { new Guid("5a42a307-8da3-49ec-abe2-fd90dde9e64c"), "Geçit Mah. 1. Begonya Sok. No: 57 Daire: 6", "Oliva Sitesi B Blok", "Teslimat Adresi", (short)2, new Guid("5d0c385c-810d-4dd6-9462-259183584992"), new DateTime(2026, 3, 12, 0, 33, 13, 202, DateTimeKind.Local).AddTicks(3040), null, "Alıcı", (short)1, true, "Mehmet", "40.26587386663734", "28.9617998", new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"), "05556667788", null, null, null, null, new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a"), null, new Guid("67d10056-c978-4e93-89d6-ab078cbab543") },
-                    { new Guid("5ac17430-b672-40a1-9a34-8197e6c08a04"), "Ahmet Yesevi, Bey Sk. No:4/B", null, "Gönderim Adresi", (short)4, new Guid("5d0c385c-810d-4dd6-9462-259183584992"), new DateTime(2026, 3, 12, 0, 33, 13, 202, DateTimeKind.Local).AddTicks(490), null, "Pizzacı", null, true, "Ahmet", "40.267317071584884", "28.9391322447786", new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"), "05551112233", new Guid("3a4d6ba2-593d-4f28-a2ce-89fbbb7fc811"), new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), null, null, new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a"), null, null }
+                    { new Guid("b0ae82b5-e00c-496f-951f-84ea5dfecbbb"), "Geçit Mah. 1. Begonya Sok. No: 57 Daire: 6", "Oliva Sitesi B Blok", "Teslimat Adresi", (short)2, new Guid("5d0c385c-810d-4dd6-9462-259183584992"), new DateTime(2026, 3, 18, 22, 42, 1, 631, DateTimeKind.Local).AddTicks(8240), null, "Alıcı", (short)1, true, "Mehmet", "40.26587386663734", "28.9617998", new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"), "05556667788", null, null, null, null, new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a"), null, new Guid("67d10056-c978-4e93-89d6-ab078cbab543") },
+                    { new Guid("d5e0f36d-4830-432d-83f0-e6bc994c68f3"), "Ahmet Yesevi, Bey Sk. No:4/B", null, "Gönderim Adresi", (short)4, new Guid("5d0c385c-810d-4dd6-9462-259183584992"), new DateTime(2026, 3, 18, 22, 42, 1, 631, DateTimeKind.Local).AddTicks(5330), null, "Pizzacı", null, true, "Ahmet", "40.267317071584884", "28.9391322447786", new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"), "05551112233", new Guid("3a4d6ba2-593d-4f28-a2ce-89fbbb7fc811"), new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), null, null, new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a"), null, null }
                 });
 
             migrationBuilder.CreateIndex(
@@ -1085,6 +1575,43 @@ namespace Persistence.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Coupon_Code",
+                table: "Coupon",
+                column: "Code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Coupon_RestaurantId",
+                table: "Coupon",
+                column: "RestaurantId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Coupon_SellerId",
+                table: "Coupon",
+                column: "SellerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CouponCategory_CategoryId",
+                table: "CouponCategory",
+                column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CouponMenu_MenuId",
+                table: "CouponMenu",
+                column: "MenuId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FavoriteRestaurant_RestaurantId",
+                table: "FavoriteRestaurant",
+                column: "RestaurantId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FavoriteRestaurant_UserId_RestaurantId",
+                table: "FavoriteRestaurant",
+                columns: new[] { "UserId", "RestaurantId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Menu_RestaurantId",
                 table: "Menu",
                 column: "RestaurantId");
@@ -1160,6 +1687,61 @@ namespace Persistence.Migrations
                 column: "OrderId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_OrderItemValueOptions_MenuOptionValueOptionId",
+                table: "OrderItemValueOptions",
+                column: "MenuOptionValueOptionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderItemValueOptions_MenuOptionValueOptionValueId",
+                table: "OrderItemValueOptions",
+                column: "MenuOptionValueOptionValueId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderItemValueOptions_OrderItemValueId",
+                table: "OrderItemValueOptions",
+                column: "OrderItemValueId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderItemValueOptions_ProductId",
+                table: "OrderItemValueOptions",
+                column: "ProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderItemValues_MenuOptionId",
+                table: "OrderItemValues",
+                column: "MenuOptionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderItemValues_MenuOptionValueId",
+                table: "OrderItemValues",
+                column: "MenuOptionValueId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderItemValues_OrderItemId",
+                table: "OrderItemValues",
+                column: "OrderItemId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderItemValues_ProductId",
+                table: "OrderItemValues",
+                column: "ProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderStatusHistories_OrderId",
+                table: "OrderStatusHistories",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PasswordResetToken_UserId",
+                table: "PasswordResetToken",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Payments_OrderId",
+                table: "Payments",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Product_RestaurantId",
                 table: "Product",
                 column: "RestaurantId");
@@ -1180,6 +1762,17 @@ namespace Persistence.Migrations
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_RefreshToken_Token",
+                table: "RefreshToken",
+                column: "Token",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshToken_UserId",
+                table: "RefreshToken",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_RestaurantCdnUpdateQueue_StatusId_CreatedDate",
                 table: "RestaurantCdnUpdateQueue",
                 columns: new[] { "StatusId", "CreatedDate" });
@@ -1188,6 +1781,22 @@ namespace Persistence.Migrations
                 name: "IX_RestaurantWorkingHour_RestaurantId_DayOfWeek",
                 table: "RestaurantWorkingHour",
                 columns: new[] { "RestaurantId", "DayOfWeek" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Review_OrderId",
+                table: "Review",
+                column: "OrderId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Review_RestaurantId",
+                table: "Review",
+                column: "RestaurantId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Review_UserId",
+                table: "Review",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Subscription_RestaurantId",
@@ -1203,6 +1812,32 @@ namespace Persistence.Migrations
                 name: "IX_Subscription_SubscriptionPlanId",
                 table: "Subscription",
                 column: "SubscriptionPlanId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubscriptionUsage_SubscriptionId_Year_Month",
+                table: "SubscriptionUsage",
+                columns: new[] { "SubscriptionId", "Year", "Month" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserCoupon_CouponId",
+                table: "UserCoupon",
+                column: "CouponId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserCoupon_OrderId",
+                table: "UserCoupon",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserCoupon_UserId_CouponId",
+                table: "UserCoupon",
+                columns: new[] { "UserId", "CouponId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserExternalInfos_UserId",
+                table: "UserExternalInfos",
+                column: "UserId");
         }
 
         /// <inheritdoc />
@@ -1218,16 +1853,37 @@ namespace Persistence.Migrations
                 name: "CategoryDetail");
 
             migrationBuilder.DropTable(
+                name: "CouponCategory");
+
+            migrationBuilder.DropTable(
+                name: "CouponMenu");
+
+            migrationBuilder.DropTable(
                 name: "Cuisine");
+
+            migrationBuilder.DropTable(
+                name: "FavoriteRestaurant");
 
             migrationBuilder.DropTable(
                 name: "OptionTemplateValueOptionValue");
 
             migrationBuilder.DropTable(
-                name: "OrderItem");
+                name: "OrderItemValueOptions");
+
+            migrationBuilder.DropTable(
+                name: "OrderStatusHistories");
+
+            migrationBuilder.DropTable(
+                name: "PasswordResetToken");
+
+            migrationBuilder.DropTable(
+                name: "Payments");
 
             migrationBuilder.DropTable(
                 name: "ProductAttributeValue");
+
+            migrationBuilder.DropTable(
+                name: "RefreshToken");
 
             migrationBuilder.DropTable(
                 name: "RestaurantCdnUpdateQueue");
@@ -1236,22 +1892,25 @@ namespace Persistence.Migrations
                 name: "RestaurantWorkingHour");
 
             migrationBuilder.DropTable(
+                name: "Review");
+
+            migrationBuilder.DropTable(
                 name: "ScheduledTask");
 
             migrationBuilder.DropTable(
                 name: "SellerDetail");
 
             migrationBuilder.DropTable(
-                name: "Subscription");
+                name: "SubscriptionUsage");
 
             migrationBuilder.DropTable(
-                name: "User");
+                name: "UserCoupon");
+
+            migrationBuilder.DropTable(
+                name: "UserExternalInfos");
 
             migrationBuilder.DropTable(
                 name: "BasketItemValue");
-
-            migrationBuilder.DropTable(
-                name: "MenuOptionValueOptionValue");
 
             migrationBuilder.DropTable(
                 name: "Category");
@@ -1260,31 +1919,49 @@ namespace Persistence.Migrations
                 name: "OptionTemplateValueOption");
 
             migrationBuilder.DropTable(
-                name: "Order");
+                name: "MenuOptionValueOptionValue");
+
+            migrationBuilder.DropTable(
+                name: "OrderItemValues");
 
             migrationBuilder.DropTable(
                 name: "ProductAttribute");
 
             migrationBuilder.DropTable(
-                name: "Seller");
+                name: "Subscription");
 
             migrationBuilder.DropTable(
-                name: "SubscriptionPlan");
+                name: "Coupon");
+
+            migrationBuilder.DropTable(
+                name: "User");
 
             migrationBuilder.DropTable(
                 name: "BasketItem");
 
             migrationBuilder.DropTable(
+                name: "OptionTemplateValue");
+
+            migrationBuilder.DropTable(
                 name: "MenuOptionValueOption");
 
             migrationBuilder.DropTable(
-                name: "OptionTemplateValue");
+                name: "OrderItem");
+
+            migrationBuilder.DropTable(
+                name: "SubscriptionPlan");
+
+            migrationBuilder.DropTable(
+                name: "Seller");
 
             migrationBuilder.DropTable(
                 name: "Basket");
 
             migrationBuilder.DropTable(
                 name: "MenuOptionValue");
+
+            migrationBuilder.DropTable(
+                name: "Order");
 
             migrationBuilder.DropTable(
                 name: "MenuOption");

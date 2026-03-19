@@ -12,8 +12,8 @@ using Persistence.Contexts;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(BaseDbContext))]
-    [Migration("20260314190300_cardkey")]
-    partial class cardkey
+    [Migration("20260318194202_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -237,6 +237,43 @@ namespace Persistence.Migrations
                     b.ToTable("BasketItemValueItemValue", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.Buyer.FavoriteRestaurant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("CreatedDate");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("DeletedDate");
+
+                    b.Property<Guid>("RestaurantId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("RestaurantId");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("UpdatedDate");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("UserId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RestaurantId");
+
+                    b.HasIndex("UserId", "RestaurantId")
+                        .IsUnique();
+
+                    b.ToTable("FavoriteRestaurant", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Entities.Buyer.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -248,10 +285,6 @@ namespace Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)")
                         .HasColumnName("CancellationReason");
-
-                    b.Property<DateTime?>("ConfirmedAt")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("ConfirmedAt");
 
                     b.Property<string>("CouponCode")
                         .HasMaxLength(50)
@@ -271,12 +304,14 @@ namespace Persistence.Migrations
                         .HasColumnName("DeletedDate");
 
                     b.Property<DateTime?>("DeliveredAt")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("DeliveredAt");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid>("DeliveryAddressId")
                         .HasColumnType("char(36)")
                         .HasColumnName("DeliveryAddressId");
+
+                    b.Property<decimal?>("DeliveryDistanceKm")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<decimal>("DiscountAmount")
                         .HasPrecision(18, 2)
@@ -299,6 +334,9 @@ namespace Persistence.Migrations
                     b.Property<short>("PaymentStatusId")
                         .HasColumnType("smallint")
                         .HasColumnName("PaymentStatusId");
+
+                    b.Property<DateTime?>("PickedUpAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid>("RestaurantId")
                         .HasColumnType("char(36)")
@@ -390,6 +428,281 @@ namespace Persistence.Migrations
                     b.HasIndex("OrderId");
 
                     b.ToTable("OrderItem", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.OrderItemValue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("MenuOptionId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("MenuOptionValueId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("OrderItemId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MenuOptionId");
+
+                    b.HasIndex("MenuOptionValueId");
+
+                    b.HasIndex("OrderItemId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("OrderItemValues");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.OrderItemValueOption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("MenuOptionValueOptionId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("MenuOptionValueOptionValueId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("OrderItemValueId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MenuOptionValueOptionId");
+
+                    b.HasIndex("MenuOptionValueOptionValueId");
+
+                    b.HasIndex("OrderItemValueId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("OrderItemValueOptions");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.OrderStatusHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderStatusHistories");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.Payment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<string>("CardAlias")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CardAssociation")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CardLastFourDigits")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CardType")
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal>("CommissionAmount")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("ErrorCode")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("FailedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("PaymentOptionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProviderConversationId")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ProviderFraudStatus")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ProviderPaymentId")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ProviderTransactionId")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RefundReason")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RefundTransactionId")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("RefundedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("SellerId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("SellerPayoutAmount")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.Review", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Id");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("Comment");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("CreatedDate");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("DeletedDate");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("OrderId");
+
+                    b.Property<short>("Rating")
+                        .HasColumnType("smallint")
+                        .HasColumnName("Rating");
+
+                    b.Property<Guid>("RestaurantId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("RestaurantId");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("UpdatedDate");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("UserId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.HasIndex("RestaurantId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Review", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Buyer.UserCoupon", b =>
@@ -533,12 +846,12 @@ namespace Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("80a9ad16-aecf-4e86-928b-05d267fdd65d"),
+                            Id = new Guid("d5e0f36d-4830-432d-83f0-e6bc994c68f3"),
                             AddressLine1 = "Ahmet Yesevi, Bey Sk. No:4/B",
                             AddressName = "Gönderim Adresi",
                             AddressType = (short)4,
                             CityId = new Guid("5d0c385c-810d-4dd6-9462-259183584992"),
-                            CreatedDate = new DateTime(2026, 3, 14, 22, 2, 59, 490, DateTimeKind.Local).AddTicks(5270),
+                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 631, DateTimeKind.Local).AddTicks(5330),
                             FirstName = "Pizzacı",
                             IsDefault = true,
                             LastName = "Ahmet",
@@ -552,13 +865,13 @@ namespace Persistence.Migrations
                         },
                         new
                         {
-                            Id = new Guid("ac0b3f21-fec1-4c3a-af6c-9ebe04da0090"),
+                            Id = new Guid("b0ae82b5-e00c-496f-951f-84ea5dfecbbb"),
                             AddressLine1 = "Geçit Mah. 1. Begonya Sok. No: 57 Daire: 6",
                             AddressLine2 = "Oliva Sitesi B Blok",
                             AddressName = "Teslimat Adresi",
                             AddressType = (short)2,
                             CityId = new Guid("5d0c385c-810d-4dd6-9462-259183584992"),
-                            CreatedDate = new DateTime(2026, 3, 14, 22, 2, 59, 490, DateTimeKind.Local).AddTicks(8230),
+                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 631, DateTimeKind.Local).AddTicks(8240),
                             FirstName = "Alıcı",
                             InvoiceType = (short)1,
                             IsDefault = true,
@@ -603,6 +916,112 @@ namespace Persistence.Migrations
                     b.ToTable("Cuisine", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.Common.PasswordResetToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("Code");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("CreatedDate");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("DeletedDate");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("ExpiresAt");
+
+                    b.Property<int>("FailedAttempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("FailedAttempts");
+
+                    b.Property<short>("Method")
+                        .HasColumnType("smallint")
+                        .HasColumnName("Method");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("UpdatedDate");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("UsedAt");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("UserId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PasswordResetToken", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Common.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("CreatedDate");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("DeletedDate");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("ExpiresAt");
+
+                    b.Property<string>("ReplacedByToken")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)")
+                        .HasColumnName("ReplacedByToken");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("RevokedAt");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)")
+                        .HasColumnName("Token");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("UpdatedDate");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("UserId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshToken", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Entities.Common.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -614,9 +1033,6 @@ namespace Persistence.Migrations
 
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<string>("CardUserKey")
-                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
@@ -666,10 +1082,10 @@ namespace Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("b74f46cc-598b-43e3-93de-6259040a0700"),
-                            ActivationKey = new Guid("68abe6a4-b6a0-45d0-b726-98924d93e7e4"),
+                            Id = new Guid("9e9d19c8-a7f9-4ac3-aa51-12bff18cd608"),
+                            ActivationKey = new Guid("001a20ef-22a9-40f1-930b-f0e3feb73a9c"),
                             BirthDate = new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedDate = new DateTime(2026, 3, 14, 22, 2, 59, 473, DateTimeKind.Local).AddTicks(270),
+                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 615, DateTimeKind.Local).AddTicks(9740),
                             Email = "admin@esnaftan.com",
                             FirstName = "Esnaftan",
                             LastName = "Admin",
@@ -681,10 +1097,10 @@ namespace Persistence.Migrations
                         },
                         new
                         {
-                            Id = new Guid("b17f0e9e-e7d5-48f0-8622-91b522b5f350"),
-                            ActivationKey = new Guid("63dc89fe-6c85-4a85-9c8b-e17221bf6067"),
+                            Id = new Guid("7440c259-33db-4335-a3fa-b6aeb650146c"),
+                            ActivationKey = new Guid("242a2995-96f9-402f-9c7f-c0023ac8a5c0"),
                             BirthDate = new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedDate = new DateTime(2026, 3, 14, 22, 2, 59, 481, DateTimeKind.Local).AddTicks(1130),
+                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 623, DateTimeKind.Local).AddTicks(4080),
                             Email = "info@pizzaci.com",
                             FirstName = "Pizzacı",
                             LastName = "Ahmet",
@@ -698,9 +1114,9 @@ namespace Persistence.Migrations
                         new
                         {
                             Id = new Guid("67d10056-c978-4e93-89d6-ab078cbab543"),
-                            ActivationKey = new Guid("60528802-d3e9-4a76-865d-352751b388ae"),
+                            ActivationKey = new Guid("fb06e86b-4f9c-432a-9d67-ceb511435a38"),
                             BirthDate = new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedDate = new DateTime(2026, 3, 14, 22, 2, 59, 481, DateTimeKind.Local).AddTicks(1460),
+                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 623, DateTimeKind.Local).AddTicks(4290),
                             Email = "alici@gmail.com",
                             FirstName = "Alıcı",
                             LastName = "Mehmet",
@@ -710,6 +1126,43 @@ namespace Persistence.Migrations
                             UserRoleId = (short)2,
                             UserStatusId = (short)1
                         });
+                });
+
+            modelBuilder.Entity("Domain.Entities.Common.UserExternalInfo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserExternalInfos");
                 });
 
             modelBuilder.Entity("Domain.Entities.Seller.Category", b =>
@@ -1752,6 +2205,9 @@ namespace Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("IdentityNumber")
+                        .HasColumnType("longtext");
+
                     b.Property<bool>("IsEInvoiceAvaible")
                         .HasColumnType("tinyint(1)");
 
@@ -1784,7 +2240,7 @@ namespace Persistence.Migrations
                             Id = new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"),
                             CompanyStatus = (short)1,
                             CompanyType = (short)2,
-                            CreatedDate = new DateTime(2026, 3, 14, 22, 2, 59, 481, DateTimeKind.Local).AddTicks(9720),
+                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 624, DateTimeKind.Local).AddTicks(710),
                             IBAN = "TR260006266822193294982978",
                             IsEInvoiceAvaible = true,
                             LegalName = "Pizzacı Ahmet Ltd. Şti.",
@@ -1845,6 +2301,9 @@ namespace Persistence.Migrations
                         .HasColumnType("char(36)")
                         .HasColumnName("Id");
 
+                    b.Property<bool>("AutoRenew")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("CreatedDate");
@@ -1857,6 +2316,9 @@ namespace Persistence.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("EndDate");
 
+                    b.Property<DateTime?>("LastRenewalAttemptAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Notes")
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)")
@@ -1866,6 +2328,9 @@ namespace Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("PaidAmount");
+
+                    b.Property<int>("RenewalAttempts")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("RestaurantId")
                         .HasColumnType("char(36)")
@@ -1909,6 +2374,9 @@ namespace Persistence.Migrations
                         .HasColumnType("char(36)")
                         .HasColumnName("Id");
 
+                    b.Property<decimal>("CommissionRate")
+                        .HasColumnType("decimal(65,30)");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("CreatedDate");
@@ -1926,6 +2394,9 @@ namespace Persistence.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("IsActive");
 
+                    b.Property<int>("MaxOrdersPerMonth")
+                        .HasColumnType("int");
+
                     b.Property<int>("MaxRestaurants")
                         .HasColumnType("int")
                         .HasColumnName("MaxRestaurants");
@@ -1941,6 +2412,9 @@ namespace Persistence.Migrations
                         .HasColumnType("varchar(100)")
                         .HasColumnName("Name");
 
+                    b.Property<short>("OverageAction")
+                        .HasColumnType("smallint");
+
                     b.Property<short>("PlanType")
                         .HasColumnType("smallint")
                         .HasColumnName("PlanType");
@@ -1952,6 +2426,41 @@ namespace Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SubscriptionPlan", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Seller.SubscriptionUsage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderCount")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SubscriptionId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubscriptionId", "Year", "Month")
+                        .IsUnique();
+
+                    b.ToTable("SubscriptionUsage", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Buyer.BasketItem", b =>
@@ -2043,6 +2552,25 @@ namespace Persistence.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Buyer.FavoriteRestaurant", b =>
+                {
+                    b.HasOne("Domain.Entities.Seller.Restaurant", "Restaurant")
+                        .WithMany()
+                        .HasForeignKey("RestaurantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Common.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Restaurant");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Domain.Entities.Buyer.OrderItem", b =>
                 {
                     b.HasOne("Domain.Entities.Buyer.Order", "Order")
@@ -2052,6 +2580,117 @@ namespace Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.OrderItemValue", b =>
+                {
+                    b.HasOne("Domain.Entities.Seller.MenuOption", "MenuOption")
+                        .WithMany()
+                        .HasForeignKey("MenuOptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Seller.MenuOptionValue", "MenuOptionValue")
+                        .WithMany()
+                        .HasForeignKey("MenuOptionValueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Buyer.OrderItem", "OrderItem")
+                        .WithMany("OrderItemValues")
+                        .HasForeignKey("OrderItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Seller.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MenuOption");
+
+                    b.Navigation("MenuOptionValue");
+
+                    b.Navigation("OrderItem");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.OrderItemValueOption", b =>
+                {
+                    b.HasOne("Domain.Entities.Seller.MenuOptionValueOption", "MenuOptionValueOption")
+                        .WithMany()
+                        .HasForeignKey("MenuOptionValueOptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Seller.MenuOptionValueOptionValue", "MenuOptionValueOptionValue")
+                        .WithMany()
+                        .HasForeignKey("MenuOptionValueOptionValueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Buyer.OrderItemValue", "OrderItemValue")
+                        .WithMany("OrderItemValueOptions")
+                        .HasForeignKey("OrderItemValueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Seller.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MenuOptionValueOption");
+
+                    b.Navigation("MenuOptionValueOptionValue");
+
+                    b.Navigation("OrderItemValue");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.OrderStatusHistory", b =>
+                {
+                    b.HasOne("Domain.Entities.Buyer.Order", "Order")
+                        .WithMany("StatusHistory")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.Payment", b =>
+                {
+                    b.HasOne("Domain.Entities.Buyer.Order", "Order")
+                        .WithMany("Payments")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.Review", b =>
+                {
+                    b.HasOne("Domain.Entities.Seller.Restaurant", "Restaurant")
+                        .WithMany()
+                        .HasForeignKey("RestaurantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Common.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Restaurant");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Domain.Entities.Buyer.UserCoupon", b =>
@@ -2096,6 +2735,39 @@ namespace Persistence.Migrations
                     b.Navigation("Restaurant");
 
                     b.Navigation("Seller");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Common.PasswordResetToken", b =>
+                {
+                    b.HasOne("Domain.Entities.Common.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Common.RefreshToken", b =>
+                {
+                    b.HasOne("Domain.Entities.Common.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Common.UserExternalInfo", b =>
+                {
+                    b.HasOne("Domain.Entities.Common.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -2394,6 +3066,17 @@ namespace Persistence.Migrations
                     b.Navigation("SubscriptionPlan");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Seller.SubscriptionUsage", b =>
+                {
+                    b.HasOne("Domain.Entities.Seller.Subscription", "Subscription")
+                        .WithMany()
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Subscription");
+                });
+
             modelBuilder.Entity("Domain.Entities.Buyer.Basket", b =>
                 {
                     b.Navigation("BasketItems");
@@ -2412,6 +3095,20 @@ namespace Persistence.Migrations
             modelBuilder.Entity("Domain.Entities.Buyer.Order", b =>
                 {
                     b.Navigation("OrderItems");
+
+                    b.Navigation("Payments");
+
+                    b.Navigation("StatusHistory");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.OrderItem", b =>
+                {
+                    b.Navigation("OrderItemValues");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.OrderItemValue", b =>
+                {
+                    b.Navigation("OrderItemValueOptions");
                 });
 
             modelBuilder.Entity("Domain.Entities.Seller.Category", b =>

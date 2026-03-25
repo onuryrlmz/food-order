@@ -292,6 +292,10 @@ namespace Persistence.Migrations
                         .HasColumnType("char(36)")
                         .HasColumnName("CouponId");
 
+                    b.Property<Guid?>("CourierId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("CourierId");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("CreatedDate");
@@ -306,6 +310,10 @@ namespace Persistence.Migrations
                     b.Property<Guid>("DeliveryAddressId")
                         .HasColumnType("char(36)")
                         .HasColumnName("DeliveryAddressId");
+
+                    b.Property<Guid?>("DeliveryAssignmentId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("DeliveryAssignmentId");
 
                     b.Property<decimal?>("DeliveryDistanceKm")
                         .HasColumnType("decimal(65,30)");
@@ -843,12 +851,12 @@ namespace Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("d5e0f36d-4830-432d-83f0-e6bc994c68f3"),
+                            Id = new Guid("28b1293a-4a64-4e0f-ae7b-6e7d6e04b51f"),
                             AddressLine1 = "Ahmet Yesevi, Bey Sk. No:4/B",
                             AddressName = "Gönderim Adresi",
                             AddressType = (short)4,
                             CityId = new Guid("5d0c385c-810d-4dd6-9462-259183584992"),
-                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 631, DateTimeKind.Local).AddTicks(5330),
+                            CreatedDate = new DateTime(2026, 3, 24, 21, 16, 54, 422, DateTimeKind.Local).AddTicks(5700),
                             FirstName = "Pizzacı",
                             IsDefault = true,
                             LastName = "Ahmet",
@@ -862,13 +870,13 @@ namespace Persistence.Migrations
                         },
                         new
                         {
-                            Id = new Guid("b0ae82b5-e00c-496f-951f-84ea5dfecbbb"),
+                            Id = new Guid("8b0fe2ee-669a-4884-b4f4-5bf1b8c8e442"),
                             AddressLine1 = "Geçit Mah. 1. Begonya Sok. No: 57 Daire: 6",
                             AddressLine2 = "Oliva Sitesi B Blok",
                             AddressName = "Teslimat Adresi",
                             AddressType = (short)2,
                             CityId = new Guid("5d0c385c-810d-4dd6-9462-259183584992"),
-                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 631, DateTimeKind.Local).AddTicks(8240),
+                            CreatedDate = new DateTime(2026, 3, 24, 21, 16, 54, 422, DateTimeKind.Local).AddTicks(8600),
                             FirstName = "Alıcı",
                             InvoiceType = (short)1,
                             IsDefault = true,
@@ -1079,10 +1087,10 @@ namespace Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("9e9d19c8-a7f9-4ac3-aa51-12bff18cd608"),
-                            ActivationKey = new Guid("001a20ef-22a9-40f1-930b-f0e3feb73a9c"),
+                            Id = new Guid("6005c78b-8728-4d9a-be6f-5554acf8e9a7"),
+                            ActivationKey = new Guid("98f468df-f65e-44d7-89f9-5863be616a28"),
                             BirthDate = new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 615, DateTimeKind.Local).AddTicks(9740),
+                            CreatedDate = new DateTime(2026, 3, 24, 21, 16, 54, 406, DateTimeKind.Local).AddTicks(2720),
                             Email = "admin@esnaftan.com",
                             FirstName = "Esnaftan",
                             LastName = "Admin",
@@ -1094,10 +1102,10 @@ namespace Persistence.Migrations
                         },
                         new
                         {
-                            Id = new Guid("7440c259-33db-4335-a3fa-b6aeb650146c"),
-                            ActivationKey = new Guid("242a2995-96f9-402f-9c7f-c0023ac8a5c0"),
+                            Id = new Guid("4f42f685-b154-460e-bb9e-a4f8402eff0b"),
+                            ActivationKey = new Guid("0bca0c3b-eed5-45da-8382-a2c1016f8c95"),
                             BirthDate = new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 623, DateTimeKind.Local).AddTicks(4080),
+                            CreatedDate = new DateTime(2026, 3, 24, 21, 16, 54, 414, DateTimeKind.Local).AddTicks(2790),
                             Email = "info@pizzaci.com",
                             FirstName = "Pizzacı",
                             LastName = "Ahmet",
@@ -1111,9 +1119,9 @@ namespace Persistence.Migrations
                         new
                         {
                             Id = new Guid("67d10056-c978-4e93-89d6-ab078cbab543"),
-                            ActivationKey = new Guid("fb06e86b-4f9c-432a-9d67-ceb511435a38"),
+                            ActivationKey = new Guid("3beffec0-22cd-4e48-8259-ffd3d9573dac"),
                             BirthDate = new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 623, DateTimeKind.Local).AddTicks(4290),
+                            CreatedDate = new DateTime(2026, 3, 24, 21, 16, 54, 414, DateTimeKind.Local).AddTicks(3020),
                             Email = "alici@gmail.com",
                             FirstName = "Alıcı",
                             LastName = "Mehmet",
@@ -1160,6 +1168,539 @@ namespace Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserExternalInfos");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Courier.Courier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Id");
+
+                    b.Property<short>("AvailabilityStatusId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("AvailabilityStatusId");
+
+                    b.Property<Guid?>("CourierCompanyId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("CourierCompanyId");
+
+                    b.Property<short>("CourierTypeId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("CourierTypeId");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("CreatedDate");
+
+                    b.Property<decimal?>("CurrentLatitude")
+                        .HasPrecision(10, 7)
+                        .HasColumnType("decimal(10,7)")
+                        .HasColumnName("CurrentLatitude");
+
+                    b.Property<decimal?>("CurrentLongitude")
+                        .HasPrecision(10, 7)
+                        .HasColumnType("decimal(10,7)")
+                        .HasColumnName("CurrentLongitude");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("DeletedDate");
+
+                    b.Property<string>("IBAN")
+                        .HasMaxLength(34)
+                        .HasColumnType("varchar(34)")
+                        .HasColumnName("IBAN");
+
+                    b.Property<string>("IdentityNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("IdentityNumber");
+
+                    b.Property<DateTime?>("LastLocationUpdate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("LastLocationUpdate");
+
+                    b.Property<decimal>("Rating")
+                        .HasPrecision(3, 2)
+                        .HasColumnType("decimal(3,2)")
+                        .HasColumnName("Rating");
+
+                    b.Property<int>("RatingCount")
+                        .HasColumnType("int")
+                        .HasColumnName("RatingCount");
+
+                    b.Property<Guid?>("RestaurantId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("RestaurantId");
+
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("StatusId");
+
+                    b.Property<int>("TotalDeliveries")
+                        .HasColumnType("int")
+                        .HasColumnName("TotalDeliveries");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("UpdatedDate");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("UserId");
+
+                    b.Property<string>("VehiclePlate")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("VehiclePlate");
+
+                    b.Property<string>("VehicleType")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("VehicleType");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AvailabilityStatusId");
+
+                    b.HasIndex("CourierCompanyId");
+
+                    b.HasIndex("RestaurantId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Courier", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Courier.CourierCompany", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Id");
+
+                    b.Property<decimal>("CommissionRate")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)")
+                        .HasColumnName("CommissionRate");
+
+                    b.Property<short>("CompanyTypeId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("CompanyTypeId");
+
+                    b.Property<string>("ContactPerson")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("ContactPerson");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("CreatedDate");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("DeletedDate");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("Email");
+
+                    b.Property<string>("IBAN")
+                        .IsRequired()
+                        .HasMaxLength(34)
+                        .HasColumnType("varchar(34)")
+                        .HasColumnName("IBAN");
+
+                    b.Property<string>("IdentityNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("IdentityNumber");
+
+                    b.Property<string>("LegalName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("LegalName");
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("LogoUrl");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("Name");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("Phone");
+
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("StatusId");
+
+                    b.Property<string>("TaxArea")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("TaxArea");
+
+                    b.Property<string>("TaxCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("TaxCode");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("UpdatedDate");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CourierCompany", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Courier.CourierEarning", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Id");
+
+                    b.Property<decimal?>("BonusAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("BonusAmount");
+
+                    b.Property<Guid>("CourierId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("CourierId");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("CreatedDate");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("DeletedDate");
+
+                    b.Property<Guid>("DeliveryAssignmentId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("DeliveryAssignmentId");
+
+                    b.Property<decimal>("DeliveryFee")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("DeliveryFee");
+
+                    b.Property<bool>("IsSettled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("IsSettled");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("OrderId");
+
+                    b.Property<DateTime?>("SettledAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("SettledAt");
+
+                    b.Property<string>("SettlementReference")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("SettlementReference");
+
+                    b.Property<decimal?>("TipAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("TipAmount");
+
+                    b.Property<decimal>("TotalEarning")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("TotalEarning");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("UpdatedDate");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourierId");
+
+                    b.HasIndex("DeliveryAssignmentId");
+
+                    b.HasIndex("IsSettled");
+
+                    b.ToTable("CourierEarning", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Courier.CourierLocationHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Id");
+
+                    b.Property<Guid>("CourierId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("CourierId");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("CreatedDate");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("DeletedDate");
+
+                    b.Property<Guid?>("DeliveryAssignmentId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("DeliveryAssignmentId");
+
+                    b.Property<decimal>("Latitude")
+                        .HasPrecision(10, 7)
+                        .HasColumnType("decimal(10,7)")
+                        .HasColumnName("Latitude");
+
+                    b.Property<decimal>("Longitude")
+                        .HasPrecision(10, 7)
+                        .HasColumnType("decimal(10,7)")
+                        .HasColumnName("Longitude");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("RecordedAt");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("UpdatedDate");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourierId");
+
+                    b.HasIndex("DeliveryAssignmentId");
+
+                    b.HasIndex("RecordedAt");
+
+                    b.ToTable("CourierLocationHistory", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Courier.DeliveryAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime?>("AcceptedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("AcceptedAt");
+
+                    b.Property<Guid?>("AgreementId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("AgreementId");
+
+                    b.Property<short>("AssignmentStrategyId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("AssignmentStrategyId");
+
+                    b.Property<int>("AttemptNumber")
+                        .HasColumnType("int")
+                        .HasColumnName("AttemptNumber");
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("CancellationReason");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("CancelledAt");
+
+                    b.Property<Guid?>("CourierCompanyId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("CourierCompanyId");
+
+                    b.Property<Guid?>("CourierId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("CourierId");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("CreatedDate");
+
+                    b.Property<decimal?>("CustomerLatitude")
+                        .HasPrecision(10, 7)
+                        .HasColumnType("decimal(10,7)")
+                        .HasColumnName("CustomerLatitude");
+
+                    b.Property<decimal?>("CustomerLongitude")
+                        .HasPrecision(10, 7)
+                        .HasColumnType("decimal(10,7)")
+                        .HasColumnName("CustomerLongitude");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("DeletedDate");
+
+                    b.Property<DateTime?>("DeliveredAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("DeliveredAt");
+
+                    b.Property<decimal?>("DeliveryFee")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("DeliveryFee");
+
+                    b.Property<decimal?>("DistanceKm")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("DistanceKm");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("ExpiresAt");
+
+                    b.Property<DateTime?>("OfferedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("OfferedAt");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("OrderId");
+
+                    b.Property<DateTime?>("PickedUpAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("PickedUpAt");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("RejectedAt");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("RejectionReason");
+
+                    b.Property<Guid>("RestaurantId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("RestaurantId");
+
+                    b.Property<decimal?>("RestaurantLatitude")
+                        .HasPrecision(10, 7)
+                        .HasColumnType("decimal(10,7)")
+                        .HasColumnName("RestaurantLatitude");
+
+                    b.Property<decimal?>("RestaurantLongitude")
+                        .HasPrecision(10, 7)
+                        .HasColumnType("decimal(10,7)")
+                        .HasColumnName("RestaurantLongitude");
+
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("StatusId");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("UpdatedDate");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgreementId");
+
+                    b.HasIndex("CourierCompanyId");
+
+                    b.HasIndex("CourierId");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("StatusId");
+
+                    b.ToTable("DeliveryAssignment", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Courier.RestaurantCourierAgreement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("Id");
+
+                    b.Property<decimal?>("AgreedDeliveryFee")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("AgreedDeliveryFee");
+
+                    b.Property<short>("AssignmentStrategyId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("AssignmentStrategyId");
+
+                    b.Property<Guid?>("CourierCompanyId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("CourierCompanyId");
+
+                    b.Property<Guid?>("CourierId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("CourierId");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("CreatedDate");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("DeletedDate");
+
+                    b.Property<DateTime?>("EffectiveFrom")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("EffectiveFrom");
+
+                    b.Property<DateTime?>("EffectiveUntil")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("EffectiveUntil");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("IsDefault");
+
+                    b.Property<decimal?>("PerKmFee")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("PerKmFee");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int")
+                        .HasColumnName("Priority");
+
+                    b.Property<Guid>("RestaurantId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("RestaurantId");
+
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("StatusId");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("UpdatedDate");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourierCompanyId");
+
+                    b.HasIndex("CourierId");
+
+                    b.HasIndex("RestaurantId");
+
+                    b.ToTable("RestaurantCourierAgreement", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Seller.Category", b =>
@@ -1939,6 +2480,10 @@ namespace Persistence.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("CreatedDate");
 
+                    b.Property<short?>("DefaultAssignmentStrategyId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("DefaultAssignmentStrategyId");
+
                     b.Property<DateTime?>("DeletedDate")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("DeletedDate");
@@ -1952,6 +2497,10 @@ namespace Persistence.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("varchar(150)")
                         .HasColumnName("Email");
+
+                    b.Property<bool>("HasOwnCouriers")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("HasOwnCouriers");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)")
@@ -2029,6 +2578,7 @@ namespace Persistence.Migrations
                             CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Süper lezzetli pizzalar, hızlı teslimat!",
                             Email = "a@a.com",
+                            HasOwnCouriers = false,
                             IsActive = false,
                             IsOpen = false,
                             MaxDeliveryTime = 45,
@@ -2237,7 +2787,7 @@ namespace Persistence.Migrations
                             Id = new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"),
                             CompanyStatus = (short)1,
                             CompanyType = (short)2,
-                            CreatedDate = new DateTime(2026, 3, 18, 22, 42, 1, 624, DateTimeKind.Local).AddTicks(710),
+                            CreatedDate = new DateTime(2026, 3, 24, 21, 16, 54, 414, DateTimeKind.Local).AddTicks(9930),
                             IBAN = "TR260006266822193294982978",
                             IsEInvoiceAvaible = true,
                             LegalName = "Pizzacı Ahmet Ltd. Şti.",
@@ -2769,6 +3319,117 @@ namespace Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Courier.Courier", b =>
+                {
+                    b.HasOne("Domain.Entities.Courier.CourierCompany", "CourierCompany")
+                        .WithMany("Couriers")
+                        .HasForeignKey("CourierCompanyId");
+
+                    b.HasOne("Domain.Entities.Seller.Restaurant", "Restaurant")
+                        .WithMany()
+                        .HasForeignKey("RestaurantId");
+
+                    b.HasOne("Domain.Entities.Common.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CourierCompany");
+
+                    b.Navigation("Restaurant");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Courier.CourierEarning", b =>
+                {
+                    b.HasOne("Domain.Entities.Courier.Courier", "Courier")
+                        .WithMany("Earnings")
+                        .HasForeignKey("CourierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Courier.DeliveryAssignment", "DeliveryAssignment")
+                        .WithMany()
+                        .HasForeignKey("DeliveryAssignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Courier");
+
+                    b.Navigation("DeliveryAssignment");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Courier.CourierLocationHistory", b =>
+                {
+                    b.HasOne("Domain.Entities.Courier.Courier", "Courier")
+                        .WithMany()
+                        .HasForeignKey("CourierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Courier.DeliveryAssignment", "DeliveryAssignment")
+                        .WithMany()
+                        .HasForeignKey("DeliveryAssignmentId");
+
+                    b.Navigation("Courier");
+
+                    b.Navigation("DeliveryAssignment");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Courier.DeliveryAssignment", b =>
+                {
+                    b.HasOne("Domain.Entities.Courier.RestaurantCourierAgreement", "Agreement")
+                        .WithMany()
+                        .HasForeignKey("AgreementId");
+
+                    b.HasOne("Domain.Entities.Courier.CourierCompany", "CourierCompany")
+                        .WithMany()
+                        .HasForeignKey("CourierCompanyId");
+
+                    b.HasOne("Domain.Entities.Courier.Courier", "Courier")
+                        .WithMany("DeliveryAssignments")
+                        .HasForeignKey("CourierId");
+
+                    b.HasOne("Domain.Entities.Buyer.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Agreement");
+
+                    b.Navigation("Courier");
+
+                    b.Navigation("CourierCompany");
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Courier.RestaurantCourierAgreement", b =>
+                {
+                    b.HasOne("Domain.Entities.Courier.CourierCompany", "CourierCompany")
+                        .WithMany("Agreements")
+                        .HasForeignKey("CourierCompanyId");
+
+                    b.HasOne("Domain.Entities.Courier.Courier", "Courier")
+                        .WithMany()
+                        .HasForeignKey("CourierId");
+
+                    b.HasOne("Domain.Entities.Seller.Restaurant", "Restaurant")
+                        .WithMany()
+                        .HasForeignKey("RestaurantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Courier");
+
+                    b.Navigation("CourierCompany");
+
+                    b.Navigation("Restaurant");
+                });
+
             modelBuilder.Entity("Domain.Entities.Seller.Category", b =>
                 {
                     b.HasOne("Domain.Entities.Seller.Restaurant", "Restaurant")
@@ -3106,6 +3767,20 @@ namespace Persistence.Migrations
             modelBuilder.Entity("Domain.Entities.Buyer.OrderItemValue", b =>
                 {
                     b.Navigation("OrderItemValueOptions");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Courier.Courier", b =>
+                {
+                    b.Navigation("DeliveryAssignments");
+
+                    b.Navigation("Earnings");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Courier.CourierCompany", b =>
+                {
+                    b.Navigation("Agreements");
+
+                    b.Navigation("Couriers");
                 });
 
             modelBuilder.Entity("Domain.Entities.Seller.Category", b =>

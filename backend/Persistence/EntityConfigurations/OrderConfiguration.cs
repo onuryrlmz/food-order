@@ -27,6 +27,8 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.CouponId).HasColumnName("CouponId");
         builder.Property(o => o.CouponCode).HasColumnName("CouponCode").HasMaxLength(50);
         builder.Property(o => o.CancellationReason).HasColumnName("CancellationReason").HasMaxLength(500);
+        builder.Property(o => o.CourierId).HasColumnName("CourierId");
+        builder.Property(o => o.DeliveryAssignmentId).HasColumnName("DeliveryAssignmentId");
         builder.Property(o => o.CreatedDate).HasColumnName("CreatedDate").IsRequired();
         builder.Property(o => o.UpdatedDate).HasColumnName("UpdatedDate");
         builder.Property(o => o.DeletedDate).HasColumnName("DeletedDate");

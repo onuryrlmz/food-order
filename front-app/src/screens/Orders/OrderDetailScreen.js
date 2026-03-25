@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Platform,
+  Linking,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
@@ -26,12 +27,21 @@ const OrderDetailScreen = ({route, navigation}) => {
   const [cancelling, setCancelling] = useState(false);
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [reordering, setReordering] = useState(false);
+  const [courierInfo, setCourierInfo] = useState(null);
 
   const connectionRef = useRef(null);
 
   useEffect(() => {
     loadOrder();
   }, [orderId]);
+
+  useEffect(() => {
+    if (order && [9, 10, 7].includes(order.statusId)) {
+      orderService.getOrderTracking(orderId)
+        .then(res => { if (res.data?.data) setCourierInfo(res.data.data); })
+        .catch(() => {});
+    }
+  }, [order?.statusId]);
 
   // SignalR real-time updates for order status
   useEffect(() => {
@@ -215,6 +225,26 @@ const OrderDetailScreen = ({route, navigation}) => {
             })}
           </View>
         </View>
+
+        {courierInfo?.courierName && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Kurye Bilgileri</Text>
+            <View style={styles.courierCard}>
+              <View style={styles.courierInfo}>
+                <Icon name="account" size={24} color={Colors.primary} />
+                <View style={{marginLeft: Spacing.sm}}>
+                  <Text style={styles.courierName}>{courierInfo.courierName}</Text>
+                  <Text style={styles.courierDetail}>{courierInfo.vehicleType || 'Motosiklet'}</Text>
+                </View>
+              </View>
+              {courierInfo.courierPhone && (
+                <TouchableOpacity onPress={() => Linking.openURL(`tel:${courierInfo.courierPhone}`)}>
+                  <Icon name="phone" size={24} color={Colors.primary} />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -759,6 +789,28 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weights.bold,
     color: '#FFF',
     marginLeft: 6,
+  },
+  courierCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.background,
+    padding: Spacing.base,
+    borderRadius: BorderRadius.md,
+  },
+  courierInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  courierName: {
+    fontSize: Fonts.sizes.md,
+    fontWeight: Fonts.weights.semibold,
+    color: Colors.text,
+  },
+  courierDetail: {
+    fontSize: Fonts.sizes.sm,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
 });
 

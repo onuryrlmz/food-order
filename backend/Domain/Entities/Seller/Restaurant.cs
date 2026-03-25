@@ -27,6 +27,10 @@ public class Restaurant : Entity<Guid>
     public decimal Rating { get; set; } = 0;
     public int RatingCount { get; set; } = 0;
 
+    // Courier
+    public short? DefaultAssignmentStrategyId { get; set; }
+    public bool HasOwnCouriers { get; set; } = false;
+
     // Navigation
     public virtual ICollection<Subscription> Subscriptions { get; set; }
 }

@@ -4,6 +4,7 @@ using Persistence.Contexts;
 using Persistence.IRepositories;
 using Persistence.IRepositories.Buyer;
 using Persistence.IRepositories.Common;
+using Persistence.IRepositories.Courier;
 using Persistence.IRepositories.Seller;
 
 namespace Persistence.Repositories;
@@ -52,6 +53,13 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     public IRefreshTokenRepository RefreshTokenRepository { get; }
     public IPasswordResetTokenRepository PasswordResetTokenRepository { get; }
 
+    // Courier
+    public ICourierCompanyRepository CourierCompanyRepository { get; }
+    public ICourierRepository CourierRepository { get; }
+    public IRestaurantCourierAgreementRepository RestaurantCourierAgreementRepository { get; }
+    public IDeliveryAssignmentRepository DeliveryAssignmentRepository { get; }
+    public ICourierEarningRepository CourierEarningRepository { get; }
+
     public UnitOfWork(BaseDbContext context,
         ICuisineRepository cuisineRepository,
         ISellerRepository sellerRepository,
@@ -84,7 +92,12 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         IReviewRepository reviewRepository,
         IFavoriteRestaurantRepository favoriteRestaurantRepository,
         IRefreshTokenRepository refreshTokenRepository,
-        IPasswordResetTokenRepository passwordResetTokenRepository)
+        IPasswordResetTokenRepository passwordResetTokenRepository,
+        ICourierCompanyRepository courierCompanyRepository,
+        ICourierRepository courierRepository,
+        IRestaurantCourierAgreementRepository restaurantCourierAgreementRepository,
+        IDeliveryAssignmentRepository deliveryAssignmentRepository,
+        ICourierEarningRepository courierEarningRepository)
     {
         _context = context;
         CuisineRepository = cuisineRepository;
@@ -119,6 +132,11 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         FavoriteRestaurantRepository = favoriteRestaurantRepository;
         RefreshTokenRepository = refreshTokenRepository;
         PasswordResetTokenRepository = passwordResetTokenRepository;
+        CourierCompanyRepository = courierCompanyRepository;
+        CourierRepository = courierRepository;
+        RestaurantCourierAgreementRepository = restaurantCourierAgreementRepository;
+        DeliveryAssignmentRepository = deliveryAssignmentRepository;
+        CourierEarningRepository = courierEarningRepository;
     }
 
     public async Task BeginTransactionAsync()

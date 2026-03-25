@@ -105,6 +105,24 @@ const navItems = [
     ),
   },
   {
+    label: 'Kurye Firmaları',
+    href: '/courier-companies',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 17a2 2 0 002 2h4a2 2 0 002-2M8 17H4a1 1 0 01-1-1v-5a1 1 0 011-1h1l1.67-4.17A2 2 0 018.52 4h6.96a2 2 0 011.85 1.83L19 10h1a1 1 0 011 1v5a1 1 0 01-1 1h-4M8 17a2 2 0 012-2h4a2 2 0 012 2" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Kuryeler',
+    href: '/couriers',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+      </svg>
+    ),
+  },
+  {
     label: 'Finans',
     href: '/finance',
     icon: (

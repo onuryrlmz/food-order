@@ -20,7 +20,18 @@ const processQueue = (error, token = null) => {
 };
 
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    // Backend returns HTTP 200 with hasFailed=true for business logic errors
+    const body = res.data;
+    if (body && body.hasFailed === true) {
+      const msg = body.messages?.[0]?.description || 'Bir hata oluştu';
+      const error = new Error(msg);
+      error.response = res;
+      error.isBusinessError = true;
+      return Promise.reject(error);
+    }
+    return res;
+  },
   async (err) => {
     const originalRequest = err.config;
 

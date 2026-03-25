@@ -45,6 +45,44 @@ namespace Persistence.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "CourierCompany",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Name = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    LegalName = table.Column<string>(type: "varchar(300)", maxLength: 300, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TaxCode = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TaxArea = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IBAN = table.Column<string>(type: "varchar(34)", maxLength: 34, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Phone = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Email = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ContactPerson = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    StatusId = table.Column<short>(type: "smallint", nullable: false),
+                    CompanyTypeId = table.Column<short>(type: "smallint", nullable: false),
+                    IdentityNumber = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CommissionRate = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: false),
+                    LogoUrl = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CourierCompany", x => x.Id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Cuisine",
                 columns: table => new
                 {
@@ -89,6 +127,8 @@ namespace Persistence.Migrations
                     PickedUpAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     DeliveredAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     DeliveryDistanceKm = table.Column<decimal>(type: "decimal(65,30)", nullable: true),
+                    CourierId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    DeliveryAssignmentId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
@@ -126,6 +166,8 @@ namespace Persistence.Migrations
                     IsOpen = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     Rating = table.Column<decimal>(type: "decimal(3,2)", precision: 3, scale: 2, nullable: false),
                     RatingCount = table.Column<int>(type: "int", nullable: false),
+                    DefaultAssignmentStrategyId = table.Column<short>(type: "smallint", nullable: true),
+                    HasOwnCouriers = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
@@ -694,6 +736,57 @@ namespace Persistence.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Courier",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    CourierCompanyId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    RestaurantId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    CourierTypeId = table.Column<short>(type: "smallint", nullable: false),
+                    StatusId = table.Column<short>(type: "smallint", nullable: false),
+                    AvailabilityStatusId = table.Column<short>(type: "smallint", nullable: false),
+                    VehicleType = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    VehiclePlate = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IdentityNumber = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IBAN = table.Column<string>(type: "varchar(34)", maxLength: 34, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Rating = table.Column<decimal>(type: "decimal(3,2)", precision: 3, scale: 2, nullable: false),
+                    RatingCount = table.Column<int>(type: "int", nullable: false),
+                    TotalDeliveries = table.Column<int>(type: "int", nullable: false),
+                    CurrentLatitude = table.Column<decimal>(type: "decimal(10,7)", precision: 10, scale: 7, nullable: true),
+                    CurrentLongitude = table.Column<decimal>(type: "decimal(10,7)", precision: 10, scale: 7, nullable: true),
+                    LastLocationUpdate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Courier", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Courier_CourierCompany_CourierCompanyId",
+                        column: x => x.CourierCompanyId,
+                        principalTable: "CourierCompany",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Courier_Restaurant_RestaurantId",
+                        column: x => x.RestaurantId,
+                        principalTable: "Restaurant",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Courier_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "FavoriteRestaurant",
                 columns: table => new
                 {
@@ -1104,6 +1197,48 @@ namespace Persistence.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "RestaurantCourierAgreement",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    RestaurantId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    CourierCompanyId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    CourierId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    StatusId = table.Column<short>(type: "smallint", nullable: false),
+                    AssignmentStrategyId = table.Column<short>(type: "smallint", nullable: false),
+                    AgreedDeliveryFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    PerKmFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    Priority = table.Column<int>(type: "int", nullable: false),
+                    IsDefault = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    EffectiveFrom = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    EffectiveUntil = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RestaurantCourierAgreement", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RestaurantCourierAgreement_CourierCompany_CourierCompanyId",
+                        column: x => x.CourierCompanyId,
+                        principalTable: "CourierCompany",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_RestaurantCourierAgreement_Courier_CourierId",
+                        column: x => x.CourierId,
+                        principalTable: "Courier",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_RestaurantCourierAgreement_Restaurant_RestaurantId",
+                        column: x => x.RestaurantId,
+                        principalTable: "Restaurant",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "MenuOptionValue",
                 columns: table => new
                 {
@@ -1190,6 +1325,67 @@ namespace Persistence.Migrations
                         principalTable: "Product",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "DeliveryAssignment",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    OrderId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    RestaurantId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    CourierId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    CourierCompanyId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    AgreementId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    StatusId = table.Column<short>(type: "smallint", nullable: false),
+                    AssignmentStrategyId = table.Column<short>(type: "smallint", nullable: false),
+                    DeliveryFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    DistanceKm = table.Column<decimal>(type: "decimal(10,2)", precision: 10, scale: 2, nullable: true),
+                    CustomerLatitude = table.Column<decimal>(type: "decimal(10,7)", precision: 10, scale: 7, nullable: true),
+                    CustomerLongitude = table.Column<decimal>(type: "decimal(10,7)", precision: 10, scale: 7, nullable: true),
+                    RestaurantLatitude = table.Column<decimal>(type: "decimal(10,7)", precision: 10, scale: 7, nullable: true),
+                    RestaurantLongitude = table.Column<decimal>(type: "decimal(10,7)", precision: 10, scale: 7, nullable: true),
+                    OfferedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    AcceptedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    RejectedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    PickedUpAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeliveredAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    CancelledAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    CancellationReason = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    AttemptNumber = table.Column<int>(type: "int", nullable: false),
+                    RejectionReason = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DeliveryAssignment", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DeliveryAssignment_CourierCompany_CourierCompanyId",
+                        column: x => x.CourierCompanyId,
+                        principalTable: "CourierCompany",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_DeliveryAssignment_Courier_CourierId",
+                        column: x => x.CourierId,
+                        principalTable: "Courier",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_DeliveryAssignment_Order_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Order",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DeliveryAssignment_RestaurantCourierAgreement_AgreementId",
+                        column: x => x.AgreementId,
+                        principalTable: "RestaurantCourierAgreement",
+                        principalColumn: "Id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -1347,6 +1543,75 @@ namespace Persistence.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "CourierEarning",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    CourierId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    DeliveryAssignmentId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    OrderId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    DeliveryFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    TipAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    BonusAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    TotalEarning = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    IsSettled = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    SettledAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    SettlementReference = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CourierEarning", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CourierEarning_Courier_CourierId",
+                        column: x => x.CourierId,
+                        principalTable: "Courier",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CourierEarning_DeliveryAssignment_DeliveryAssignmentId",
+                        column: x => x.DeliveryAssignmentId,
+                        principalTable: "DeliveryAssignment",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "CourierLocationHistory",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    CourierId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    DeliveryAssignmentId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    Latitude = table.Column<decimal>(type: "decimal(10,7)", precision: 10, scale: 7, nullable: false),
+                    Longitude = table.Column<decimal>(type: "decimal(10,7)", precision: 10, scale: 7, nullable: false),
+                    RecordedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CourierLocationHistory", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CourierLocationHistory_Courier_CourierId",
+                        column: x => x.CourierId,
+                        principalTable: "Courier",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CourierLocationHistory_DeliveryAssignment_DeliveryAssignment~",
+                        column: x => x.DeliveryAssignmentId,
+                        principalTable: "DeliveryAssignment",
+                        principalColumn: "Id");
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "MenuOptionValueOptionValue",
                 columns: table => new
                 {
@@ -1472,22 +1737,22 @@ namespace Persistence.Migrations
 
             migrationBuilder.InsertData(
                 table: "Restaurant",
-                columns: new[] { "Id", "CoverImage", "CreatedDate", "DeletedDate", "Description", "Email", "IsActive", "IsOpen", "Latitude", "Longitude", "MaxDeliveryTime", "MinDeliveryTime", "MinimumOrderPrice", "Name", "Phone", "Rating", "RatingCount", "SellerId", "ServiceAreaPolygonWkt", "UpdatedDate" },
-                values: new object[] { new Guid("3a4d6ba2-593d-4f28-a2ce-89fbbb7fc811"), "https://cdn.getiryemek.com/restaurants/1741075067957_1125x522.webp", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "Süper lezzetli pizzalar, hızlı teslimat!", "a@a.com", false, false, null, null, 45, 25, 250m, "Pizzacı Ahmet", "05551112233", 0m, 0, new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), null, null });
+                columns: new[] { "Id", "CoverImage", "CreatedDate", "DefaultAssignmentStrategyId", "DeletedDate", "Description", "Email", "HasOwnCouriers", "IsActive", "IsOpen", "Latitude", "Longitude", "MaxDeliveryTime", "MinDeliveryTime", "MinimumOrderPrice", "Name", "Phone", "Rating", "RatingCount", "SellerId", "ServiceAreaPolygonWkt", "UpdatedDate" },
+                values: new object[] { new Guid("3a4d6ba2-593d-4f28-a2ce-89fbbb7fc811"), "https://cdn.getiryemek.com/restaurants/1741075067957_1125x522.webp", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, "Süper lezzetli pizzalar, hızlı teslimat!", "a@a.com", false, false, false, null, null, 45, 25, 250m, "Pizzacı Ahmet", "05551112233", 0m, 0, new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), null, null });
 
             migrationBuilder.InsertData(
                 table: "Seller",
                 columns: new[] { "Id", "ApiKey", "ApiSecret", "CompanyStatus", "CompanyType", "CreatedDate", "DeletedDate", "IBAN", "IdentityNumber", "IsEInvoiceAvaible", "LegalName", "Name", "TaxArea", "TaxCode", "UpdatedDate" },
-                values: new object[] { new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), null, null, (short)1, (short)2, new DateTime(2026, 3, 18, 22, 42, 1, 624, DateTimeKind.Local).AddTicks(710), null, "TR260006266822193294982978", null, true, "Pizzacı Ahmet Ltd. Şti.", "Pizzacı Ahmet", "Nilüfer", "1234567890", null });
+                values: new object[] { new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), null, null, (short)1, (short)2, new DateTime(2026, 3, 24, 21, 16, 54, 414, DateTimeKind.Local).AddTicks(9930), null, "TR260006266822193294982978", null, true, "Pizzacı Ahmet Ltd. Şti.", "Pizzacı Ahmet", "Nilüfer", "1234567890", null });
 
             migrationBuilder.InsertData(
                 table: "User",
                 columns: new[] { "Id", "ActivationKey", "BirthDate", "CreatedDate", "DeletedDate", "Email", "FirstName", "LastName", "Password", "PhoneNumber", "SellerId", "SexId", "UpdatedDate", "UserRoleId", "UserStatusId" },
                 values: new object[,]
                 {
-                    { new Guid("67d10056-c978-4e93-89d6-ab078cbab543"), new Guid("fb06e86b-4f9c-432a-9d67-ceb511435a38"), new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 18, 22, 42, 1, 623, DateTimeKind.Local).AddTicks(4290), null, "alici@gmail.com", "Alıcı", "Mehmet", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05556667788", null, (short)1, null, (short)2, (short)1 },
-                    { new Guid("7440c259-33db-4335-a3fa-b6aeb650146c"), new Guid("242a2995-96f9-402f-9c7f-c0023ac8a5c0"), new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 18, 22, 42, 1, 623, DateTimeKind.Local).AddTicks(4080), null, "info@pizzaci.com", "Pizzacı", "Ahmet", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05519684748", new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), (short)1, null, (short)4, (short)1 },
-                    { new Guid("9e9d19c8-a7f9-4ac3-aa51-12bff18cd608"), new Guid("001a20ef-22a9-40f1-930b-f0e3feb73a9c"), new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 18, 22, 42, 1, 615, DateTimeKind.Local).AddTicks(9740), null, "admin@esnaftan.com", "Esnaftan", "Admin", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05519684748", null, (short)1, null, (short)1, (short)1 }
+                    { new Guid("4f42f685-b154-460e-bb9e-a4f8402eff0b"), new Guid("0bca0c3b-eed5-45da-8382-a2c1016f8c95"), new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 24, 21, 16, 54, 414, DateTimeKind.Local).AddTicks(2790), null, "info@pizzaci.com", "Pizzacı", "Ahmet", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05519684748", new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), (short)1, null, (short)4, (short)1 },
+                    { new Guid("6005c78b-8728-4d9a-be6f-5554acf8e9a7"), new Guid("98f468df-f65e-44d7-89f9-5863be616a28"), new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 24, 21, 16, 54, 406, DateTimeKind.Local).AddTicks(2720), null, "admin@esnaftan.com", "Esnaftan", "Admin", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05519684748", null, (short)1, null, (short)1, (short)1 },
+                    { new Guid("67d10056-c978-4e93-89d6-ab078cbab543"), new Guid("3beffec0-22cd-4e48-8259-ffd3d9573dac"), new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 24, 21, 16, 54, 414, DateTimeKind.Local).AddTicks(3020), null, "alici@gmail.com", "Alıcı", "Mehmet", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05556667788", null, (short)1, null, (short)2, (short)1 }
                 });
 
             migrationBuilder.InsertData(
@@ -1495,8 +1760,8 @@ namespace Persistence.Migrations
                 columns: new[] { "Id", "AddressLine1", "AddressLine2", "AddressName", "AddressType", "CityId", "CreatedDate", "DeletedDate", "FirstName", "InvoiceType", "IsDefault", "LastName", "Latitude", "Longitude", "NeighbourhoodId", "Phone", "RestaurantId", "SellerId", "TaxArea", "TaxCode", "TownId", "UpdatedDate", "UserId" },
                 values: new object[,]
                 {
-                    { new Guid("b0ae82b5-e00c-496f-951f-84ea5dfecbbb"), "Geçit Mah. 1. Begonya Sok. No: 57 Daire: 6", "Oliva Sitesi B Blok", "Teslimat Adresi", (short)2, new Guid("5d0c385c-810d-4dd6-9462-259183584992"), new DateTime(2026, 3, 18, 22, 42, 1, 631, DateTimeKind.Local).AddTicks(8240), null, "Alıcı", (short)1, true, "Mehmet", "40.26587386663734", "28.9617998", new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"), "05556667788", null, null, null, null, new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a"), null, new Guid("67d10056-c978-4e93-89d6-ab078cbab543") },
-                    { new Guid("d5e0f36d-4830-432d-83f0-e6bc994c68f3"), "Ahmet Yesevi, Bey Sk. No:4/B", null, "Gönderim Adresi", (short)4, new Guid("5d0c385c-810d-4dd6-9462-259183584992"), new DateTime(2026, 3, 18, 22, 42, 1, 631, DateTimeKind.Local).AddTicks(5330), null, "Pizzacı", null, true, "Ahmet", "40.267317071584884", "28.9391322447786", new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"), "05551112233", new Guid("3a4d6ba2-593d-4f28-a2ce-89fbbb7fc811"), new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), null, null, new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a"), null, null }
+                    { new Guid("28b1293a-4a64-4e0f-ae7b-6e7d6e04b51f"), "Ahmet Yesevi, Bey Sk. No:4/B", null, "Gönderim Adresi", (short)4, new Guid("5d0c385c-810d-4dd6-9462-259183584992"), new DateTime(2026, 3, 24, 21, 16, 54, 422, DateTimeKind.Local).AddTicks(5700), null, "Pizzacı", null, true, "Ahmet", "40.267317071584884", "28.9391322447786", new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"), "05551112233", new Guid("3a4d6ba2-593d-4f28-a2ce-89fbbb7fc811"), new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), null, null, new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a"), null, null },
+                    { new Guid("8b0fe2ee-669a-4884-b4f4-5bf1b8c8e442"), "Geçit Mah. 1. Begonya Sok. No: 57 Daire: 6", "Oliva Sitesi B Blok", "Teslimat Adresi", (short)2, new Guid("5d0c385c-810d-4dd6-9462-259183584992"), new DateTime(2026, 3, 24, 21, 16, 54, 422, DateTimeKind.Local).AddTicks(8600), null, "Alıcı", (short)1, true, "Mehmet", "40.26587386663734", "28.9617998", new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"), "05556667788", null, null, null, null, new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a"), null, new Guid("67d10056-c978-4e93-89d6-ab078cbab543") }
                 });
 
             migrationBuilder.CreateIndex(
@@ -1599,6 +1864,82 @@ namespace Persistence.Migrations
                 name: "IX_CouponMenu_MenuId",
                 table: "CouponMenu",
                 column: "MenuId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Courier_AvailabilityStatusId",
+                table: "Courier",
+                column: "AvailabilityStatusId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Courier_CourierCompanyId",
+                table: "Courier",
+                column: "CourierCompanyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Courier_RestaurantId",
+                table: "Courier",
+                column: "RestaurantId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Courier_UserId",
+                table: "Courier",
+                column: "UserId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourierEarning_CourierId",
+                table: "CourierEarning",
+                column: "CourierId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourierEarning_DeliveryAssignmentId",
+                table: "CourierEarning",
+                column: "DeliveryAssignmentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourierEarning_IsSettled",
+                table: "CourierEarning",
+                column: "IsSettled");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourierLocationHistory_CourierId",
+                table: "CourierLocationHistory",
+                column: "CourierId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourierLocationHistory_DeliveryAssignmentId",
+                table: "CourierLocationHistory",
+                column: "DeliveryAssignmentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourierLocationHistory_RecordedAt",
+                table: "CourierLocationHistory",
+                column: "RecordedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DeliveryAssignment_AgreementId",
+                table: "DeliveryAssignment",
+                column: "AgreementId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DeliveryAssignment_CourierCompanyId",
+                table: "DeliveryAssignment",
+                column: "CourierCompanyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DeliveryAssignment_CourierId",
+                table: "DeliveryAssignment",
+                column: "CourierId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DeliveryAssignment_OrderId",
+                table: "DeliveryAssignment",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DeliveryAssignment_StatusId",
+                table: "DeliveryAssignment",
+                column: "StatusId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_FavoriteRestaurant_RestaurantId",
@@ -1778,6 +2119,21 @@ namespace Persistence.Migrations
                 columns: new[] { "StatusId", "CreatedDate" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_RestaurantCourierAgreement_CourierCompanyId",
+                table: "RestaurantCourierAgreement",
+                column: "CourierCompanyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RestaurantCourierAgreement_CourierId",
+                table: "RestaurantCourierAgreement",
+                column: "CourierId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RestaurantCourierAgreement_RestaurantId",
+                table: "RestaurantCourierAgreement",
+                column: "RestaurantId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_RestaurantWorkingHour_RestaurantId_DayOfWeek",
                 table: "RestaurantWorkingHour",
                 columns: new[] { "RestaurantId", "DayOfWeek" });
@@ -1859,6 +2215,12 @@ namespace Persistence.Migrations
                 name: "CouponMenu");
 
             migrationBuilder.DropTable(
+                name: "CourierEarning");
+
+            migrationBuilder.DropTable(
+                name: "CourierLocationHistory");
+
+            migrationBuilder.DropTable(
                 name: "Cuisine");
 
             migrationBuilder.DropTable(
@@ -1916,6 +2278,9 @@ namespace Persistence.Migrations
                 name: "Category");
 
             migrationBuilder.DropTable(
+                name: "DeliveryAssignment");
+
+            migrationBuilder.DropTable(
                 name: "OptionTemplateValueOption");
 
             migrationBuilder.DropTable(
@@ -1934,10 +2299,10 @@ namespace Persistence.Migrations
                 name: "Coupon");
 
             migrationBuilder.DropTable(
-                name: "User");
+                name: "BasketItem");
 
             migrationBuilder.DropTable(
-                name: "BasketItem");
+                name: "RestaurantCourierAgreement");
 
             migrationBuilder.DropTable(
                 name: "OptionTemplateValue");
@@ -1958,10 +2323,19 @@ namespace Persistence.Migrations
                 name: "Basket");
 
             migrationBuilder.DropTable(
+                name: "Courier");
+
+            migrationBuilder.DropTable(
                 name: "MenuOptionValue");
 
             migrationBuilder.DropTable(
                 name: "Order");
+
+            migrationBuilder.DropTable(
+                name: "CourierCompany");
+
+            migrationBuilder.DropTable(
+                name: "User");
 
             migrationBuilder.DropTable(
                 name: "MenuOption");

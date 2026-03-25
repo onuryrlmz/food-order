@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Domain.Entities.Buyer;
 using Domain.Entities.Common;
+using Domain.Entities.Courier;
 using Domain.Entities.Seller;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -41,6 +42,14 @@ public sealed class BaseDbContext : DbContext
 
     // Seller - Subscription
     public DbSet<SubscriptionUsage> SubscriptionUsages { get; set; }
+
+    // Courier
+    public DbSet<CourierCompany> CourierCompanies { get; set; }
+    public DbSet<Domain.Entities.Courier.Courier> Couriers { get; set; }
+    public DbSet<RestaurantCourierAgreement> RestaurantCourierAgreements { get; set; }
+    public DbSet<DeliveryAssignment> DeliveryAssignments { get; set; }
+    public DbSet<CourierEarning> CourierEarnings { get; set; }
+    public DbSet<CourierLocationHistory> CourierLocationHistories { get; set; }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())
     {

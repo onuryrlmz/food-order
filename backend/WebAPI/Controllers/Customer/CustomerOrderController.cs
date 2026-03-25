@@ -1,6 +1,8 @@
 using Application.Services.Buyer.OrderService;
+using Application.Services.Courier.DeliveryAssignmentService;
 using Base.Enums;
 using Domain.Dto.Buyer.Order;
+using Domain.Dto.Courier;
 using Domain.Service;
 using Microsoft.AspNetCore.Mvc;
 using WebAPI.Helpers;
@@ -12,8 +14,13 @@ namespace WebAPI.Controllers.Customer;
 public class CustomerOrderController : BaseController
 {
     private readonly IOrderService _orderService;
+    private readonly IDeliveryAssignmentService _deliveryAssignmentService;
 
-    public CustomerOrderController(IOrderService orderService) => _orderService = orderService;
+    public CustomerOrderController(IOrderService orderService, IDeliveryAssignmentService deliveryAssignmentService)
+    {
+        _orderService = orderService;
+        _deliveryAssignmentService = deliveryAssignmentService;
+    }
 
     [HttpPost("place")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
@@ -52,4 +59,9 @@ public class CustomerOrderController : BaseController
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
     public async Task<ServiceObjectResult<ReorderResponseDto>> Reorder(Guid orderId)
         => await _orderService.ReorderAsync(orderId);
+
+    [HttpGet("{orderId}/tracking")]
+    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    public async Task<ServiceObjectResult<CourierTrackingResponseDto>> GetTracking(Guid orderId)
+        => await _deliveryAssignmentService.GetOrderTracking(orderId);
 }

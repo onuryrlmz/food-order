@@ -58,6 +58,8 @@ public class AuthorizationServiceEnums
         Anonymous = 3,
         SellerAdmin = 4,
         SellerUser = 5,
+        Courier = 6,
+        CourierCompanyAdmin = 7
     }
 
     public enum UserStatusEnums : short
@@ -77,7 +79,9 @@ public class AuthorizationServiceEnums
         RejectedByRestaurant = 5,
         Preparing = 6,
         OnTheWay = 7,
-        Delivered = 8
+        Delivered = 8,
+        CourierAssigned = 9,
+        CourierPickedUp = 10
     }
 
     public enum PaymentStatusEnums : short
@@ -120,6 +124,69 @@ public class AuthorizationServiceEnums
         CreditCard = 1,
         CashOnDelivery = 2,
         CashCreditCard = 3
+    }
+
+    public enum CourierTypeEnums : short
+    {
+        RestaurantOwn = 1,
+        Individual = 2,
+        CompanyMember = 3
+    }
+
+    public enum CourierStatusEnums : short
+    {
+        Pending = 1,
+        Active = 2,
+        Suspended = 3,
+        Deactivated = 4
+    }
+
+    public enum CourierAvailabilityEnums : short
+    {
+        Offline = 0,
+        Online = 1,
+        OnDelivery = 2
+    }
+
+    public enum CourierCompanyStatusEnums : short
+    {
+        Pending = 1,
+        Active = 2,
+        Suspended = 3,
+        Deactivated = 4
+    }
+
+    public enum CourierCompanyTypeEnums : short
+    {
+        Individual = 1,
+        Corporate = 2
+    }
+
+    public enum CourierAgreementStatusEnums : short
+    {
+        PendingApproval = 1,
+        Active = 2,
+        Suspended = 3,
+        Terminated = 4
+    }
+
+    public enum CourierAssignmentStrategyEnums : short
+    {
+        ManualByRestaurant = 1,
+        AutoAssignNearest = 2,
+        BroadcastToAvailable = 3
+    }
+
+    public enum DeliveryAssignmentStatusEnums : short
+    {
+        Pending = 1,
+        Offered = 2,
+        Accepted = 3,
+        Rejected = 4,
+        PickedUp = 5,
+        Delivered = 6,
+        Cancelled = 7,
+        Expired = 8
     }
 
     public static Dictionary<short, UserRoleEnums> UserRoleEnumList => Enum.GetValues(typeof(UserRoleEnums)).Cast<UserRoleEnums>().ToDictionary(t => (short)t, t => t);

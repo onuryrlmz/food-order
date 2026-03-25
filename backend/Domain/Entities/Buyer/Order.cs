@@ -28,6 +28,10 @@ public class Order : Entity<Guid>
     public DateTime? DeliveredAt { get; set; }
     public decimal? DeliveryDistanceKm { get; set; }
 
+    // Courier
+    public Guid? CourierId { get; set; }
+    public Guid? DeliveryAssignmentId { get; set; }
+
     public virtual ICollection<OrderItem> OrderItems { get; set; }
     public virtual ICollection<Payment> Payments { get; set; }
     public virtual ICollection<OrderStatusHistory> StatusHistory { get; set; }

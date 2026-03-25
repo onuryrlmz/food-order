@@ -39,6 +39,14 @@ Clean Architecture — 6 katman:
 - `Basket` → `BasketItem` → `BasketItemValue` → `BasketItemValueItemValue`
 - `Order` → `OrderItem` (siparişler, tek restoran per sipariş)
 
+### Courier
+- `CourierCompany` — kurye firması (legal bilgiler, vergi, IBAN)
+- `Courier` — kurye profili (tip: RestaurantOwn/Individual/CompanyMember, araç, konum, rating)
+- `RestaurantCourierAgreement` — restoran-kurye/firma anlaşması (ücret, strateji, öncelik)
+- `DeliveryAssignment` — teslimat ataması (sipariş-kurye eşleşme, yaşam döngüsü)
+- `CourierEarning` — kurye kazancı (teslimat ücreti, bahşiş, bonus)
+- `CourierLocationHistory` — konum geçmişi (analitik)
+
 ### Common
 - `User` (Admin/SellerAdmin/SellerUser/User rolleri)
 - `Address`
@@ -68,6 +76,9 @@ Clean Architecture — 6 katman:
 3. Sipariş `Pending` statüsünde oluşur
 4. Satıcı `PUT /v1/order/{id}/status` ile statü günceller
 5. Müşteri `POST /v1/order/{id}/cancel` ile `Pending`/`Confirmed` siparişi iptal edebilir
+6. Sipariş `Preparing` statüsüne geçtiğinde kurye atama tetiklenir (RestaurantCourierAgreement'a göre)
+7. Kurye kabul → `CourierAssigned(9)` → Teslim aldı → `CourierPickedUp(10)` → `OnTheWay(7)` → `Delivered(8)`
+8. Kurye sistemi olmayan restoranlar eski akışla çalışmaya devam eder: Preparing → OnTheWay → Delivered
 
 ## Restoran Keşfi (Location)
 
@@ -94,6 +105,14 @@ Domain/Entities/Seller/SubscriptionPlan.cs                  — abonelik planı 
 Domain/Entities/Seller/Subscription.cs                      — abonelik entity
 Domain/Entities/Buyer/Order.cs                              — sipariş entity
 Domain/Entities/Buyer/OrderItem.cs                          — sipariş kalemi entity
+Application/Services/Courier/CourierService/                — kurye kayıt, profil, online/offline
+Application/Services/Courier/DeliveryAssignmentService/     — teslimat atama, kabul/red, teslim
+Application/Services/Courier/CourierCompanyService/          — firma kayıt, üye yönetimi
+Application/Services/Courier/CourierEarningService/          — kazanç hesaplama, ödeme
+WebAPI/Controllers/Courier/                                 — kurye ve firma API'leri
+WebAPI/Controllers/Seller/SellerCourierController.cs        — satıcı kurye yönetimi
+WebAPI/Controllers/Admin/AdminCourierController.cs          — admin kurye yönetimi
+WebAPI/Hubs/CourierHub.cs                                   — kurye SignalR hub
 ```
 
 ## API Endpoint Özeti
@@ -117,6 +136,19 @@ Domain/Entities/Buyer/OrderItem.cs                          — sipariş kalemi 
 | POST | /v1/subscription/{id}/cancel | SellerAdmin | Abonelik iptal |
 | GET | /v1/subscription/my | SellerAdmin/SellerUser | Kendi abonelikleri |
 | POST | /v1/subscription/expire-check | Admin | Süresi dolmuş abonelikleri kapat |
+| POST | /v1/courier/register | User | Kurye kayıt (admin onayı gerekir) |
+| POST | /v1/courier/go-online | Courier | Online ol |
+| POST | /v1/courier/go-offline | Courier | Offline ol |
+| PUT | /v1/courier/location | Courier | Konum güncelle |
+| POST | /v1/courier/assignment/{id}/accept | Courier | Teslimatı kabul et |
+| POST | /v1/courier/assignment/{id}/picked-up | Courier | Teslim aldım |
+| POST | /v1/courier/assignment/{id}/delivered | Courier | Teslim ettim |
+| POST | /v1/courier-company/register | User | Firma kayıt |
+| GET | /v1/seller/courier/restaurant/{id}/agreements | SellerAdmin | Anlaşma listesi |
+| POST | /v1/seller/courier/restaurant/{id}/assign/{orderId} | SellerAdmin | Manuel kurye ata |
+| GET | /v1/admin/courier/companies | Admin | Firma listesi |
+| PUT | /v1/admin/courier/couriers/{id}/approve | Admin | Kurye onayla |
+| GET | /v1/customer/order/{id}/tracking | User | Canlı kurye takip |
 
 ## Geliştirme Notları
 

@@ -27,6 +27,8 @@ public class RestaurantConfiguration : IEntityTypeConfiguration<Restaurant>
         builder.Property(b => b.IsOpen).HasColumnName("IsOpen").IsRequired();
         builder.Property(b => b.Rating).HasColumnName("Rating").HasPrecision(3, 2);
         builder.Property(b => b.RatingCount).HasColumnName("RatingCount");
+        builder.Property(b => b.DefaultAssignmentStrategyId).HasColumnName("DefaultAssignmentStrategyId");
+        builder.Property(b => b.HasOwnCouriers).HasColumnName("HasOwnCouriers").IsRequired();
 
         builder.Property(b => b.CreatedDate).HasColumnName("CreatedDate").IsRequired();
         builder.Property(b => b.UpdatedDate).HasColumnName("UpdatedDate");

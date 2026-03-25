@@ -7,6 +7,7 @@ using Domain.Entities.Common;
 using Domain.Service;
 using Newtonsoft.Json;
 using Persistence.IRepositories.Common;
+using Persistence.IRepositories.Courier;
 using Persistence.IRepositories.Seller;
 
 namespace Application.Services.Common.AuthService;
@@ -16,6 +17,7 @@ public class AuthTokenManager : IAuthTokenService
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IUserRepository _userRepository;
     private readonly IRestaurantRepository _restaurantRepository;
+    private readonly ICourierRepository _courierRepository;
 
     private const int AccessTokenExpirationMinutes = 15;
     private const int RefreshTokenExpirationDays = 30;
@@ -23,11 +25,13 @@ public class AuthTokenManager : IAuthTokenService
     public AuthTokenManager(
         IRefreshTokenRepository refreshTokenRepository,
         IUserRepository userRepository,
-        IRestaurantRepository restaurantRepository)
+        IRestaurantRepository restaurantRepository,
+        ICourierRepository courierRepository)
     {
         _refreshTokenRepository = refreshTokenRepository;
         _userRepository = userRepository;
         _restaurantRepository = restaurantRepository;
+        _courierRepository = courierRepository;
     }
 
     public async Task<TokenPairDto> GenerateTokenPairAsync(User user)
@@ -48,6 +52,16 @@ public class AuthTokenManager : IAuthTokenService
             tokenDto.SellerId = user.SellerId;
             var restaurants = _restaurantRepository.GetList(x => x.SellerId == user.SellerId && !x.DeletedDate.HasValue, size: 100);
             tokenDto.RestaurantIds = restaurants?.Items?.Select(x => x.Id)?.ToList();
+        }
+
+        if (user.UserRoleId is (short)AuthorizationServiceEnums.UserRoleEnums.Courier or (short)AuthorizationServiceEnums.UserRoleEnums.CourierCompanyAdmin)
+        {
+            var courier = await _courierRepository.GetAsync(x => x.UserId == user.Id && !x.DeletedDate.HasValue);
+            if (courier != null)
+            {
+                tokenDto.CourierId = courier.Id;
+                tokenDto.CourierCompanyId = courier.CourierCompanyId;
+            }
         }
 
         var tokenStringData = JsonConvert.SerializeObject(tokenDto);

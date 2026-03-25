@@ -157,6 +157,7 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<OrderHub>("/hubs/order");
 app.MapHub<RestaurantHub>("/hubs/restaurant");
+app.MapHub<CourierHub>("/hubs/courier");
 
 // Hangfire dashboard (admin only in production)
 app.UseHangfireDashboard("/hangfire");
@@ -169,5 +170,7 @@ RecurringJob.AddOrUpdate<ISubscriptionJobService>("usage-warnings", s => s.Check
 RecurringJob.AddOrUpdate<ICleanupJobService>("cleanup-reset-tokens", s => s.CleanupExpiredResetTokens(), Cron.Daily);
 RecurringJob.AddOrUpdate<ICleanupJobService>("cleanup-refresh-tokens", s => s.CleanupExpiredRefreshTokens(), Cron.Weekly);
 RecurringJob.AddOrUpdate<IDeliveryTimeoutJobService>("check-delivery-timeouts", s => s.CheckDeliveryTimeouts(), "*/15 * * * *");
+RecurringJob.AddOrUpdate<ICourierJobService>("check-expired-assignments", s => s.CheckExpiredAssignments(), "*/1 * * * *");
+RecurringJob.AddOrUpdate<ICourierJobService>("auto-offline-couriers", s => s.AutoOfflineInactiveCouriers(), "*/5 * * * *");
 
 app.Run();

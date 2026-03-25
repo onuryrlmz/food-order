@@ -34,6 +34,10 @@ using Application.Services.Buyer.FavoriteService;
 using Application.Services.Buyer.ReviewService;
 using Application.Services.Analytics;
 using Application.Services.Common.BackgroundJobs;
+using Application.Services.Courier.CourierService;
+using Application.Services.Courier.CourierCompanyService;
+using Application.Services.Courier.DeliveryAssignmentService;
+using Application.Services.Courier.CourierEarningService;
 using Base.Constant;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -140,6 +144,13 @@ public static class ApplicationServiceRegistration
         services.AddScoped<ISubscriptionJobService, SubscriptionJobService>();
         services.AddScoped<ICleanupJobService, CleanupJobService>();
         services.AddScoped<IDeliveryTimeoutJobService, DeliveryTimeoutJobService>();
+        services.AddScoped<ICourierJobService, CourierJobService>();
+
+        //Courier
+        services.AddScoped<ICourierService, CourierManager>();
+        services.AddScoped<ICourierCompanyService, CourierCompanyManager>();
+        services.AddScoped<IDeliveryAssignmentService, DeliveryAssignmentManager>();
+        services.AddScoped<ICourierEarningService, CourierEarningManager>();
 
         return services;
     }

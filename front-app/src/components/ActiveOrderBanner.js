@@ -7,6 +7,8 @@ import {ORDER_STATUS} from '../utils/constants';
 const STEPS = [
   {statusId: 4, label: 'Onay'},
   {statusId: 6, label: 'Hazırlanıyor'},
+  {statusId: 9, label: 'Kurye Atandı'},
+  {statusId: 10, label: 'Teslim Aldı'},
   {statusId: 7, label: 'Yolda'},
   {statusId: 8, label: 'Teslim'},
 ];
@@ -21,6 +23,10 @@ const getEstimatedTime = (order) => {
       return {remaining: Math.max(35 - diffMin, 5), total: 35, label: 'Tahmini teslim'};
     case 6:
       return {remaining: Math.max(25 - diffMin, 5), total: 25, label: 'Tahmini teslim'};
+    case 9:
+      return {remaining: Math.max(20 - diffMin, 5), total: 20, label: 'Tahmini teslim'};
+    case 10:
+      return {remaining: Math.max(15 - diffMin, 3), total: 15, label: 'Tahmini teslim'};
     case 7:
       return {remaining: Math.max(15 - diffMin, 3), total: 15, label: 'Tahmini varış'};
     default:
@@ -31,8 +37,10 @@ const getEstimatedTime = (order) => {
 const getStepIndex = (statusId) => {
   if (statusId === 4) return 0;
   if (statusId === 6) return 1;
-  if (statusId === 7) return 2;
-  if (statusId === 8) return 3;
+  if (statusId === 9) return 2;
+  if (statusId === 10) return 3;
+  if (statusId === 7) return 4;
+  if (statusId === 8) return 5;
   return 0;
 };
 

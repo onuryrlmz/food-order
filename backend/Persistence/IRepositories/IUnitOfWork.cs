@@ -1,5 +1,6 @@
 using Persistence.IRepositories.Buyer;
 using Persistence.IRepositories.Common;
+using Persistence.IRepositories.Courier;
 using Persistence.IRepositories.Seller;
 
 namespace Persistence.IRepositories;
@@ -44,6 +45,13 @@ public interface IUnitOfWork : IDisposable
     // Auth
     IRefreshTokenRepository RefreshTokenRepository { get; }
     IPasswordResetTokenRepository PasswordResetTokenRepository { get; }
+
+    // Courier
+    ICourierCompanyRepository CourierCompanyRepository { get; }
+    ICourierRepository CourierRepository { get; }
+    IRestaurantCourierAgreementRepository RestaurantCourierAgreementRepository { get; }
+    IDeliveryAssignmentRepository DeliveryAssignmentRepository { get; }
+    ICourierEarningRepository CourierEarningRepository { get; }
 
     Task<int> CompleteAsync();
     Task BeginTransactionAsync();

@@ -1,6 +1,7 @@
 using Application.Services.Buyer.BasketService;
 using Application.Services.Buyer.PaymentService;
 using Application.Services.Common.TokenService;
+using Application.Services.Courier.DeliveryAssignmentService;
 using Application.Services.Seller.SubscriptionService;
 using Application.Utils;
 using Base.Enums;
@@ -41,6 +42,7 @@ public class OrderManager : IOrderService
     private readonly INotificationService _notificationService;
     private readonly IRealtimeNotifier _realtimeNotifier;
     private readonly IBasketService _basketService;
+    private readonly IDeliveryAssignmentService _deliveryAssignmentService;
 
     public OrderManager(
         IUnitOfWork unitOfWork,
@@ -56,7 +58,8 @@ public class OrderManager : IOrderService
         ISubscriptionService subscriptionService,
         INotificationService notificationService,
         IRealtimeNotifier realtimeNotifier,
-        IBasketService basketService)
+        IBasketService basketService,
+        IDeliveryAssignmentService deliveryAssignmentService)
     {
         _unitOfWork = unitOfWork;
         _tokenAccessor = tokenAccessor;
@@ -72,6 +75,7 @@ public class OrderManager : IOrderService
         _notificationService = notificationService;
         _realtimeNotifier = realtimeNotifier;
         _basketService = basketService;
+        _deliveryAssignmentService = deliveryAssignmentService;
     }
 
     public async Task<ServiceObjectResult<PlaceOrderResponseDto>> PlaceOrder(PlaceOrderRequestDto requestDto)
@@ -709,7 +713,7 @@ public class OrderManager : IOrderService
                     },
                     { (short)AuthorizationServiceEnums.OrderStatusEnums.Preparing, new List<short>
                         {
-                            (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay
+                            (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay // Fallback for restaurants without courier system
                         }
                     }
                 };
@@ -728,6 +732,19 @@ public class OrderManager : IOrderService
             await AddStatusHistory(order.Id, (AuthorizationServiceEnums.OrderStatusEnums)statusId);
             await _unitOfWork.CompleteAsync();
 
+            // Auto-trigger courier assignment when order moves to Preparing
+            if (statusId == (short)AuthorizationServiceEnums.OrderStatusEnums.Preparing)
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _deliveryAssignmentService.CreateAssignment(order.Id);
+                    }
+                    catch { /* best effort - manual assignment still possible */ }
+                });
+            }
+
             // Push notification + SignalR
             _ = Task.Run(async () =>
             {
@@ -738,6 +755,8 @@ public class OrderManager : IOrderService
                         AuthorizationServiceEnums.OrderStatusEnums.Preparing => "Siparişiniz hazırlanıyor",
                         AuthorizationServiceEnums.OrderStatusEnums.OnTheWay => "Siparişiniz yola çıktı",
                         AuthorizationServiceEnums.OrderStatusEnums.Delivered => "Siparişiniz teslim edildi",
+                        AuthorizationServiceEnums.OrderStatusEnums.CourierAssigned => "Siparişinize kurye atandı",
+                        AuthorizationServiceEnums.OrderStatusEnums.CourierPickedUp => "Siparişiniz kurye tarafından teslim alındı",
                         AuthorizationServiceEnums.OrderStatusEnums.RejectedByRestaurant => "Siparişiniz restoran tarafından reddedildi",
                         _ => "Sipariş durumu güncellendi"
                     };

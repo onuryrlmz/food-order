@@ -16,6 +16,8 @@ export const ORDER_STATUS = {
   6: {label: 'Hazırlanıyor', color: '#AF52DE', icon: 'food-variant'},
   7: {label: 'Yola Çıktı', color: '#5856D6', icon: 'motorbike'},
   8: {label: 'Teslim Edildi', color: '#34C759', icon: 'check-all'},
+  9: {label: 'Kurye Atandı', color: '#5856D6', icon: 'account-check'},
+  10: {label: 'Kurye Teslim Aldı', color: '#5856D6', icon: 'package-variant'},
 };
 
 export const PAYMENT_OPTIONS = {

@@ -86,6 +86,9 @@ export default function SellersPage() {
     });
   };
 
+  const getErrorMsg = (err) =>
+    err.isBusinessError ? err.message : (err.response?.data?.messages?.[0]?.description || 'Bir hata oluştu');
+
   const handleEdit = async (e) => {
     e.preventDefault();
     setEditSaving(true);
@@ -98,7 +101,7 @@ export default function SellersPage() {
       setEditModal(null);
       mutate();
     } catch (err) {
-      toast(err.response?.data?.messages?.[0]?.description || 'Hata oluştu', 'error');
+      toast(getErrorMsg(err), 'error');
     } finally {
       setEditSaving(false);
     }
@@ -117,7 +120,7 @@ export default function SellersPage() {
       setForm(defaultForm);
       mutate();
     } catch (err) {
-      toast(err.response?.data?.messages?.[0]?.description || 'Hata oluştu', 'error');
+      toast(getErrorMsg(err), 'error');
     } finally {
       setSaving(false);
     }
@@ -132,7 +135,7 @@ export default function SellersPage() {
       setConfirmModal(null);
       mutate();
     } catch (err) {
-      toast(err.response?.data?.messages?.[0]?.description || 'Hata oluştu', 'error');
+      toast(getErrorMsg(err), 'error');
     } finally {
       setConfirming(false);
     }
@@ -149,7 +152,7 @@ export default function SellersPage() {
         mutate();
       }
     } catch (err) {
-      toast(err.response?.data?.messages?.[0]?.description || 'iyzico kaydı başarısız', 'error');
+      toast(getErrorMsg(err), 'error');
     } finally {
       setRetrying(null);
     }

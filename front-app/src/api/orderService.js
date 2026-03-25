@@ -21,4 +21,6 @@ export const orderService = {
 
   reorder: (orderId) =>
     apiClient.post(`/customer/order/${orderId}/reorder`),
+
+  getOrderTracking: (orderId) => apiClient.get(`/customer/order/${orderId}/tracking`),
 };

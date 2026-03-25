@@ -161,13 +161,9 @@ public class GetirServiceAdapter : IGetirServiceAdapter
     private void ProcessProductDetail(Menu menu, GetirProductDetail.RootObject productDetail)
     {
         if (productDetail.data.product.optionCategories.Length == 0)
-        {
             ProcessSimpleProduct(menu, productDetail);
-        }
         else
-        {
             ProcessProductWithOptions(menu, productDetail);
-        }
     }
 
     private void ProcessSimpleProduct(Menu menu, GetirProductDetail.RootObject productDetail)

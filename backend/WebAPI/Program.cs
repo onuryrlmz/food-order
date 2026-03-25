@@ -133,8 +133,8 @@ builder.Services.AddCors(options =>
             policy.SetIsOriginAllowed(_ => true); // dev fallback
 
         policy.AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+            .AllowAnyHeader()
+            .AllowCredentials();
     })
 );
 

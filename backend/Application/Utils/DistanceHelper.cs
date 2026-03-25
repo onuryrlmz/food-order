@@ -19,5 +19,8 @@ public static class DistanceHelper
         return R * c;
     }
 
-    private static decimal ToRadians(decimal angle) => angle * (decimal)Math.PI / 180m;
+    private static decimal ToRadians(decimal angle)
+    {
+        return angle * (decimal)Math.PI / 180m;
+    }
 }

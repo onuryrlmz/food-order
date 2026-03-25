@@ -13,34 +13,47 @@ public class SellerCouponController : BaseController
 {
     private readonly ICouponService _couponService;
 
-    public SellerCouponController(ICouponService couponService) => _couponService = couponService;
+    public SellerCouponController(ICouponService couponService)
+    {
+        _couponService = couponService;
+    }
 
     [HttpGet("list")]
     [AuthorizeAPIRequest(true, false,
         AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
         AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
     public async Task<ServiceCollectionResult<GetCouponListDto>> GetList()
-        => await _couponService.GetCouponsBySeller();
+    {
+        return await _couponService.GetCouponsBySeller();
+    }
 
     [HttpGet("{id}")]
     [AuthorizeAPIRequest(true, false,
         AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
         AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
     public async Task<ServiceObjectResult<GetCouponDetailDto>> GetById(Guid id)
-        => await _couponService.GetCouponById(id);
+    {
+        return await _couponService.GetCouponById(id);
+    }
 
     [HttpPost("create")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<Guid>> Create([FromBody] CreateCouponDto requestDto)
-        => await _couponService.CreateCoupon(requestDto);
+    {
+        return await _couponService.CreateCoupon(requestDto);
+    }
 
     [HttpPut("update")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Update([FromBody] UpdateCouponDto requestDto)
-        => await _couponService.UpdateCoupon(requestDto);
+    {
+        return await _couponService.UpdateCoupon(requestDto);
+    }
 
     [HttpDelete("{id}")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Delete(Guid id)
-        => await _couponService.DeleteCoupon(id);
+    {
+        return await _couponService.DeleteCoupon(id);
+    }
 }

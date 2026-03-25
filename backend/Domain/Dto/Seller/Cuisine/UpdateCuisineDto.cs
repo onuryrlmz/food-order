@@ -1,4 +1,5 @@
 namespace Domain.Dto.Seller.Cuisine;
+
 public class UpdateCuisineDto
 {
     public Guid Id { get; set; }

@@ -97,7 +97,7 @@ public class PaymentManager : IPaymentService
                         var subscription = await _context.Set<Domain.Entities.Seller.Subscription>()
                             .Include(s => s.SubscriptionPlan)
                             .FirstOrDefaultAsync(s => s.RestaurantId == order.RestaurantId
-                                && s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active);
+                                                      && s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active);
                         var commissionRate = subscription?.SubscriptionPlan?.CommissionRate ?? 0.10m;
                         payment.CommissionAmount = payment.Amount * commissionRate;
                         payment.SellerPayoutAmount = payment.Amount - payment.CommissionAmount;
@@ -116,7 +116,6 @@ public class PaymentManager : IPaymentService
                         var existingKey = await _context.UserExternalInfos
                             .FirstOrDefaultAsync(x => x.UserId == order.UserId && x.Provider == "iyzico" && x.Key == "CardUserKey");
                         if (existingKey == null)
-                        {
                             _context.UserExternalInfos.Add(new UserExternalInfo
                             {
                                 Id = Guid.NewGuid(),
@@ -125,7 +124,6 @@ public class PaymentManager : IPaymentService
                                 Key = "CardUserKey",
                                 Value = completeResult.Data.CardUserKey
                             });
-                        }
 
                         // Kart alias bilgisini kaydet
                         if (!string.IsNullOrEmpty(completeResult.Data.CardToken) && payment != null)
@@ -163,21 +161,22 @@ public class PaymentManager : IPaymentService
                                 .FirstOrDefaultAsync(r => r.Id == order.RestaurantId);
                             if (restaurant != null)
                             {
-                                var sellerUser = await _context.Set<Domain.Entities.Common.User>()
+                                var sellerUser = await _context.Set<User>()
                                     .FirstOrDefaultAsync(u => u.SellerId == restaurant.SellerId);
                                 if (sellerUser != null)
-                                {
                                     await _notificationService.SendToUserAsync(sellerUser.Id, "Yeni Sipariş",
                                         $"Yeni sipariş #{order.Id.ToString()[..8]}",
                                         new Dictionary<string, string> { { "orderId", order.Id.ToString() } });
-                                }
                             }
 
                             await _realtimeNotifier.NotifyNewOrderToRestaurant(order.RestaurantId, order.Id, order.TotalPrice);
                             await _realtimeNotifier.NotifyOrderStatusChanged(order.Id,
                                 (short)AuthorizationServiceEnums.OrderStatusEnums.WaitingRestaurantApproval);
                         }
-                        catch { /* best effort */ }
+                        catch
+                        {
+                            /* best effort */
+                        }
                     });
 
                     result.SetData(true);
@@ -256,7 +255,10 @@ public class PaymentManager : IPaymentService
                         $"Siparişiniz için {payment.Amount:F2} TL iade yapıldı.",
                         new Dictionary<string, string> { { "orderId", orderId.ToString() } });
                 }
-                catch { /* best effort */ }
+                catch
+                {
+                    /* best effort */
+                }
             });
 
             result.SetData(true);

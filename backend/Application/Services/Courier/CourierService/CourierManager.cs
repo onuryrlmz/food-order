@@ -28,11 +28,19 @@ public class CourierManager : ICourierService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             // Check if user already registered as courier
             var existing = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
-            if (existing != null) { result.Fail("Bu kullanıcı zaten kurye olarak kayıtlı."); return result; }
+            if (existing != null)
+            {
+                result.Fail("Bu kullanıcı zaten kurye olarak kayıtlı.");
+                return result;
+            }
 
             // Validate courier type specific rules
             if (requestDto.CourierTypeId == (short)AuthorizationServiceEnums.CourierTypeEnums.RestaurantOwn
@@ -88,7 +96,11 @@ public class CourierManager : ICourierService
                 RestaurantId = courier.RestaurantId
             });
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -98,7 +110,11 @@ public class CourierManager : ICourierService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var courier = await _context.Set<Domain.Entities.Courier.Courier>()
                 .Include(c => c.User)
@@ -106,7 +122,11 @@ public class CourierManager : ICourierService
                 .Include(c => c.Restaurant)
                 .FirstOrDefaultAsync(c => c.UserId == token.UserId && c.DeletedDate == null);
 
-            if (courier == null) { result.Fail("Kurye profili bulunamadı."); return result; }
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
 
             result.SetData(new CourierProfileResponseDto
             {
@@ -129,7 +149,11 @@ public class CourierManager : ICourierService
                 RestaurantName = courier.Restaurant?.Name
             });
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -139,11 +163,19 @@ public class CourierManager : ICourierService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var courier = await _unitOfWork.CourierRepository.GetAsync(
                 x => x.UserId == token.UserId, enableTracking: true);
-            if (courier == null) { result.Fail("Kurye profili bulunamadı."); return result; }
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
 
             if (requestDto.VehicleType != null) courier.VehicleType = requestDto.VehicleType;
             if (requestDto.VehiclePlate != null) courier.VehiclePlate = requestDto.VehiclePlate;
@@ -153,7 +185,11 @@ public class CourierManager : ICourierService
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -163,11 +199,19 @@ public class CourierManager : ICourierService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var courier = await _unitOfWork.CourierRepository.GetAsync(
                 x => x.UserId == token.UserId, enableTracking: true);
-            if (courier == null) { result.Fail("Kurye profili bulunamadı."); return result; }
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
 
             if (courier.StatusId != (short)AuthorizationServiceEnums.CourierStatusEnums.Active)
             {
@@ -180,7 +224,11 @@ public class CourierManager : ICourierService
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -190,18 +238,30 @@ public class CourierManager : ICourierService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var courier = await _unitOfWork.CourierRepository.GetAsync(
                 x => x.UserId == token.UserId, enableTracking: true);
-            if (courier == null) { result.Fail("Kurye profili bulunamadı."); return result; }
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
 
             courier.AvailabilityStatusId = (short)AuthorizationServiceEnums.CourierAvailabilityEnums.Offline;
             _unitOfWork.CourierRepository.Update(courier);
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -211,11 +271,19 @@ public class CourierManager : ICourierService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var courier = await _unitOfWork.CourierRepository.GetAsync(
                 x => x.UserId == token.UserId, enableTracking: true);
-            if (courier == null) { result.Fail("Kurye profili bulunamadı."); return result; }
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
 
             courier.CurrentLatitude = requestDto.Latitude;
             courier.CurrentLongitude = requestDto.Longitude;
@@ -225,7 +293,11 @@ public class CourierManager : ICourierService
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -235,7 +307,11 @@ public class CourierManager : ICourierService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var query = _context.Set<Domain.Entities.Courier.Courier>()
                 .Include(c => c.User)
@@ -278,7 +354,11 @@ public class CourierManager : ICourierService
             result.RawData = couriers;
             result.TotalDataCount = totalCount;
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -288,7 +368,11 @@ public class CourierManager : ICourierService
         try
         {
             var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.Id == courierId, enableTracking: true);
-            if (courier == null) { result.Fail("Kurye bulunamadı."); return result; }
+            if (courier == null)
+            {
+                result.Fail("Kurye bulunamadı.");
+                return result;
+            }
 
             courier.StatusId = (short)AuthorizationServiceEnums.CourierStatusEnums.Active;
             _unitOfWork.CourierRepository.Update(courier);
@@ -305,7 +389,11 @@ public class CourierManager : ICourierService
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -315,7 +403,11 @@ public class CourierManager : ICourierService
         try
         {
             var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.Id == courierId, enableTracking: true);
-            if (courier == null) { result.Fail("Kurye bulunamadı."); return result; }
+            if (courier == null)
+            {
+                result.Fail("Kurye bulunamadı.");
+                return result;
+            }
 
             courier.StatusId = (short)AuthorizationServiceEnums.CourierStatusEnums.Suspended;
             courier.AvailabilityStatusId = (short)AuthorizationServiceEnums.CourierAvailabilityEnums.Offline;
@@ -323,7 +415,11 @@ public class CourierManager : ICourierService
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -333,13 +429,17 @@ public class CourierManager : ICourierService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             // Get couriers that have an active agreement with this restaurant
             var agreements = await _context.Set<Domain.Entities.Courier.RestaurantCourierAgreement>()
                 .Where(a => a.RestaurantId == restaurantId
-                    && a.StatusId == (short)AuthorizationServiceEnums.CourierAgreementStatusEnums.Active
-                    && a.DeletedDate == null)
+                            && a.StatusId == (short)AuthorizationServiceEnums.CourierAgreementStatusEnums.Active
+                            && a.DeletedDate == null)
                 .ToListAsync();
 
             var courierIds = agreements.Where(a => a.CourierId != null).Select(a => a.CourierId!.Value).ToList();
@@ -349,10 +449,10 @@ public class CourierManager : ICourierService
             var couriers = await _context.Set<Domain.Entities.Courier.Courier>()
                 .Include(c => c.User)
                 .Where(c => c.DeletedDate == null
-                    && c.StatusId == (short)AuthorizationServiceEnums.CourierStatusEnums.Active
-                    && (c.RestaurantId == restaurantId
-                        || courierIds.Contains(c.Id)
-                        || (c.CourierCompanyId != null && companyIds.Contains(c.CourierCompanyId.Value))))
+                            && c.StatusId == (short)AuthorizationServiceEnums.CourierStatusEnums.Active
+                            && (c.RestaurantId == restaurantId
+                                || courierIds.Contains(c.Id)
+                                || (c.CourierCompanyId != null && companyIds.Contains(c.CourierCompanyId.Value))))
                 .Select(c => new CourierProfileResponseDto
                 {
                     Id = c.Id,
@@ -376,7 +476,11 @@ public class CourierManager : ICourierService
             result.RawData = couriers;
             result.TotalDataCount = couriers.Count;
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 }

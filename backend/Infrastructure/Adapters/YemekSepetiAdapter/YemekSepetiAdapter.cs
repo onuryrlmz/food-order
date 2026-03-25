@@ -61,6 +61,7 @@ public class YemekSepetiAdapter : IYemekSepetiAdapter
                 existing.Price = price;
                 existing.Hash = ExtHelper.CreateMD5(JsonConvert.SerializeObject(new { existing.Name, existing.Price, existing.ProductType }));
             }
+
             return existing;
         }
 
@@ -70,7 +71,7 @@ public class YemekSepetiAdapter : IYemekSepetiAdapter
             ReferenceId = referenceId,
             Name = cleanName,
             Price = price,
-            ProductType = productType,
+            ProductType = productType
         };
         product.Hash = ExtHelper.CreateMD5(JsonConvert.SerializeObject(new { product.Name, product.Price, product.ProductType }));
         _productByName[cleanName] = product;
@@ -86,7 +87,7 @@ public class YemekSepetiAdapter : IYemekSepetiAdapter
                 var category = new Category
                 {
                     ReferenceId = ysCategory.id.ToString(),
-                    Name = ysCategory.name,
+                    Name = ysCategory.name
                 };
 
                 foreach (var ysMenu in ysCategory.products)
@@ -100,7 +101,7 @@ public class YemekSepetiAdapter : IYemekSepetiAdapter
                                                      ?.price ??
                                                  0),
                         OrderIndex = ysCategory.products.IndexOf(ysMenu),
-                        ImageUrl = ysMenu.file_path,
+                        ImageUrl = ysMenu.file_path
                     };
 
                     foreach (var ysMenuOption in ysMenu.product_variations[0].topping_ids)
@@ -113,15 +114,12 @@ public class YemekSepetiAdapter : IYemekSepetiAdapter
                             Description = string.Empty,
                             MaxCount = ysMenuOptionDto.quantity_maximum,
                             MinCount = ysMenuOptionDto.name.Contains("Promosyon") ? 0 : ysMenuOptionDto.quantity_minimum,
-                            OrderIndex = ysMenu.product_variations[0].topping_ids.IndexOf(ysMenuOption),
+                            OrderIndex = ysMenu.product_variations[0].topping_ids.IndexOf(ysMenuOption)
                         };
 
                         foreach (var ysMenuOptionValue in ysMenuOptionDto.options)
                         {
-                            if (ysMenuOptionDto.options.IndexOf(ysMenuOptionValue) == 0 && ysMenuOptionDto.name.Contains("Promosyon"))
-                            {
-                                continue; // Skip the first option if it is a promotion
-                            }
+                            if (ysMenuOptionDto.options.IndexOf(ysMenuOptionValue) == 0 && ysMenuOptionDto.name.Contains("Promosyon")) continue; // Skip the first option if it is a promotion
 
                             var product = GetOrAddProduct(
                                 ysMenuOptionValue.product.name,
@@ -135,7 +133,7 @@ public class YemekSepetiAdapter : IYemekSepetiAdapter
                                 Name = product.Name,
                                 ProductReferenceId = product.Hash,
                                 Price = Convert.ToDouble(ysMenuOptionValue?.product?.product_variations?.FirstOrDefault()?.price ?? 0),
-                                OrderIndex = ysMenuOptionDto.options.IndexOf(ysMenuOptionValue),
+                                OrderIndex = ysMenuOptionDto.options.IndexOf(ysMenuOptionValue)
                             };
 
                             // Nested options (option2 level) → MenuOptionValueOption
@@ -150,7 +148,7 @@ public class YemekSepetiAdapter : IYemekSepetiAdapter
                                     Description = string.Empty,
                                     MinCount = ysNestedOptionDto.quantity_minimum,
                                     MaxCount = ysNestedOptionDto.quantity_maximum,
-                                    OrderIndex = ysMenuOptionValue.product.product_variations[0].topping_ids.IndexOf(ysNestedOption),
+                                    OrderIndex = ysMenuOptionValue.product.product_variations[0].topping_ids.IndexOf(ysNestedOption)
                                 };
 
                                 foreach (var ysNestedOptionValue in ysNestedOptionDto.options)
@@ -167,7 +165,7 @@ public class YemekSepetiAdapter : IYemekSepetiAdapter
                                         Name = subProduct.Name,
                                         ProductReferenceId = subProduct.Hash,
                                         Price = ysNestedOptionValue.price,
-                                        OrderIndex = ysNestedOptionDto.options.IndexOf(ysNestedOptionValue),
+                                        OrderIndex = ysNestedOptionDto.options.IndexOf(ysNestedOptionValue)
                                     };
                                     menuOptionValueOption.MenuOptionValueOptionValues.Add(menuOptionValueOptionValue);
                                 }

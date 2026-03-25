@@ -44,6 +44,7 @@ public class AdminFinanceController : BaseController
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -84,6 +85,7 @@ public class AdminFinanceController : BaseController
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -104,10 +106,7 @@ public class AdminFinanceController : BaseController
                 .Where(p => p.IsActive)
                 .ToListAsync();
 
-            foreach (var plan in plans)
-            {
-                plan.CommissionRate = request.Rate;
-            }
+            foreach (var plan in plans) plan.CommissionRate = request.Rate;
 
             await _context.SaveChangesAsync();
             result.SetData(true);
@@ -116,6 +115,7 @@ public class AdminFinanceController : BaseController
         {
             result.Fail(e);
         }
+
         return result;
     }
 }

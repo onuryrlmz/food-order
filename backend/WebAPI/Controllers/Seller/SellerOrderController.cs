@@ -13,7 +13,10 @@ public class SellerOrderController : BaseController
 {
     private readonly IOrderService _orderService;
 
-    public SellerOrderController(IOrderService orderService) => _orderService = orderService;
+    public SellerOrderController(IOrderService orderService)
+    {
+        _orderService = orderService;
+    }
 
     [HttpGet("restaurant/{restaurantId}")]
     [AuthorizeAPIRequest(true, false,
@@ -25,7 +28,9 @@ public class SellerOrderController : BaseController
         [FromQuery] short? statusId = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
-        => await _orderService.GetRestaurantOrders(restaurantId, statusId, page, pageSize);
+    {
+        return await _orderService.GetRestaurantOrders(restaurantId, statusId, page, pageSize);
+    }
 
     [HttpGet("{orderId}")]
     [AuthorizeAPIRequest(true, false,
@@ -33,12 +38,16 @@ public class SellerOrderController : BaseController
         AuthorizationServiceEnums.UserRoleEnums.SellerUser,
         AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<GetOrderResponseDto>> GetById(Guid orderId)
-        => await _orderService.GetOrderById(orderId);
+    {
+        return await _orderService.GetOrderById(orderId);
+    }
 
     [HttpPut("{orderId}/status")]
     [AuthorizeAPIRequest(true, false,
         AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
         AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> UpdateStatus(Guid orderId, [FromQuery] short statusId)
-        => await _orderService.UpdateOrderStatus(orderId, statusId);
+    {
+        return await _orderService.UpdateOrderStatus(orderId, statusId);
+    }
 }

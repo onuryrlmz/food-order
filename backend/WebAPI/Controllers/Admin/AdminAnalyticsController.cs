@@ -13,21 +13,28 @@ public class AdminAnalyticsController : BaseController
 {
     private readonly IAnalyticsService _analyticsService;
 
-    public AdminAnalyticsController(IAnalyticsService analyticsService) => _analyticsService = analyticsService;
+    public AdminAnalyticsController(IAnalyticsService analyticsService)
+    {
+        _analyticsService = analyticsService;
+    }
 
     [HttpGet("summary")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<AnalyticsSummaryDto>> GetSummary(
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate)
-        => await _analyticsService.GetAdminSummary(startDate, endDate);
+    {
+        return await _analyticsService.GetAdminSummary(startDate, endDate);
+    }
 
     [HttpGet("trends")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceCollectionResult<OrderTrendDto>> GetOrderTrends(
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate)
-        => await _analyticsService.GetAdminOrderTrends(startDate, endDate);
+    {
+        return await _analyticsService.GetAdminOrderTrends(startDate, endDate);
+    }
 
     [HttpGet("top-restaurants")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
@@ -35,5 +42,7 @@ public class AdminAnalyticsController : BaseController
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate,
         [FromQuery] int limit = 10)
-        => await _analyticsService.GetAdminTopRestaurants(startDate, endDate, limit);
+    {
+        return await _analyticsService.GetAdminTopRestaurants(startDate, endDate, limit);
+    }
 }

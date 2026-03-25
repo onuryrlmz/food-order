@@ -113,21 +113,17 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
             var refund = Refund.Create(request, options);
 
             if (refund.Status == Status.SUCCESS.ToString())
-            {
                 result.SetData(new RefundResultDto
                 {
                     Success = true,
                     TransactionId = refund.PaymentTransactionId
                 });
-            }
             else
-            {
                 result.SetData(new RefundResultDto
                 {
                     Success = false,
                     ErrorMessage = refund.ErrorMessage
                 });
-            }
         }
         catch (Exception e)
         {
@@ -213,25 +209,25 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
             var threedsInit = ThreedsInitialize.Create(request, options);
 
             if (threedsInit.Status == "success")
-            {
                 result.SetData(new InitiatePaymentResponseDto
                 {
                     RequiresThreeDs = true,
                     ThreeDsHtmlContent = threedsInit.HtmlContent,
                     IsSuccess = true
                 });
-            }
             else
-            {
                 result.SetData(new InitiatePaymentResponseDto
                 {
                     RequiresThreeDs = false,
                     IsSuccess = false,
                     ErrorMessage = threedsInit.ErrorMessage
                 });
-            }
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return await Task.FromResult(result);
     }
 
@@ -275,7 +271,11 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
                 result.AddErrorMessage(payment.ErrorMessage ?? "Ödeme tamamlanamadı.");
             }
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return await Task.FromResult(result);
     }
 
@@ -304,7 +304,6 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
             var card = Card.Create(request, options);
 
             if (card.Status == Status.SUCCESS.ToString())
-            {
                 result.SetData(new CardStorageResultDto
                 {
                     CardUserKey = card.CardUserKey,
@@ -317,13 +316,14 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
                     CardAlias = card.CardAlias,
                     CardBankName = card.CardBankName
                 });
-            }
             else
-            {
                 result.AddErrorMessage(card.ErrorMessage ?? "Kart kaydedilemedi.");
-            }
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -365,7 +365,11 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
                 result.SetData(new List<CardDetailDto>());
             }
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -389,7 +393,11 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
             else
                 result.AddErrorMessage(deleteResult.ErrorMessage ?? "Kart silinemedi.");
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 }

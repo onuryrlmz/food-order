@@ -63,7 +63,7 @@ public class AwsS3Base
             BucketName = _bucketName,
             FilePath = path,
             Key = string.IsNullOrEmpty(folderName) ? $@"{file.Name}" : $@"{folderName}/{file.Name}",
-            DisablePayloadSigning = true,
+            DisablePayloadSigning = true
         };
 
         var result = Task.Run(() => s3Client.PutObjectAsync(request)).Result;

@@ -63,7 +63,7 @@ public class RestaurantCdnWorker : BackgroundService
         var pending = await queueRepo.GetListAsync(
             x => x.StatusId == (short)RestaurantCdnUpdateQueue.CdnUpdateStatus.Pending
                  && x.RetryCount < MaxRetry,
-            orderBy: q => q.OrderBy(x => x.CreatedDate),
+            q => q.OrderBy(x => x.CreatedDate),
             size: 10,
             enableTracking: true);
 

@@ -36,22 +36,30 @@ public class CardManager : ICardService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var user = await _userRepository.GetAsync(x => x.Id == token.UserId);
-            if (user == null) { result.Fail("Kullanıcı bulunamadı."); return result; }
+            if (user == null)
+            {
+                result.Fail("Kullanıcı bulunamadı.");
+                return result;
+            }
 
             var cardUserKey = await GetExternalInfo(token.UserId, ProviderIyzico, KeyCardUserKey);
 
             var cardResult = _iyzicoAdapter.CreateCard(
-                externalId: user.Id.ToString(),
-                email: user.Email,
-                cardUserKey: cardUserKey,
-                cardAlias: requestDto.CardAlias,
-                cardNumber: requestDto.CardNumber,
-                expireYear: requestDto.ExpireYear,
-                expireMonth: requestDto.ExpireMonth,
-                cardHolderName: requestDto.CardHolderName
+                user.Id.ToString(),
+                user.Email,
+                cardUserKey,
+                requestDto.CardAlias,
+                requestDto.CardNumber,
+                requestDto.ExpireYear,
+                requestDto.ExpireMonth,
+                requestDto.CardHolderName
             );
 
             if (cardResult.HasFailed)
@@ -60,10 +68,7 @@ public class CardManager : ICardService
                 return result;
             }
 
-            if (string.IsNullOrEmpty(cardUserKey))
-            {
-                await SetExternalInfo(token.UserId, ProviderIyzico, KeyCardUserKey, cardResult.Data.CardUserKey);
-            }
+            if (string.IsNullOrEmpty(cardUserKey)) await SetExternalInfo(token.UserId, ProviderIyzico, KeyCardUserKey, cardResult.Data.CardUserKey);
 
             // Kart alias bilgisini kaydet
             var cardInfoJson = System.Text.Json.JsonSerializer.Serialize(new
@@ -79,7 +84,11 @@ public class CardManager : ICardService
 
             result.SetData(cardResult.Data);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -89,7 +98,11 @@ public class CardManager : ICardService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var cardUserKey = await GetExternalInfo(token.UserId, ProviderIyzico, KeyCardUserKey);
 
@@ -112,24 +125,27 @@ public class CardManager : ICardService
                 .ToListAsync();
             var aliasMap = new Dictionary<string, string>();
             foreach (var sci in savedCardInfos)
-            {
                 try
                 {
                     var parsed = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(sci.Value);
                     if (parsed.TryGetProperty("cardToken", out var ct) && parsed.TryGetProperty("alias", out var al))
                         aliasMap[ct.GetString()!] = al.GetString() ?? "Kartım";
                 }
-                catch { }
-            }
+                catch
+                {
+                }
+
             foreach (var card in cardResult.Data)
-            {
                 if (aliasMap.TryGetValue(card.CardToken, out var alias))
                     card.CardAlias = alias;
-            }
 
             result.SetData(cardResult.Data);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -139,7 +155,11 @@ public class CardManager : ICardService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var cardUserKey = await GetExternalInfo(token.UserId, ProviderIyzico, KeyCardUserKey);
 
@@ -167,7 +187,11 @@ public class CardManager : ICardService
 
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -198,6 +222,7 @@ public class CardManager : ICardService
                 Value = value
             });
         }
+
         await _context.SaveChangesAsync();
     }
 }

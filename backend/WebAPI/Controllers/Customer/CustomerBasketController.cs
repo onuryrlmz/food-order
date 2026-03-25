@@ -14,20 +14,29 @@ public class CustomerBasketController : BaseController
 {
     private readonly IBasketService _basketService;
 
-    public CustomerBasketController(IBasketService basketService) => _basketService = basketService;
+    public CustomerBasketController(IBasketService basketService)
+    {
+        _basketService = basketService;
+    }
 
     [HttpGet]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
     public async Task<ServiceObjectResult<GetBasketDto>> GetBasket()
-        => await _basketService.GetBasketByIdForRedis();
+    {
+        return await _basketService.GetBasketByIdForRedis();
+    }
 
     [HttpPut]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
     public async Task<ServiceObjectResult<bool>> UpdateBasket([FromBody] UpdateBasketDto requestDto)
-        => await _basketService.UpdateBasketForRedis(requestDto);
+    {
+        return await _basketService.UpdateBasketForRedis(requestDto);
+    }
 
     [HttpDelete]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
     public async Task<ServiceObjectResult<bool>> ClearBasket()
-        => await _basketService.ClearBasketForRedis();
+    {
+        return await _basketService.ClearBasketForRedis();
+    }
 }

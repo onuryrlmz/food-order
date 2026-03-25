@@ -33,7 +33,7 @@ public class DeliveryTimeoutJobService : IDeliveryTimeoutJobService
             // Find OnTheWay orders where CreatedDate + MaxDeliveryTime < now
             var overdueOrders = await _context.Set<Order>()
                 .Where(o => o.StatusId == (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay
-                    && o.DeletedDate == null)
+                            && o.DeletedDate == null)
                 .Join(
                     _context.Set<Restaurant>(),
                     o => o.RestaurantId,
@@ -54,16 +54,14 @@ public class DeliveryTimeoutJobService : IDeliveryTimeoutJobService
                 // Notify restaurant (seller admin)
                 var sellerUser = await _context.Set<Domain.Entities.Common.User>()
                     .FirstOrDefaultAsync(u => u.SellerId == item.Restaurant.SellerId
-                        && u.UserRoleId == (short)AuthorizationServiceEnums.UserRoleEnums.SellerAdmin);
+                                              && u.UserRoleId == (short)AuthorizationServiceEnums.UserRoleEnums.SellerAdmin);
 
                 if (sellerUser != null)
-                {
                     await _notificationService.SendToUserAsync(
                         sellerUser.Id,
                         "Teslimat Gecikmesi",
                         $"Sipariş #{item.Order.Id.ToString()[..8]} tahmini teslimat süresini aştı.",
                         new Dictionary<string, string> { { "orderId", item.Order.Id.ToString() } });
-                }
 
                 _logger.LogWarning("Overdue delivery: Order {OrderId}, Restaurant {RestaurantName}",
                     item.Order.Id, item.Restaurant.Name);

@@ -10,7 +10,7 @@ public class UserCoupon : Entity<Guid>
     public Guid? OrderId { get; set; } // Kullanıldığı sipariş
     public DateTime? UsedAt { get; set; }
     public int UsageCount { get; set; } // Kaç kez kullandı
-    
+
     public virtual User User { get; set; }
     public virtual Seller.Coupon Coupon { get; set; }
     public virtual Order? Order { get; set; }

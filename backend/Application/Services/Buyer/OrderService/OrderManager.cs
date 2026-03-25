@@ -302,9 +302,9 @@ public class OrderManager : IOrderService
                     // Validate coupon is still valid
                     var now = DateTime.UtcNow;
                     var isValid = now >= coupon.StartDate && now <= coupon.EndDate
-                        && (!coupon.UsageLimit.HasValue || coupon.CurrentUsageCount < coupon.UsageLimit.Value)
-                        && (coupon.RestaurantId == null || coupon.RestaurantId == requestDto.RestaurantId)
-                        && totalProductPrice >= coupon.MinOrderAmount;
+                                                          && (!coupon.UsageLimit.HasValue || coupon.CurrentUsageCount < coupon.UsageLimit.Value)
+                                                          && (coupon.RestaurantId == null || coupon.RestaurantId == requestDto.RestaurantId)
+                                                          && totalProductPrice >= coupon.MinOrderAmount;
 
                     if (isValid && coupon.UsagePerUser.HasValue)
                     {
@@ -340,7 +340,7 @@ public class OrderManager : IOrderService
                         // Handle SpecificMenus / SpecificCategories scope
                         if (coupon.ApplicableType == CouponServiceEnums.CouponApplicableTypeEnums.SpecificMenus)
                         {
-                            var menuIds = coupon.CouponMenus?.Select(cm => cm.MenuId).ToHashSet() ?? new();
+                            var menuIds = coupon.CouponMenus?.Select(cm => cm.MenuId).ToHashSet() ?? new HashSet<Guid>();
                             var applicableTotal = order.OrderItems.Where(oi => menuIds.Contains(oi.MenuId)).Sum(oi => oi.TotalPrice);
                             discountAmount = coupon.Type switch
                             {
@@ -353,7 +353,7 @@ public class OrderManager : IOrderService
                         }
                         else if (coupon.ApplicableType == CouponServiceEnums.CouponApplicableTypeEnums.SpecificCategories)
                         {
-                            var couponCategoryIds = coupon.CouponCategories?.Select(cc => cc.CategoryId).ToHashSet() ?? new();
+                            var couponCategoryIds = coupon.CouponCategories?.Select(cc => cc.CategoryId).ToHashSet() ?? new HashSet<Guid>();
                             var orderMenuIds = order.OrderItems.Select(oi => oi.MenuId).ToList();
                             var applicableMenuIds = await _context.Set<CategoryDetail>()
                                 .Where(cd => orderMenuIds.Contains(cd.MenuId) && couponCategoryIds.Contains(cd.CategoryId))
@@ -400,7 +400,7 @@ public class OrderManager : IOrderService
                                 CouponId = coupon.Id,
                                 OrderId = order.Id,
                                 UsedAt = DateTime.UtcNow,
-                                UsageCount = 1,
+                                UsageCount = 1
                             });
                         }
                     }
@@ -507,7 +507,7 @@ public class OrderManager : IOrderService
 
             var order = await _unitOfWork.OrderRepository.GetAsync(
                 x => x.Id == orderId,
-                include: q => q.Include(o => o.OrderItems));
+                q => q.Include(o => o.OrderItems));
 
             if (order == null)
             {
@@ -556,8 +556,8 @@ public class OrderManager : IOrderService
 
             var orders = await _unitOfWork.OrderRepository.GetListAsync(
                 x => x.UserId == token.UserId && activeStatuses.Contains(x.StatusId),
-                orderBy: q => q.OrderByDescending(o => o.CreatedDate),
-                include: q => q.Include(o => o.OrderItems),
+                q => q.OrderByDescending(o => o.CreatedDate),
+                q => q.Include(o => o.OrderItems),
                 size: 5);
 
             var restaurantIds = orders.Items.Select(o => o.RestaurantId).Distinct().ToList();
@@ -600,10 +600,10 @@ public class OrderManager : IOrderService
 
             var orders = await _unitOfWork.OrderRepository.GetListAsync(
                 x => x.UserId == token.UserId && allowedStatuses.Contains(x.StatusId),
-                orderBy: q => q.OrderByDescending(o => o.CreatedDate),
-                include: q => q.Include(o => o.OrderItems),
-                index: page - 1,
-                size: pageSize);
+                q => q.OrderByDescending(o => o.CreatedDate),
+                q => q.Include(o => o.OrderItems),
+                page - 1,
+                pageSize);
 
             var restaurantIds = orders.Items.Select(o => o.RestaurantId).Distinct().ToList();
             var restaurants = await _restaurantRepository.GetListAsync(x => restaurantIds.Contains(x.Id), size: restaurantIds.Count);
@@ -659,8 +659,14 @@ public class OrderManager : IOrderService
             // Auto-refund on cancellation
             _ = Task.Run(async () =>
             {
-                try { await _paymentService.RefundOrderAsync(order.Id, "Müşteri tarafından iptal"); }
-                catch { /* best effort */ }
+                try
+                {
+                    await _paymentService.RefundOrderAsync(order.Id, "Müşteri tarafından iptal");
+                }
+                catch
+                {
+                    /* best effort */
+                }
             });
 
             result.SetData(true);
@@ -705,13 +711,15 @@ public class OrderManager : IOrderService
                 // Satıcı geçiş kuralları
                 var sellerTransitions = new Dictionary<short, List<short>>
                 {
-                    { (short)AuthorizationServiceEnums.OrderStatusEnums.WaitingRestaurantApproval, new List<short>
+                    {
+                        (short)AuthorizationServiceEnums.OrderStatusEnums.WaitingRestaurantApproval, new List<short>
                         {
                             (short)AuthorizationServiceEnums.OrderStatusEnums.Preparing,
                             (short)AuthorizationServiceEnums.OrderStatusEnums.RejectedByRestaurant
                         }
                     },
-                    { (short)AuthorizationServiceEnums.OrderStatusEnums.Preparing, new List<short>
+                    {
+                        (short)AuthorizationServiceEnums.OrderStatusEnums.Preparing, new List<short>
                         {
                             (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay // Fallback for restaurants without courier system
                         }
@@ -734,23 +742,24 @@ public class OrderManager : IOrderService
 
             // Auto-trigger courier assignment when order moves to Preparing
             if (statusId == (short)AuthorizationServiceEnums.OrderStatusEnums.Preparing)
-            {
                 _ = Task.Run(async () =>
                 {
                     try
                     {
                         await _deliveryAssignmentService.CreateAssignment(order.Id);
                     }
-                    catch { /* best effort - manual assignment still possible */ }
+                    catch
+                    {
+                        /* best effort - manual assignment still possible */
+                    }
                 });
-            }
 
             // Push notification + SignalR
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    var statusName = ((AuthorizationServiceEnums.OrderStatusEnums)statusId) switch
+                    var statusName = (AuthorizationServiceEnums.OrderStatusEnums)statusId switch
                     {
                         AuthorizationServiceEnums.OrderStatusEnums.Preparing => "Siparişiniz hazırlanıyor",
                         AuthorizationServiceEnums.OrderStatusEnums.OnTheWay => "Siparişiniz yola çıktı",
@@ -770,7 +779,10 @@ public class OrderManager : IOrderService
                     if (statusId == (short)AuthorizationServiceEnums.OrderStatusEnums.RejectedByRestaurant)
                         await _paymentService.RefundOrderAsync(order.Id, "Restoran tarafından reddedildi");
                 }
-                catch { /* best effort */ }
+                catch
+                {
+                    /* best effort */
+                }
             });
 
             result.SetData(true);
@@ -802,10 +814,10 @@ public class OrderManager : IOrderService
                 x => x.RestaurantId == restaurantId
                      && sellerVisibleStatuses.Contains(x.StatusId)
                      && (statusId == null || x.StatusId == statusId),
-                orderBy: q => q.OrderByDescending(o => o.CreatedDate),
-                include: q => q.Include(o => o.OrderItems),
-                index: page - 1,
-                size: pageSize);
+                q => q.OrderByDescending(o => o.CreatedDate),
+                q => q.Include(o => o.OrderItems),
+                page - 1,
+                pageSize);
 
             var restaurant = await _restaurantRepository.GetAsync(x => x.Id == restaurantId);
             var restaurantName = restaurant?.Name ?? "Bilinmiyor";
@@ -827,17 +839,24 @@ public class OrderManager : IOrderService
         try
         {
             var token = _tokenAccessor.GetToken();
-            var order = await _unitOfWork.OrderRepository.GetAsync(
-                x => x.Id == orderId && x.UserId == token!.UserId);
+            var order = await _unitOfWork.OrderRepository.GetAsync(x => x.Id == orderId && x.UserId == token!.UserId);
 
-            if (order == null) { result.Fail("Sipariş bulunamadı."); return result; }
+            if (order == null)
+            {
+                result.Fail("Sipariş bulunamadı.");
+                return result;
+            }
+
             if (order.PaymentStatusId != (short)AuthorizationServiceEnums.PaymentStatusEnums.Pending)
             {
-                result.Fail("Bu sipariş için ödeme zaten işlenmiş."); return result;
+                result.Fail("Bu sipariş için ödeme zaten işlenmiş.");
+                return result;
             }
+
             if (order.PaymentOptionId != (short)AuthorizationServiceEnums.PaymentOptionEnums.CreditCard)
             {
-                result.Fail("Bu sipariş kart ödemesi gerektirmiyor."); return result;
+                result.Fail("Bu sipariş kart ödemesi gerektirmiyor.");
+                return result;
             }
 
             var callbackUrl = $"{_callbackBaseUrl}/v1/payment/iyzico/callback";
@@ -871,7 +890,11 @@ public class OrderManager : IOrderService
 
             result.SetData(paymentResult.Data);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -883,12 +906,12 @@ public class OrderManager : IOrderService
             pageSize = Math.Min(pageSize, 100);
             var orders = await _unitOfWork.OrderRepository.GetListAsync(
                 x => statusId == null || x.StatusId == statusId,
-                orderBy: q => q.OrderByDescending(o => o.CreatedDate),
-                include: q => q.Include(o => o.OrderItems)
-                               .Include(o => o.Payments)
-                               .Include(o => o.StatusHistory),
-                index: page - 1,
-                size: pageSize);
+                q => q.OrderByDescending(o => o.CreatedDate),
+                q => q.Include(o => o.OrderItems)
+                    .Include(o => o.Payments)
+                    .Include(o => o.StatusHistory),
+                page - 1,
+                pageSize);
 
             var restaurantIds = orders.Items.Select(o => o.RestaurantId).Distinct().ToList();
             var restaurants = await _restaurantRepository.GetListAsync(x => restaurantIds.Contains(x.Id), size: restaurantIds.Count + 1);
@@ -907,6 +930,7 @@ public class OrderManager : IOrderService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -917,9 +941,9 @@ public class OrderManager : IOrderService
         {
             var order = await _unitOfWork.OrderRepository.GetAsync(
                 x => x.Id == orderId,
-                include: q => q.Include(o => o.OrderItems)
-                               .Include(o => o.Payments)
-                               .Include(o => o.StatusHistory));
+                q => q.Include(o => o.OrderItems)
+                    .Include(o => o.Payments)
+                    .Include(o => o.StatusHistory));
 
             if (order == null)
             {
@@ -930,7 +954,7 @@ public class OrderManager : IOrderService
             var restaurant = await _restaurantRepository.GetAsync(x => x.Id == order.RestaurantId);
             var user = await _userRepository.GetAsync(x => x.Id == order.UserId);
             var address = await _unitOfWork.OrderRepository.GetAsync(x => x.Id == orderId) != null
-                ? await _context.Set<Domain.Entities.Common.Address>().FirstOrDefaultAsync(a => a.Id == order.DeliveryAddressId)
+                ? await _context.Set<Address>().FirstOrDefaultAsync(a => a.Id == order.DeliveryAddressId)
                 : null;
 
             var dto = MapToAdminDto(order, restaurant?.Name ?? "Bilinmiyor", user);
@@ -943,6 +967,7 @@ public class OrderManager : IOrderService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -984,7 +1009,7 @@ public class OrderManager : IOrderService
         };
     }
 
-    private static AdminGetOrderResponseDto MapToAdminDto(Order order, string restaurantName, Domain.Entities.Common.User? user)
+    private static AdminGetOrderResponseDto MapToAdminDto(Order order, string restaurantName, User? user)
     {
         return new AdminGetOrderResponseDto
         {
@@ -1068,7 +1093,6 @@ public class OrderManager : IOrderService
             var snapshot = JsonConvert.DeserializeObject<dynamic>(snapshotJson);
             var values = new List<OrderItemValueDto>();
             if (snapshot?.values != null)
-            {
                 foreach (var v in snapshot.values)
                 {
                     var dto = new OrderItemValueDto
@@ -1081,9 +1105,7 @@ public class OrderManager : IOrderService
                         Options = new List<OrderItemValueOptionDto>()
                     };
                     if (v.options != null)
-                    {
                         foreach (var o in v.options)
-                        {
                             dto.Options.Add(new OrderItemValueOptionDto
                             {
                                 OptionName = o.optionName?.ToString() ?? "",
@@ -1092,11 +1114,10 @@ public class OrderManager : IOrderService
                                 UnitPrice = (decimal)(o.unitPrice ?? 0),
                                 TotalPrice = (decimal)(o.totalPrice ?? 0)
                             });
-                        }
-                    }
+
                     values.Add(dto);
                 }
-            }
+
             return (
                 snapshot?.menuName?.ToString() ?? string.Empty,
                 snapshot?.description?.ToString(),
@@ -1131,7 +1152,7 @@ public class OrderManager : IOrderService
 
             var overdueOrders = await _context.Orders
                 .Where(o => o.StatusId == (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay
-                    && o.DeletedDate == null)
+                            && o.DeletedDate == null)
                 .Join(
                     _context.Set<Restaurant>(),
                     o => o.RestaurantId,
@@ -1145,7 +1166,7 @@ public class OrderManager : IOrderService
 
             var totalCount = await _context.Orders
                 .Where(o => o.StatusId == (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay
-                    && o.DeletedDate == null)
+                            && o.DeletedDate == null)
                 .Join(
                     _context.Set<Restaurant>(),
                     o => o.RestaurantId,
@@ -1155,7 +1176,7 @@ public class OrderManager : IOrderService
                 .CountAsync();
 
             var userIds = overdueOrders.Select(x => x.Order.UserId).Distinct().ToList();
-            var users = await _context.Set<Domain.Entities.Common.User>()
+            var users = await _context.Set<User>()
                 .Where(u => userIds.Contains(u.Id))
                 .ToDictionaryAsync(u => u.Id);
 
@@ -1195,6 +1216,7 @@ public class OrderManager : IOrderService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -1212,7 +1234,7 @@ public class OrderManager : IOrderService
 
             var order = await _unitOfWork.OrderRepository.GetAsync(
                 o => o.Id == orderId && o.UserId == token.UserId,
-                include: q => q.Include(o => o.OrderItems));
+                q => q.Include(o => o.OrderItems));
 
             if (order == null)
             {
@@ -1252,7 +1274,6 @@ public class OrderManager : IOrderService
                 }
 
                 if (menu.Price != item.UnitPrice)
-                {
                     response.Warnings.Add(new ReorderWarningDto
                     {
                         MenuId = item.MenuId,
@@ -1260,7 +1281,6 @@ public class OrderManager : IOrderService
                         WarningType = "PriceChanged",
                         Message = $"Fiyat değişti: {item.UnitPrice:C2} → {menu.Price:C2}"
                     });
-                }
 
                 basketItems.Add(new UpdateBasketDto.UpdateBasketItemDto
                 {
@@ -1300,6 +1320,7 @@ public class OrderManager : IOrderService
         {
             result.Fail(e);
         }
+
         return result;
     }
 }

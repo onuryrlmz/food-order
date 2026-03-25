@@ -45,6 +45,7 @@ public class CouponManager : ICouponService
                 result.Fail("Seller not found");
                 return result;
             }
+
             var sellerId = token.SellerId.Value;
 
             // Check if code already exists
@@ -75,21 +76,13 @@ public class CouponManager : ICouponService
 
             // Add applicable menus
             if (requestDto.ApplicableType == CouponServiceEnums.CouponApplicableTypeEnums.SpecificMenus && requestDto.ApplicableMenuIds != null)
-            {
                 foreach (var menuId in requestDto.ApplicableMenuIds)
-                {
                     _context.CouponMenus.Add(new CouponMenu { CouponId = coupon.Id, MenuId = menuId });
-                }
-            }
 
             // Add applicable categories
             if (requestDto.ApplicableType == CouponServiceEnums.CouponApplicableTypeEnums.SpecificCategories && requestDto.ApplicableCategoryIds != null)
-            {
                 foreach (var categoryId in requestDto.ApplicableCategoryIds)
-                {
                     _context.CouponCategories.Add(new CouponCategory { CouponId = coupon.Id, CategoryId = categoryId });
-                }
-            }
 
             await _context.SaveChangesAsync();
             result.SetData(coupon.Id);
@@ -113,6 +106,7 @@ public class CouponManager : ICouponService
                 result.Fail("Seller not found");
                 return result;
             }
+
             var sellerId = token.SellerId.Value;
 
             var coupon = await _couponRepository.GetAsync(c => c.Id == requestDto.Id && c.SellerId == sellerId);
@@ -154,22 +148,14 @@ public class CouponManager : ICouponService
             // Update applicable menus
             _context.CouponMenus.RemoveRange(_context.CouponMenus.Where(cm => cm.CouponId == coupon.Id));
             if (requestDto.ApplicableType == CouponServiceEnums.CouponApplicableTypeEnums.SpecificMenus && requestDto.ApplicableMenuIds != null)
-            {
                 foreach (var menuId in requestDto.ApplicableMenuIds)
-                {
                     _context.CouponMenus.Add(new CouponMenu { CouponId = coupon.Id, MenuId = menuId });
-                }
-            }
 
             // Update applicable categories
             _context.CouponCategories.RemoveRange(_context.CouponCategories.Where(cc => cc.CouponId == coupon.Id));
             if (requestDto.ApplicableType == CouponServiceEnums.CouponApplicableTypeEnums.SpecificCategories && requestDto.ApplicableCategoryIds != null)
-            {
                 foreach (var categoryId in requestDto.ApplicableCategoryIds)
-                {
                     _context.CouponCategories.Add(new CouponCategory { CouponId = coupon.Id, CategoryId = categoryId });
-                }
-            }
 
             await _context.SaveChangesAsync();
             result.SetData(true);
@@ -193,6 +179,7 @@ public class CouponManager : ICouponService
                 result.Fail("Seller not found");
                 return result;
             }
+
             var sellerId = token.SellerId.Value;
 
             var coupon = await _couponRepository.GetAsync(c => c.Id == id && c.SellerId == sellerId);
@@ -226,6 +213,7 @@ public class CouponManager : ICouponService
                 result.Fail("Seller not found");
                 return result;
             }
+
             var sellerId = token.SellerId.Value;
 
             var coupons = await _context.Coupons
@@ -258,8 +246,8 @@ public class CouponManager : ICouponService
                 UsagePerUser = c.UsagePerUser,
                 CurrentUsageCount = c.CurrentUsageCount,
                 CreatedDate = c.CreatedDate,
-                ApplicableMenus = c.CouponMenus?.Select(cm => new CouponApplicableItemDto { Id = cm.MenuId, Name = cm.Menu?.Name ?? "" }).ToList() ?? new(),
-                ApplicableCategories = c.CouponCategories?.Select(cc => new CouponApplicableItemDto { Id = cc.CategoryId, Name = cc.Category?.Name ?? "" }).ToList() ?? new()
+                ApplicableMenus = c.CouponMenus?.Select(cm => new CouponApplicableItemDto { Id = cm.MenuId, Name = cm.Menu?.Name ?? "" }).ToList() ?? new List<CouponApplicableItemDto>(),
+                ApplicableCategories = c.CouponCategories?.Select(cc => new CouponApplicableItemDto { Id = cc.CategoryId, Name = cc.Category?.Name ?? "" }).ToList() ?? new List<CouponApplicableItemDto>()
             }).ToList();
 
             result.SetData(dtoList);
@@ -283,6 +271,7 @@ public class CouponManager : ICouponService
                 result.Fail("Seller not found");
                 return result;
             }
+
             var sellerId = token.SellerId.Value;
 
             var coupon = await _context.Coupons
@@ -379,8 +368,8 @@ public class CouponManager : ICouponService
                 UsagePerUser = c.UsagePerUser,
                 CurrentUsageCount = c.CurrentUsageCount,
                 CreatedDate = c.CreatedDate,
-                ApplicableMenus = c.CouponMenus?.Select(cm => new CouponApplicableItemDto { Id = cm.MenuId, Name = cm.Menu?.Name ?? "" }).ToList() ?? new(),
-                ApplicableCategories = c.CouponCategories?.Select(cc => new CouponApplicableItemDto { Id = cc.CategoryId, Name = cc.Category?.Name ?? "" }).ToList() ?? new()
+                ApplicableMenus = c.CouponMenus?.Select(cm => new CouponApplicableItemDto { Id = cm.MenuId, Name = cm.Menu?.Name ?? "" }).ToList() ?? new List<CouponApplicableItemDto>(),
+                ApplicableCategories = c.CouponCategories?.Select(cc => new CouponApplicableItemDto { Id = cc.CategoryId, Name = cc.Category?.Name ?? "" }).ToList() ?? new List<CouponApplicableItemDto>()
             }).ToList();
 
             result.SetData(dtoList);
@@ -489,21 +478,13 @@ public class CouponManager : ICouponService
 
             // Add applicable menus
             if (requestDto.ApplicableType == CouponServiceEnums.CouponApplicableTypeEnums.SpecificMenus && requestDto.ApplicableMenuIds != null)
-            {
                 foreach (var menuId in requestDto.ApplicableMenuIds)
-                {
                     _context.CouponMenus.Add(new CouponMenu { CouponId = coupon.Id, MenuId = menuId });
-                }
-            }
 
             // Add applicable categories
             if (requestDto.ApplicableType == CouponServiceEnums.CouponApplicableTypeEnums.SpecificCategories && requestDto.ApplicableCategoryIds != null)
-            {
                 foreach (var categoryId in requestDto.ApplicableCategoryIds)
-                {
                     _context.CouponCategories.Add(new CouponCategory { CouponId = coupon.Id, CategoryId = categoryId });
-                }
-            }
 
             await _context.SaveChangesAsync();
             result.SetData(coupon.Id);
@@ -575,21 +556,13 @@ public class CouponManager : ICouponService
 
             // Add new applicable menus
             if (requestDto.ApplicableType == CouponServiceEnums.CouponApplicableTypeEnums.SpecificMenus && requestDto.ApplicableMenuIds != null)
-            {
                 foreach (var menuId in requestDto.ApplicableMenuIds)
-                {
                     _context.CouponMenus.Add(new CouponMenu { CouponId = coupon.Id, MenuId = menuId });
-                }
-            }
 
             // Add new applicable categories
             if (requestDto.ApplicableType == CouponServiceEnums.CouponApplicableTypeEnums.SpecificCategories && requestDto.ApplicableCategoryIds != null)
-            {
                 foreach (var categoryId in requestDto.ApplicableCategoryIds)
-                {
                     _context.CouponCategories.Add(new CouponCategory { CouponId = coupon.Id, CategoryId = categoryId });
-                }
-            }
 
             _couponRepository.Update(coupon);
             await _context.SaveChangesAsync();

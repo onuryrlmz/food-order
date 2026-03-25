@@ -44,8 +44,7 @@ public class ReviewManager : IReviewService
             }
 
             // Validate order exists, belongs to user, and is delivered
-            var order = await _unitOfWork.OrderRepository.GetAsync(
-                x => x.Id == requestDto.OrderId && x.UserId == token.UserId);
+            var order = await _unitOfWork.OrderRepository.GetAsync(x => x.Id == requestDto.OrderId && x.UserId == token.UserId);
             if (order == null)
             {
                 result.Fail("Order not found");
@@ -59,8 +58,7 @@ public class ReviewManager : IReviewService
             }
 
             // Check no existing review for this order
-            var existingReview = await _unitOfWork.ReviewRepository.GetAsync(
-                x => x.OrderId == requestDto.OrderId);
+            var existingReview = await _unitOfWork.ReviewRepository.GetAsync(x => x.OrderId == requestDto.OrderId);
             if (existingReview != null)
             {
                 result.Fail("This order has already been reviewed");

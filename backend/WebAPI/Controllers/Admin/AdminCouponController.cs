@@ -26,27 +26,37 @@ public class AdminCouponController : BaseController
     [HttpGet("list")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceCollectionResult<GetCouponListDto>> GetList([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
-        => await _couponService.GetAllCoupons(page, pageSize);
+    {
+        return await _couponService.GetAllCoupons(page, pageSize);
+    }
 
     [HttpGet("{id:guid}")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<GetCouponDetailDto>> GetById(Guid id)
-        => await _couponService.AdminGetCouponById(id);
+    {
+        return await _couponService.AdminGetCouponById(id);
+    }
 
     [HttpPost("create")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<Guid>> Create([FromBody] AdminCreateCouponDto requestDto)
-        => await _couponService.AdminCreateCoupon(requestDto);
+    {
+        return await _couponService.AdminCreateCoupon(requestDto);
+    }
 
     [HttpPut("update")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> Update([FromBody] AdminUpdateCouponDto requestDto)
-        => await _couponService.AdminUpdateCoupon(requestDto);
+    {
+        return await _couponService.AdminUpdateCoupon(requestDto);
+    }
 
     [HttpDelete("{id:guid}")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> Delete(Guid id)
-        => await _couponService.AdminDeleteCoupon(id);
+    {
+        return await _couponService.AdminDeleteCoupon(id);
+    }
 
     [HttpGet("menus/{restaurantId}")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]

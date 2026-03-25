@@ -12,17 +12,24 @@ public class SellerImageController : BaseController
 {
     private readonly IImageUploadService _imageUploadService;
 
-    public SellerImageController(IImageUploadService imageUploadService) => _imageUploadService = imageUploadService;
+    public SellerImageController(IImageUploadService imageUploadService)
+    {
+        _imageUploadService = imageUploadService;
+    }
 
     [HttpPost("upload")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin, AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
     public async Task<ServiceObjectResult<ImageUploadResponseDto>> Upload(
         IFormFile file,
         [FromQuery] Guid? productId = null)
-        => await _imageUploadService.UploadImage(file, productId);
+    {
+        return await _imageUploadService.UploadImage(file, productId);
+    }
 
     [HttpDelete("{imageId}")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin, AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
     public async Task<ServiceObjectResult<bool>> Delete(Guid imageId)
-        => await _imageUploadService.DeleteImage(imageId);
+    {
+        return await _imageUploadService.DeleteImage(imageId);
+    }
 }

@@ -91,7 +91,7 @@ public class FakeData
                 BirthDate = new DateTime(1994, 2, 1),
                 SexId = (short)AuthorizationServiceEnums.SexEnums.Male,
                 PhoneNumber = "05556667788",
-                ActivationKey = Guid.NewGuid(),
+                ActivationKey = Guid.NewGuid()
             }
         ];
 
@@ -134,7 +134,7 @@ public class FakeData
                 MinDeliveryTime = 25,
                 MaxDeliveryTime = 45,
                 CoverImage = "https://cdn.getiryemek.com/restaurants/1741075067957_1125x522.webp",
-                Description = "Süper lezzetli pizzalar, hızlı teslimat!",
+                Description = "Süper lezzetli pizzalar, hızlı teslimat!"
             }
         ];
 
@@ -199,7 +199,7 @@ public class FakeData
             {
                 Id = Guid.NewGuid(),
                 CreatedDate = DateTime.Now,
-                RestaurantId = this.RestaurantId,
+                RestaurantId = RestaurantId,
                 Name = "Bol Bol Pizza - Orta Boy",
                 ProductType = 1,
                 Description = string.Empty,
@@ -209,7 +209,7 @@ public class FakeData
             {
                 Id = Guid.NewGuid(),
                 CreatedDate = DateTime.Now,
-                RestaurantId = this.RestaurantId,
+                RestaurantId = RestaurantId,
                 Name = "Mantar",
                 ProductType = 2,
                 Description = string.Empty,
@@ -219,7 +219,7 @@ public class FakeData
             {
                 Id = Guid.NewGuid(),
                 CreatedDate = DateTime.Now,
-                RestaurantId = this.RestaurantId,
+                RestaurantId = RestaurantId,
                 Name = "Sucuk",
                 ProductType = 2,
                 Description = string.Empty,
@@ -238,7 +238,7 @@ public class FakeData
             {
                 Id = Guid.NewGuid(),
                 CreatedDate = DateTime.Now,
-                RestaurantId = this.RestaurantId,
+                RestaurantId = RestaurantId,
                 Name = "Orta Boy Pizzalar",
                 Description = string.Empty,
                 Price = 100,
@@ -338,15 +338,14 @@ public class FakeData
     {
         _categories =
         [
-            new()
+            new Category
             {
                 Id = Guid.NewGuid(),
-                RestaurantId = this.RestaurantId,
+                RestaurantId = RestaurantId,
                 CreatedDate = DateTime.Now,
                 Name = "Pizzalar",
                 OrderIndex = 0
             }
-
         ];
 
         builder.HasData(_categories);
@@ -356,7 +355,7 @@ public class FakeData
     {
         _categoryDetails =
         [
-            new()
+            new CategoryDetail
             {
                 Id = Guid.NewGuid(),
                 CreatedDate = DateTime.Now,

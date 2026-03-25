@@ -16,11 +16,11 @@ public class Order : Entity<Guid>
     public decimal ShipmentPrice { get; set; }
     public decimal DiscountAmount { get; set; }
     public decimal TotalPrice { get; set; }
-    
+
     // Coupon
     public Guid? CouponId { get; set; }
     public string? CouponCode { get; set; }
-    
+
     public string? Notes { get; set; }
     public string? CancellationReason { get; set; }
 

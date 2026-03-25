@@ -1,4 +1,4 @@
-using Application.Services.Seller._99_RestaurantTransferService;
+using Application.Services.Seller.RestaurantTransferService;
 using Base.Enums;
 using Microsoft.AspNetCore.Mvc;
 using WebAPI.Helpers;
@@ -12,7 +12,9 @@ public class SellerTransferController : BaseController
     private readonly IRestaurantTransferService _transferService;
 
     public SellerTransferController(IRestaurantTransferService transferService)
-        => _transferService = transferService;
+    {
+        _transferService = transferService;
+    }
 
     [HttpPost("getir")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]

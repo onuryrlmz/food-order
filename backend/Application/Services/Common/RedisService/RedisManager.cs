@@ -33,10 +33,7 @@ public class RedisManager : IRedisService
     public async Task<(T value, string key)> SearchValueAsync<T>(string searchKey)
     {
         var endpoints = _database.Multiplexer.GetEndPoints();
-        if (endpoints.Length == 0)
-        {
-            return (default, null)!;
-        }
+        if (endpoints.Length == 0) return (default, null)!;
 
         var server = _database.Multiplexer.GetServer(endpoints.First());
         var keys = server.Keys();

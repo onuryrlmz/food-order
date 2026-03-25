@@ -28,10 +28,18 @@ public class CourierEarningManager : ICourierEarningService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
-            if (courier == null) { result.Fail("Kurye profili bulunamadı."); return result; }
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
 
             var query = _context.Set<CourierEarning>()
                 .Where(e => e.CourierId == courier.Id && e.DeletedDate == null);
@@ -61,7 +69,11 @@ public class CourierEarningManager : ICourierEarningService
             result.RawData = earnings;
             result.TotalDataCount = totalCount;
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -71,10 +83,18 @@ public class CourierEarningManager : ICourierEarningService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
-            if (courier == null) { result.Fail("Kurye profili bulunamadı."); return result; }
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
 
             var earnings = await _context.Set<CourierEarning>()
                 .Where(e => e.CourierId == courier.Id && e.DeletedDate == null)
@@ -92,7 +112,11 @@ public class CourierEarningManager : ICourierEarningService
                 AverageEarningPerDelivery = earnings.Count > 0 ? totalEarnings / earnings.Count : 0
             });
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -115,7 +139,11 @@ public class CourierEarningManager : ICourierEarningService
             await _context.SaveChangesAsync();
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -124,14 +152,26 @@ public class CourierEarningManager : ICourierEarningService
         var result = new ServiceObjectResult<bool>();
         try
         {
-            var assignment = await _unitOfWork.DeliveryAssignmentRepository.GetAsync(
-                x => x.Id == deliveryAssignmentId);
-            if (assignment == null) { result.Fail("Teslimat bulunamadı."); return result; }
-            if (assignment.CourierId == null) { result.Fail("Kurye atanmamış."); return result; }
+            var assignment = await _unitOfWork.DeliveryAssignmentRepository.GetAsync(x => x.Id == deliveryAssignmentId);
+            if (assignment == null)
+            {
+                result.Fail("Teslimat bulunamadı.");
+                return result;
+            }
+
+            if (assignment.CourierId == null)
+            {
+                result.Fail("Kurye atanmamış.");
+                return result;
+            }
 
             var existing = await _context.Set<CourierEarning>()
                 .AnyAsync(e => e.DeliveryAssignmentId == deliveryAssignmentId && e.DeletedDate == null);
-            if (existing) { result.Fail("Bu teslimat için kazanç zaten oluşturulmuş."); return result; }
+            if (existing)
+            {
+                result.Fail("Bu teslimat için kazanç zaten oluşturulmuş.");
+                return result;
+            }
 
             var earning = new CourierEarning
             {
@@ -148,7 +188,11 @@ public class CourierEarningManager : ICourierEarningService
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 }

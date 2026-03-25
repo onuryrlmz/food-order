@@ -92,8 +92,7 @@ public class AuthTokenManager : IAuthTokenService
         var response = new ServiceObjectResult<TokenPairDto>();
         try
         {
-            var existingToken = await _refreshTokenRepository.GetAsync(
-                x => x.Token == refreshToken && !x.RevokedAt.HasValue && x.ExpiresAt > DateTime.UtcNow);
+            var existingToken = await _refreshTokenRepository.GetAsync(x => x.Token == refreshToken && !x.RevokedAt.HasValue && x.ExpiresAt > DateTime.UtcNow);
 
             if (existingToken == null)
             {
@@ -105,7 +104,7 @@ public class AuthTokenManager : IAuthTokenService
             existingToken.RevokedAt = DateTime.UtcNow;
 
             var user = await _userRepository.GetAsync(x => x.Id == existingToken.UserId &&
-                x.UserStatusId == (short)AuthorizationServiceEnums.UserStatusEnums.Active);
+                                                           x.UserStatusId == (short)AuthorizationServiceEnums.UserStatusEnums.Active);
 
             if (user == null)
             {
@@ -132,8 +131,7 @@ public class AuthTokenManager : IAuthTokenService
 
     public async Task RevokeRefreshTokenAsync(string refreshToken)
     {
-        var existingToken = await _refreshTokenRepository.GetAsync(
-            x => x.Token == refreshToken && !x.RevokedAt.HasValue);
+        var existingToken = await _refreshTokenRepository.GetAsync(x => x.Token == refreshToken && !x.RevokedAt.HasValue);
 
         if (existingToken != null)
         {
@@ -144,8 +142,7 @@ public class AuthTokenManager : IAuthTokenService
 
     public async Task RevokeAllUserTokensAsync(Guid userId)
     {
-        var tokens = await _refreshTokenRepository.GetListAsync(
-            x => x.UserId == userId && !x.RevokedAt.HasValue);
+        var tokens = await _refreshTokenRepository.GetListAsync(x => x.UserId == userId && !x.RevokedAt.HasValue);
 
         foreach (var token in tokens.Items)
         {

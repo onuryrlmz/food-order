@@ -45,7 +45,7 @@ public sealed class BaseDbContext : DbContext
 
     // Courier
     public DbSet<CourierCompany> CourierCompanies { get; set; }
-    public DbSet<Domain.Entities.Courier.Courier> Couriers { get; set; }
+    public DbSet<Courier> Couriers { get; set; }
     public DbSet<RestaurantCourierAgreement> RestaurantCourierAgreements { get; set; }
     public DbSet<DeliveryAssignment> DeliveryAssignments { get; set; }
     public DbSet<CourierEarning> CourierEarnings { get; set; }

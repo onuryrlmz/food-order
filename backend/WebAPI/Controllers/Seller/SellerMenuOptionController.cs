@@ -1,4 +1,4 @@
-using Application.Services.Seller._7_MenuOptionService;
+using Application.Services.Seller.MenuOptionService;
 using Base.Enums;
 using Domain.Dto.Seller.MenuOption;
 using Domain.Service;
@@ -13,27 +13,38 @@ public class SellerMenuOptionController : BaseController
 {
     private readonly IMenuOptionService _menuOptionService;
 
-    public SellerMenuOptionController(IMenuOptionService menuOptionService) => _menuOptionService = menuOptionService;
+    public SellerMenuOptionController(IMenuOptionService menuOptionService)
+    {
+        _menuOptionService = menuOptionService;
+    }
 
     [HttpGet]
     [AuthorizeAPIRequest(true, false,
         AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
         AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
     public async Task<ServiceCollectionResult<MenuOptionResponseDto>> GetList([FromQuery] GetMenuOptionsRequestDto requestDto)
-        => await _menuOptionService.GetMenuOptionsByMenuId(requestDto);
+    {
+        return await _menuOptionService.GetMenuOptionsByMenuId(requestDto);
+    }
 
     [HttpPost]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<Guid>> Add([FromBody] CreateMenuOptionRequestDto requestDto)
-        => await _menuOptionService.Add(requestDto);
+    {
+        return await _menuOptionService.Add(requestDto);
+    }
 
     [HttpPut]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Update([FromBody] UpdateMenuOptionRequestDto requestDto)
-        => await _menuOptionService.Update(requestDto);
+    {
+        return await _menuOptionService.Update(requestDto);
+    }
 
     [HttpDelete]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Delete([FromBody] DeleteMenuOptionRequestDto requestDto)
-        => await _menuOptionService.Delete(requestDto);
+    {
+        return await _menuOptionService.Delete(requestDto);
+    }
 }

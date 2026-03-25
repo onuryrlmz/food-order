@@ -29,35 +29,49 @@ public class AdminCourierController : BaseController
     [HttpGet("companies")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceCollectionResult> GetCompanies([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] short? statusId = null)
-        => await _courierCompanyService.GetAllCompaniesForAdmin(page, pageSize, statusId);
+    {
+        return await _courierCompanyService.GetAllCompaniesForAdmin(page, pageSize, statusId);
+    }
 
     [HttpPut("companies/{companyId}/approve")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> ApproveCompany(Guid companyId)
-        => await _courierCompanyService.ApproveCompany(companyId);
+    {
+        return await _courierCompanyService.ApproveCompany(companyId);
+    }
 
     [HttpPut("companies/{companyId}/suspend")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> SuspendCompany(Guid companyId)
-        => await _courierCompanyService.SuspendCompany(companyId);
+    {
+        return await _courierCompanyService.SuspendCompany(companyId);
+    }
 
     [HttpGet("couriers")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceCollectionResult> GetCouriers([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] short? statusId = null)
-        => await _courierService.GetAllCouriersForAdmin(page, pageSize, statusId);
+    {
+        return await _courierService.GetAllCouriersForAdmin(page, pageSize, statusId);
+    }
 
     [HttpPut("couriers/{courierId}/approve")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> ApproveCourier(Guid courierId)
-        => await _courierService.ApproveCourier(courierId);
+    {
+        return await _courierService.ApproveCourier(courierId);
+    }
 
     [HttpPut("couriers/{courierId}/suspend")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> SuspendCourier(Guid courierId)
-        => await _courierService.SuspendCourier(courierId);
+    {
+        return await _courierService.SuspendCourier(courierId);
+    }
 
     [HttpPost("earnings/settle")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> SettleEarnings([FromBody] List<Guid> earningIds)
-        => await _courierEarningService.SettleEarnings(earningIds);
+    {
+        return await _courierEarningService.SettleEarnings(earningIds);
+    }
 }

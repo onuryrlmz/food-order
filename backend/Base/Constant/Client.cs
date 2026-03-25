@@ -47,7 +47,6 @@ public class Client : IDisposable
 
             // Authorization header yoksa cookie'den oku
             if (_tokenDto == null && _httpContext.Request.Cookies.TryGetValue("auth_token", out var cookieToken) && !string.IsNullOrEmpty(cookieToken))
-            {
                 try
                 {
                     var tokenString = CryptoManagerV3.Decrypt(cookieToken, Global.EncryptionKey);
@@ -57,7 +56,6 @@ public class Client : IDisposable
                 {
                     // ignored
                 }
-            }
         }
         catch (Exception e)
         {

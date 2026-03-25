@@ -56,7 +56,7 @@ public class BasketManager : IBasketService
 
             Start:
             var basket = await _basketRepository.GetAsync(x => x.UserId == _tokenAccessor.GetToken().UserId && x.StatusId == (int)BasketServiceEnums.BasketStatusEnums.Waiting,
-                include: x => x
+                x => x
                     .Include(x0 => x0.BasketItems)
                     .ThenInclude(x2 => x2.BasketItemValues)
                     .ThenInclude(x3 => x3.BasketItemValueItemValues));
@@ -117,10 +117,7 @@ public class BasketManager : IBasketService
             }
 
             // Enrich from restaurant JSON (CDN) — güncel fiyat, menü adı, kaldırılan menüler
-            if (basket.RestaurantId != Guid.Empty && basket.BasketItems != null && basket.BasketItems.Count > 0)
-            {
-                await EnrichBasketFromRestaurantJson(basket);
-            }
+            if (basket.RestaurantId != Guid.Empty && basket.BasketItems != null && basket.BasketItems.Count > 0) await EnrichBasketFromRestaurantJson(basket);
 
             // Enrich with restaurant name
             if (basket.RestaurantId != Guid.Empty)
@@ -453,10 +450,7 @@ public class BasketManager : IBasketService
                 foreach (var cd in cat.CategoriesDetail)
                 {
                     if (cd.Menus == null) continue;
-                    foreach (var m in cd.Menus)
-                    {
-                        menuMap[m.Id] = (m.Name, m.Price);
-                    }
+                    foreach (var m in cd.Menus) menuMap[m.Id] = (m.Name, m.Price);
                 }
             }
 
@@ -484,22 +478,18 @@ public class BasketManager : IBasketService
 
                 // Value fiyatları da topla
                 if (item.BasketItemValues != null)
-                {
                     foreach (var v in item.BasketItemValues)
                     {
                         basket.TotalProductPrice += v.TotalPrice;
                         basket.TotalPrice += v.TotalPrice;
 
                         if (v.BasketItemValueItemValues != null)
-                        {
                             foreach (var viv in v.BasketItemValueItemValues)
                             {
                                 basket.TotalProductPrice += viv.TotalPrice;
                                 basket.TotalPrice += viv.TotalPrice;
                             }
-                        }
                     }
-                }
             }
 
             foreach (var item in itemsToRemove)

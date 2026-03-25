@@ -131,8 +131,8 @@ public class SubscriptionManager : ISubscriptionService
 
             // Mevcut aktif aboneliği iptal et
             var activeSubscription = await _unitOfWork.SubscriptionRepository.GetAsync(x =>
-                x.RestaurantId == requestDto.RestaurantId &&
-                x.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active,
+                    x.RestaurantId == requestDto.RestaurantId &&
+                    x.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active,
                 enableTracking: true);
 
             if (activeSubscription != null)
@@ -271,7 +271,7 @@ public class SubscriptionManager : ISubscriptionService
 
             var subscriptions = await _unitOfWork.SubscriptionRepository.GetListAsync(
                 x => x.SellerId == token.SellerId.Value,
-                orderBy: q => q.OrderByDescending(s => s.CreatedDate),
+                q => q.OrderByDescending(s => s.CreatedDate),
                 size: 100);
 
             var planIds = subscriptions.Items.Select(s => s.SubscriptionPlanId).Distinct().ToList();
@@ -382,9 +382,8 @@ public class SubscriptionManager : ISubscriptionService
         var result = new ServiceObjectResult<SubscriptionUsageDto>();
         try
         {
-            var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(
-                s => s.RestaurantId == restaurantId && s.SellerId == sellerId &&
-                     s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active);
+            var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(s => s.RestaurantId == restaurantId && s.SellerId == sellerId &&
+                                                                                      s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active);
 
             if (subscription == null)
             {
@@ -395,8 +394,7 @@ public class SubscriptionManager : ISubscriptionService
             var plan = await _unitOfWork.SubscriptionPlanRepository.GetAsync(p => p.Id == subscription.SubscriptionPlanId);
             var now = DateTime.UtcNow;
 
-            var usage = await _unitOfWork.SubscriptionUsageRepository.GetAsync(
-                u => u.SubscriptionId == subscription.Id && u.Year == now.Year && u.Month == now.Month);
+            var usage = await _unitOfWork.SubscriptionUsageRepository.GetAsync(u => u.SubscriptionId == subscription.Id && u.Year == now.Year && u.Month == now.Month);
 
             var orderCount = usage?.OrderCount ?? 0;
             var maxOrders = plan?.MaxOrdersPerMonth ?? int.MaxValue;
@@ -416,6 +414,7 @@ public class SubscriptionManager : ISubscriptionService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -424,9 +423,8 @@ public class SubscriptionManager : ISubscriptionService
         var result = new ServiceObjectResult<UpgradePreviewDto>();
         try
         {
-            var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(
-                s => s.RestaurantId == restaurantId && s.SellerId == sellerId &&
-                     s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active);
+            var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(s => s.RestaurantId == restaurantId && s.SellerId == sellerId &&
+                                                                                      s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active);
 
             if (subscription == null)
             {
@@ -472,6 +470,7 @@ public class SubscriptionManager : ISubscriptionService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -509,6 +508,7 @@ public class SubscriptionManager : ISubscriptionService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -517,9 +517,8 @@ public class SubscriptionManager : ISubscriptionService
         var result = new ServiceObjectResult<bool>();
         try
         {
-            var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(
-                s => s.RestaurantId == restaurantId &&
-                     s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active);
+            var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(s => s.RestaurantId == restaurantId &&
+                                                                                      s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active);
 
             if (subscription == null)
             {
@@ -570,6 +569,7 @@ public class SubscriptionManager : ISubscriptionService
         {
             result.Fail($"Hata: {ex.Message}");
         }
+
         return result;
     }
 
@@ -587,8 +587,8 @@ public class SubscriptionManager : ISubscriptionService
 
             var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(
                 s => s.RestaurantId == restaurantId
-                    && s.SellerId == token.SellerId.Value
-                    && s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active,
+                     && s.SellerId == token.SellerId.Value
+                     && s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active,
                 enableTracking: true);
 
             if (subscription == null)
@@ -608,31 +608,38 @@ public class SubscriptionManager : ISubscriptionService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
-    private static GetSubscriptionPlanResponseDto MapPlanToDto(SubscriptionPlan plan) => new()
+    private static GetSubscriptionPlanResponseDto MapPlanToDto(SubscriptionPlan plan)
     {
-        Id = plan.Id,
-        Name = plan.Name,
-        Description = plan.Description,
-        PlanType = plan.PlanType,
-        MonthlyPrice = plan.MonthlyPrice,
-        MaxRestaurants = plan.MaxRestaurants,
-        MaxOrdersPerMonth = plan.MaxOrdersPerMonth
-    };
+        return new GetSubscriptionPlanResponseDto
+        {
+            Id = plan.Id,
+            Name = plan.Name,
+            Description = plan.Description,
+            PlanType = plan.PlanType,
+            MonthlyPrice = plan.MonthlyPrice,
+            MaxRestaurants = plan.MaxRestaurants,
+            MaxOrdersPerMonth = plan.MaxOrdersPerMonth
+        };
+    }
 
-    private static GetSubscriptionResponseDto MapSubscriptionToDto(Subscription s, string planName, string restaurantName, decimal monthlyPrice) => new()
+    private static GetSubscriptionResponseDto MapSubscriptionToDto(Subscription s, string planName, string restaurantName, decimal monthlyPrice)
     {
-        Id = s.Id,
-        RestaurantId = s.RestaurantId,
-        RestaurantName = restaurantName,
-        SubscriptionPlanId = s.SubscriptionPlanId,
-        PlanName = planName,
-        MonthlyPrice = monthlyPrice,
-        StatusId = s.StatusId,
-        StatusName = ((AuthorizationServiceEnums.SubscriptionStatusEnums)s.StatusId).ToString(),
-        StartDate = s.StartDate,
-        EndDate = s.EndDate
-    };
+        return new GetSubscriptionResponseDto
+        {
+            Id = s.Id,
+            RestaurantId = s.RestaurantId,
+            RestaurantName = restaurantName,
+            SubscriptionPlanId = s.SubscriptionPlanId,
+            PlanName = planName,
+            MonthlyPrice = monthlyPrice,
+            StatusId = s.StatusId,
+            StatusName = ((AuthorizationServiceEnums.SubscriptionStatusEnums)s.StatusId).ToString(),
+            StartDate = s.StartDate,
+            EndDate = s.EndDate
+        };
+    }
 }

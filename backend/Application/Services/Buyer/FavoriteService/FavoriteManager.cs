@@ -44,8 +44,7 @@ public class FavoriteManager : IFavoriteService
             }
 
             // Check not already favorited
-            var existing = await _unitOfWork.FavoriteRestaurantRepository.GetAsync(
-                x => x.UserId == token.UserId && x.RestaurantId == restaurantId);
+            var existing = await _unitOfWork.FavoriteRestaurantRepository.GetAsync(x => x.UserId == token.UserId && x.RestaurantId == restaurantId);
             if (existing != null)
             {
                 result.SetData(true); // Already favorited, treat as success

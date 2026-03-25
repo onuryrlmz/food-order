@@ -55,6 +55,7 @@ public class SellerFinanceController : BaseController
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -100,6 +101,7 @@ public class SellerFinanceController : BaseController
         {
             result.Fail(e);
         }
+
         return result;
     }
 }

@@ -30,70 +30,98 @@ public class CourierController : BaseController
     [HttpPost("register")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
     public async Task<ServiceObjectResult<CourierProfileResponseDto>> Register([FromBody] RegisterCourierRequestDto requestDto)
-        => await _courierService.Register(requestDto);
+    {
+        return await _courierService.Register(requestDto);
+    }
 
     [HttpGet("profile")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceObjectResult<CourierProfileResponseDto>> GetProfile()
-        => await _courierService.GetProfile();
+    {
+        return await _courierService.GetProfile();
+    }
 
     [HttpPut("profile")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceObjectResult<bool>> UpdateProfile([FromBody] UpdateCourierProfileRequestDto requestDto)
-        => await _courierService.UpdateProfile(requestDto);
+    {
+        return await _courierService.UpdateProfile(requestDto);
+    }
 
     [HttpPost("go-online")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceObjectResult<bool>> GoOnline()
-        => await _courierService.GoOnline();
+    {
+        return await _courierService.GoOnline();
+    }
 
     [HttpPost("go-offline")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceObjectResult<bool>> GoOffline()
-        => await _courierService.GoOffline();
+    {
+        return await _courierService.GoOffline();
+    }
 
     [HttpPut("location")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceObjectResult<bool>> UpdateLocation([FromBody] UpdateLocationRequestDto requestDto)
-        => await _courierService.UpdateLocation(requestDto);
+    {
+        return await _courierService.UpdateLocation(requestDto);
+    }
 
     [HttpGet("assignment/active")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceObjectResult<DeliveryAssignmentResponseDto>> GetActiveAssignment()
-        => await _deliveryAssignmentService.GetActiveAssignment();
+    {
+        return await _deliveryAssignmentService.GetActiveAssignment();
+    }
 
     [HttpGet("assignment/history")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceCollectionResult> GetAssignmentHistory([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
-        => await _deliveryAssignmentService.GetAssignmentHistory(page, pageSize);
+    {
+        return await _deliveryAssignmentService.GetAssignmentHistory(page, pageSize);
+    }
 
     [HttpPost("assignment/{assignmentId}/accept")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceObjectResult<bool>> AcceptAssignment(Guid assignmentId)
-        => await _deliveryAssignmentService.AcceptAssignment(assignmentId);
+    {
+        return await _deliveryAssignmentService.AcceptAssignment(assignmentId);
+    }
 
     [HttpPost("assignment/{assignmentId}/reject")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceObjectResult<bool>> RejectAssignment(Guid assignmentId, [FromQuery] string? reason = null)
-        => await _deliveryAssignmentService.RejectAssignment(assignmentId, reason);
+    {
+        return await _deliveryAssignmentService.RejectAssignment(assignmentId, reason);
+    }
 
     [HttpPost("assignment/{assignmentId}/picked-up")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceObjectResult<bool>> MarkPickedUp(Guid assignmentId)
-        => await _deliveryAssignmentService.MarkPickedUp(assignmentId);
+    {
+        return await _deliveryAssignmentService.MarkPickedUp(assignmentId);
+    }
 
     [HttpPost("assignment/{assignmentId}/delivered")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceObjectResult<bool>> MarkDelivered(Guid assignmentId)
-        => await _deliveryAssignmentService.MarkDelivered(assignmentId);
+    {
+        return await _deliveryAssignmentService.MarkDelivered(assignmentId);
+    }
 
     [HttpGet("earnings")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceCollectionResult> GetEarnings([FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
-        => await _courierEarningService.GetMyEarnings(from, to, page, pageSize);
+    {
+        return await _courierEarningService.GetMyEarnings(from, to, page, pageSize);
+    }
 
     [HttpGet("earnings/summary")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Courier)]
     public async Task<ServiceObjectResult<EarningSummaryResponseDto>> GetEarningSummary()
-        => await _courierEarningService.GetEarningSummary();
+    {
+        return await _courierEarningService.GetEarningSummary();
+    }
 }

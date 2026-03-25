@@ -8,42 +8,42 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AutoMapper" Version="16.1.0" />
-        <PackageReference Include="AWSSDK.S3" Version="4.0.18.4" />
-        <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
-        <PackageReference Include="Dapper" Version="2.1.72" />
-        <PackageReference Include="Dapper.SimpleCRUD" Version="2.3.0" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
-        <PackageReference Include="Nanoid" Version="3.1.0" />
-        <PackageReference Include="NArchitecture.Core.Application" Version="1.0.6" />
-        <PackageReference Include="NArchitecture.Core.CrossCuttingConcerns.Exception" Version="1.0.1" />
-        <PackageReference Include="NArchitecture.Core.CrossCuttingConcerns.Exception.WebApi" Version="1.1.2" />
-        <PackageReference Include="NArchitecture.Core.CrossCuttingConcerns.Logging" Version="1.0.1" />
-        <PackageReference Include="NArchitecture.Core.CrossCuttingConcerns.Logging.Abstraction" Version="1.0.1" />
-        <PackageReference Include="NArchitecture.Core.CrossCuttingConcerns.Logging.DependencyInjection" Version="1.0.2" />
-        <PackageReference Include="NArchitecture.Core.CrossCuttingConcerns.Logging.Serilog" Version="1.0.2" />
-        <PackageReference Include="NArchitecture.Core.CrossCuttingConcerns.Logging.Serilog.File" Version="1.0.3" />
-        <PackageReference Include="NArchitecture.Core.ElasticSearch" Version="1.0.1" />
-        <PackageReference Include="NArchitecture.Core.Localization.Abstraction" Version="1.0.1" />
-        <PackageReference Include="NArchitecture.Core.Localization.Resource.Yaml" Version="1.0.3" />
-        <PackageReference Include="NArchitecture.Core.Localization.Resource.Yaml.DependencyInjection" Version="1.0.2" />
-        <PackageReference Include="NArchitecture.Core.Localization.Translation" Version="1.0.1" />
-        <PackageReference Include="NArchitecture.Core.Localization.WebApi" Version="1.0.1" />
-        <PackageReference Include="NArchitecture.Core.Mailing" Version="1.0.3" />
-        <PackageReference Include="NArchitecture.Core.Mailing.MailKit" Version="1.0.3" />
-        <PackageReference Include="NArchitecture.Core.Persistence" Version="1.1.5" />
-        <PackageReference Include="NArchitecture.Core.Persistence.DependencyInjection" Version="1.0.2" />
-        <PackageReference Include="NArchitecture.Core.Persistence.WebApi" Version="1.0.2" />
-        <PackageReference Include="NArchitecture.Core.Security" Version="1.3.3" />
-        <PackageReference Include="NArchitecture.Core.Security.DependencyInjection" Version="1.2.1" />
-        <PackageReference Include="NArchitecture.Core.Test" Version="1.0.6" />
-        <PackageReference Include="NArchitecture.Core.Translation.Abstraction" Version="1.0.1" />
-        <PackageReference Include="NArchitecture.Core.Translation.AmazonTranslate" Version="1.0.4" />
-        <PackageReference Include="NArchitecture.Core.Translation.AmazonTranslate.DependencyInjection" Version="1.0.1" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
-        <PackageReference Include="RestSharp" Version="114.0.0" />
-        <PackageReference Include="StackExchange.Redis" Version="2.11.8" />
+        <PackageReference Include="AutoMapper" Version="16.1.0"/>
+        <PackageReference Include="AWSSDK.S3" Version="4.0.18.4"/>
+        <PackageReference Include="BCrypt.Net-Next" Version="4.1.0"/>
+        <PackageReference Include="Dapper" Version="2.1.72"/>
+        <PackageReference Include="Dapper.SimpleCRUD" Version="2.3.0"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3"/>
+        <PackageReference Include="Nanoid" Version="3.1.0"/>
+        <PackageReference Include="NArchitecture.Core.Application" Version="1.0.6"/>
+        <PackageReference Include="NArchitecture.Core.CrossCuttingConcerns.Exception" Version="1.0.1"/>
+        <PackageReference Include="NArchitecture.Core.CrossCuttingConcerns.Exception.WebApi" Version="1.1.2"/>
+        <PackageReference Include="NArchitecture.Core.CrossCuttingConcerns.Logging" Version="1.0.1"/>
+        <PackageReference Include="NArchitecture.Core.CrossCuttingConcerns.Logging.Abstraction" Version="1.0.1"/>
+        <PackageReference Include="NArchitecture.Core.CrossCuttingConcerns.Logging.DependencyInjection" Version="1.0.2"/>
+        <PackageReference Include="NArchitecture.Core.CrossCuttingConcerns.Logging.Serilog" Version="1.0.2"/>
+        <PackageReference Include="NArchitecture.Core.CrossCuttingConcerns.Logging.Serilog.File" Version="1.0.3"/>
+        <PackageReference Include="NArchitecture.Core.ElasticSearch" Version="1.0.1"/>
+        <PackageReference Include="NArchitecture.Core.Localization.Abstraction" Version="1.0.1"/>
+        <PackageReference Include="NArchitecture.Core.Localization.Resource.Yaml" Version="1.0.3"/>
+        <PackageReference Include="NArchitecture.Core.Localization.Resource.Yaml.DependencyInjection" Version="1.0.2"/>
+        <PackageReference Include="NArchitecture.Core.Localization.Translation" Version="1.0.1"/>
+        <PackageReference Include="NArchitecture.Core.Localization.WebApi" Version="1.0.1"/>
+        <PackageReference Include="NArchitecture.Core.Mailing" Version="1.0.3"/>
+        <PackageReference Include="NArchitecture.Core.Mailing.MailKit" Version="1.0.3"/>
+        <PackageReference Include="NArchitecture.Core.Persistence" Version="1.1.5"/>
+        <PackageReference Include="NArchitecture.Core.Persistence.DependencyInjection" Version="1.0.2"/>
+        <PackageReference Include="NArchitecture.Core.Persistence.WebApi" Version="1.0.2"/>
+        <PackageReference Include="NArchitecture.Core.Security" Version="1.3.3"/>
+        <PackageReference Include="NArchitecture.Core.Security.DependencyInjection" Version="1.2.1"/>
+        <PackageReference Include="NArchitecture.Core.Test" Version="1.0.6"/>
+        <PackageReference Include="NArchitecture.Core.Translation.Abstraction" Version="1.0.1"/>
+        <PackageReference Include="NArchitecture.Core.Translation.AmazonTranslate" Version="1.0.4"/>
+        <PackageReference Include="NArchitecture.Core.Translation.AmazonTranslate.DependencyInjection" Version="1.0.1"/>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4"/>
+        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0"/>
+        <PackageReference Include="RestSharp" Version="114.0.0"/>
+        <PackageReference Include="StackExchange.Redis" Version="2.11.8"/>
     </ItemGroup>
 
 </Project>

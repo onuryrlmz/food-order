@@ -25,7 +25,7 @@ public class UserController : BaseController
         _passwordResetService = passwordResetService;
     }
 
-    private CookieOptions AuthCookieOptions => new CookieOptions
+    private CookieOptions AuthCookieOptions => new()
     {
         HttpOnly = true,
         Secure = true,
@@ -36,7 +36,9 @@ public class UserController : BaseController
     [HttpPost("register")]
     [EnableRateLimiting("auth")]
     public async Task<ServiceObjectResult<bool>> Register([FromBody] UserRegisterDto requestDto)
-        => await _userService.Register(requestDto);
+    {
+        return await _userService.Register(requestDto);
+    }
 
     [HttpPost("login")]
     [EnableRateLimiting("auth")]
@@ -79,6 +81,7 @@ public class UserController : BaseController
         {
             response.Fail(e);
         }
+
         return response;
     }
 
@@ -89,7 +92,9 @@ public class UserController : BaseController
         AuthorizationServiceEnums.UserRoleEnums.SellerUser,
         AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<GetUserProfileDto>> GetProfile()
-        => await _userService.GetProfile();
+    {
+        return await _userService.GetProfile();
+    }
 
     [HttpPut("profile")]
     [AuthorizeAPIRequest(true, false,
@@ -98,7 +103,9 @@ public class UserController : BaseController
         AuthorizationServiceEnums.UserRoleEnums.SellerUser,
         AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> UpdateProfile([FromBody] UpdateUserProfileDto requestDto)
-        => await _userService.UpdateProfile(requestDto);
+    {
+        return await _userService.UpdateProfile(requestDto);
+    }
 
     [HttpPut("change-password")]
     [AuthorizeAPIRequest(true, false,
@@ -107,20 +114,28 @@ public class UserController : BaseController
         AuthorizationServiceEnums.UserRoleEnums.SellerUser,
         AuthorizationServiceEnums.UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> ChangePassword([FromBody] ChangePasswordDto requestDto)
-        => await _userService.ChangePassword(requestDto);
+    {
+        return await _userService.ChangePassword(requestDto);
+    }
 
     [HttpPost("forgot-password")]
     [EnableRateLimiting("password-reset")]
     public async Task<ServiceObjectResult<bool>> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
-        => await _passwordResetService.SendResetCodeAsync(request.EmailOrPhone);
+    {
+        return await _passwordResetService.SendResetCodeAsync(request.EmailOrPhone);
+    }
 
     [HttpPost("verify-reset-code")]
     [EnableRateLimiting("password-reset")]
     public async Task<ServiceObjectResult<bool>> VerifyCode([FromBody] VerifyResetCodeRequestDto request)
-        => await _passwordResetService.VerifyCodeAsync(request.EmailOrPhone, request.Code);
+    {
+        return await _passwordResetService.VerifyCodeAsync(request.EmailOrPhone, request.Code);
+    }
 
     [HttpPost("reset-password")]
     [EnableRateLimiting("password-reset")]
     public async Task<ServiceObjectResult<bool>> ResetPassword([FromBody] ResetPasswordRequestDto request)
-        => await _passwordResetService.ResetPasswordAsync(request.EmailOrPhone, request.Code, request.NewPassword);
+    {
+        return await _passwordResetService.ResetPasswordAsync(request.EmailOrPhone, request.Code, request.NewPassword);
+    }
 }

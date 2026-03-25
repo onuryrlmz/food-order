@@ -13,7 +13,10 @@ public class AdminUserController : BaseController
 {
     private readonly IUserService _userService;
 
-    public AdminUserController(IUserService userService) => _userService = userService;
+    public AdminUserController(IUserService userService)
+    {
+        _userService = userService;
+    }
 
     [HttpGet("list")]
     [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
@@ -21,5 +24,7 @@ public class AdminUserController : BaseController
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] short? roleId = null)
-        => await _userService.GetUserList(page, pageSize, roleId);
+    {
+        return await _userService.GetUserList(page, pageSize, roleId);
+    }
 }

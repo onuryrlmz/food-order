@@ -10,7 +10,10 @@ public class PaymentCallbackController : BaseController
 {
     private readonly IPaymentService _paymentService;
 
-    public PaymentCallbackController(IPaymentService paymentService) => _paymentService = paymentService;
+    public PaymentCallbackController(IPaymentService paymentService)
+    {
+        _paymentService = paymentService;
+    }
 
     [HttpPost("iyzico/callback")]
     public async Task<IActionResult> IyzicoCallback([FromForm] IFormCollection form)

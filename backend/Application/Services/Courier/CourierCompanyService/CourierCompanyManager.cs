@@ -29,7 +29,11 @@ public class CourierCompanyManager : ICourierCompanyService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var company = new CourierCompany
             {
@@ -67,7 +71,11 @@ public class CourierCompanyManager : ICourierCompanyService
                 CreatedDate = company.CreatedDate
             });
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -77,17 +85,29 @@ public class CourierCompanyManager : ICourierCompanyService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             // Find courier company where the user is the admin (registered the company)
             // For now, find via courier entity linked to this user with CompanyMember type
             var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
-            if (courier?.CourierCompanyId == null) { result.Fail("Firma bulunamadı."); return result; }
+            if (courier?.CourierCompanyId == null)
+            {
+                result.Fail("Firma bulunamadı.");
+                return result;
+            }
 
             var company = await _context.Set<CourierCompany>()
                 .Include(c => c.Couriers)
                 .FirstOrDefaultAsync(c => c.Id == courier.CourierCompanyId && c.DeletedDate == null);
-            if (company == null) { result.Fail("Firma bulunamadı."); return result; }
+            if (company == null)
+            {
+                result.Fail("Firma bulunamadı.");
+                return result;
+            }
 
             result.SetData(new CourierCompanyResponseDto
             {
@@ -105,7 +125,11 @@ public class CourierCompanyManager : ICourierCompanyService
                 CreatedDate = company.CreatedDate
             });
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -115,14 +139,26 @@ public class CourierCompanyManager : ICourierCompanyService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
-            if (courier?.CourierCompanyId == null) { result.Fail("Firma bulunamadı."); return result; }
+            if (courier?.CourierCompanyId == null)
+            {
+                result.Fail("Firma bulunamadı.");
+                return result;
+            }
 
             var company = await _unitOfWork.CourierCompanyRepository.GetAsync(
                 x => x.Id == courier.CourierCompanyId.Value, enableTracking: true);
-            if (company == null) { result.Fail("Firma bulunamadı."); return result; }
+            if (company == null)
+            {
+                result.Fail("Firma bulunamadı.");
+                return result;
+            }
 
             company.Name = requestDto.Name;
             company.LegalName = requestDto.LegalName;
@@ -134,7 +170,11 @@ public class CourierCompanyManager : ICourierCompanyService
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -144,10 +184,18 @@ public class CourierCompanyManager : ICourierCompanyService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
-            if (courier?.CourierCompanyId == null) { result.Fail("Firma bulunamadı."); return result; }
+            if (courier?.CourierCompanyId == null)
+            {
+                result.Fail("Firma bulunamadı.");
+                return result;
+            }
 
             var query = _context.Set<Domain.Entities.Courier.Courier>()
                 .Include(c => c.User)
@@ -179,7 +227,11 @@ public class CourierCompanyManager : ICourierCompanyService
             result.RawData = members;
             result.TotalDataCount = totalCount;
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -189,14 +241,26 @@ public class CourierCompanyManager : ICourierCompanyService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var adminCourier = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
-            if (adminCourier?.CourierCompanyId == null) { result.Fail("Firma bulunamadı."); return result; }
+            if (adminCourier?.CourierCompanyId == null)
+            {
+                result.Fail("Firma bulunamadı.");
+                return result;
+            }
 
             var memberCourier = await _unitOfWork.CourierRepository.GetAsync(
                 x => x.Id == courierId, enableTracking: true);
-            if (memberCourier == null) { result.Fail("Kurye bulunamadı."); return result; }
+            if (memberCourier == null)
+            {
+                result.Fail("Kurye bulunamadı.");
+                return result;
+            }
 
             memberCourier.CourierCompanyId = adminCourier.CourierCompanyId;
             memberCourier.CourierTypeId = (short)AuthorizationServiceEnums.CourierTypeEnums.CompanyMember;
@@ -204,7 +268,11 @@ public class CourierCompanyManager : ICourierCompanyService
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -214,14 +282,26 @@ public class CourierCompanyManager : ICourierCompanyService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var adminCourier = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
-            if (adminCourier?.CourierCompanyId == null) { result.Fail("Firma bulunamadı."); return result; }
+            if (adminCourier?.CourierCompanyId == null)
+            {
+                result.Fail("Firma bulunamadı.");
+                return result;
+            }
 
             var memberCourier = await _unitOfWork.CourierRepository.GetAsync(
                 x => x.Id == courierId && x.CourierCompanyId == adminCourier.CourierCompanyId, enableTracking: true);
-            if (memberCourier == null) { result.Fail("Kurye bulunamadı."); return result; }
+            if (memberCourier == null)
+            {
+                result.Fail("Kurye bulunamadı.");
+                return result;
+            }
 
             memberCourier.CourierCompanyId = null;
             memberCourier.CourierTypeId = (short)AuthorizationServiceEnums.CourierTypeEnums.Individual;
@@ -229,7 +309,11 @@ public class CourierCompanyManager : ICourierCompanyService
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -239,10 +323,18 @@ public class CourierCompanyManager : ICourierCompanyService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
-            if (courier?.CourierCompanyId == null) { result.Fail("Firma bulunamadı."); return result; }
+            if (courier?.CourierCompanyId == null)
+            {
+                result.Fail("Firma bulunamadı.");
+                return result;
+            }
 
             var companyMemberIds = await _context.Set<Domain.Entities.Courier.Courier>()
                 .Where(c => c.CourierCompanyId == courier.CourierCompanyId && c.DeletedDate == null)
@@ -274,7 +366,11 @@ public class CourierCompanyManager : ICourierCompanyService
             result.RawData = earnings;
             result.TotalDataCount = earnings.Count;
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -318,7 +414,11 @@ public class CourierCompanyManager : ICourierCompanyService
             result.RawData = companies;
             result.TotalDataCount = totalCount;
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -329,14 +429,22 @@ public class CourierCompanyManager : ICourierCompanyService
         {
             var company = await _unitOfWork.CourierCompanyRepository.GetAsync(
                 x => x.Id == companyId, enableTracking: true);
-            if (company == null) { result.Fail("Firma bulunamadı."); return result; }
+            if (company == null)
+            {
+                result.Fail("Firma bulunamadı.");
+                return result;
+            }
 
             company.StatusId = (short)AuthorizationServiceEnums.CourierCompanyStatusEnums.Active;
             _unitOfWork.CourierCompanyRepository.Update(company);
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -347,14 +455,22 @@ public class CourierCompanyManager : ICourierCompanyService
         {
             var company = await _unitOfWork.CourierCompanyRepository.GetAsync(
                 x => x.Id == companyId, enableTracking: true);
-            if (company == null) { result.Fail("Firma bulunamadı."); return result; }
+            if (company == null)
+            {
+                result.Fail("Firma bulunamadı.");
+                return result;
+            }
 
             company.StatusId = (short)AuthorizationServiceEnums.CourierCompanyStatusEnums.Suspended;
             _unitOfWork.CourierCompanyRepository.Update(company);
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 }

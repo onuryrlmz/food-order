@@ -12,7 +12,7 @@ public interface ICouponService
     Task<ServiceObjectResult<bool>> DeleteCoupon(Guid id);
     Task<ServiceCollectionResult<GetCouponListDto>> GetCouponsBySeller();
     Task<ServiceObjectResult<GetCouponDetailDto>> GetCouponById(Guid id);
-    
+
     // Admin endpoints
     Task<ServiceCollectionResult<GetCouponListDto>> GetAllCoupons(int page = 1, int pageSize = 50);
     Task<ServiceObjectResult<GetCouponDetailDto>> AdminGetCouponById(Guid id);

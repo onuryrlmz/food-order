@@ -57,5 +57,8 @@ public class AwsS3ServiceAdapter : IAwsS3ServiceAdapter
         return null;
     }
 
-    private AwsS3Base CreateBase() => new(_domain, _endpoint, _bucketName, _accessKey, _secretKey);
+    private AwsS3Base CreateBase()
+    {
+        return new AwsS3Base(_domain, _endpoint, _bucketName, _accessKey, _secretKey);
+    }
 }

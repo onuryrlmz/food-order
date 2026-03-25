@@ -41,8 +41,7 @@ public class PasswordResetManager : IPasswordResetService
 
             // Rate limit check: max codes per window
             var windowStart = DateTime.UtcNow.AddMinutes(-RateLimitWindowMinutes);
-            var recentCodes = await _passwordResetTokenRepository.GetListAsync(
-                x => x.UserId == user.Id && x.CreatedDate >= windowStart);
+            var recentCodes = await _passwordResetTokenRepository.GetListAsync(x => x.UserId == user.Id && x.CreatedDate >= windowStart);
 
             if (recentCodes.Items.Count >= MaxCodesPerWindow)
             {
@@ -134,7 +133,7 @@ public class PasswordResetManager : IPasswordResetService
             }
 
             // Update password
-            user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 12);
+            user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword, 12);
             await _userRepository.UpdateAsync(user);
 
             // Mark code as used
@@ -156,16 +155,14 @@ public class PasswordResetManager : IPasswordResetService
     {
         var isEmail = emailOrPhone.Contains('@');
         if (isEmail)
-        {
             return await _userRepository.GetAsync(x =>
-                x.Email == emailOrPhone.ToLowerInvariant() &&
-                x.UserStatusId == (short)AuthorizationServiceEnums.UserStatusEnums.Active,
+                    x.Email == emailOrPhone.ToLowerInvariant() &&
+                    x.UserStatusId == (short)AuthorizationServiceEnums.UserStatusEnums.Active,
                 enableTracking: true);
-        }
 
         return await _userRepository.GetAsync(x =>
-            x.PhoneNumber == emailOrPhone &&
-            x.UserStatusId == (short)AuthorizationServiceEnums.UserStatusEnums.Active,
+                x.PhoneNumber == emailOrPhone &&
+                x.UserStatusId == (short)AuthorizationServiceEnums.UserStatusEnums.Active,
             enableTracking: true);
     }
 
@@ -182,10 +179,7 @@ public class PasswordResetManager : IPasswordResetService
             return null;
 
         // Check brute force lockout
-        if (token.FailedAttempts >= MaxFailedAttempts)
-        {
-            return null;
-        }
+        if (token.FailedAttempts >= MaxFailedAttempts) return null;
 
         return token;
     }

@@ -31,7 +31,7 @@ public class SubscriptionJobService : ISubscriptionJobService
         {
             var expired = await _context.Set<Subscription>()
                 .Where(s => s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active
-                    && s.EndDate < DateTime.UtcNow)
+                            && s.EndDate < DateTime.UtcNow)
                 .ToListAsync();
 
             foreach (var sub in expired)
@@ -40,9 +40,9 @@ public class SubscriptionJobService : ISubscriptionJobService
 
                 var hasOtherActive = await _context.Set<Subscription>()
                     .AnyAsync(s => s.RestaurantId == sub.RestaurantId
-                        && s.Id != sub.Id
-                        && s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active
-                        && s.EndDate >= DateTime.UtcNow);
+                                   && s.Id != sub.Id
+                                   && s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active
+                                   && s.EndDate >= DateTime.UtcNow);
 
                 if (!hasOtherActive)
                 {
@@ -69,8 +69,8 @@ public class SubscriptionJobService : ISubscriptionJobService
             var threeDaysFromNow = DateTime.UtcNow.AddDays(3);
             var expiringSoon = await _context.Set<Subscription>()
                 .Where(s => s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active
-                    && s.EndDate <= threeDaysFromNow
-                    && s.EndDate > DateTime.UtcNow)
+                            && s.EndDate <= threeDaysFromNow
+                            && s.EndDate > DateTime.UtcNow)
                 .ToListAsync();
 
             foreach (var sub in expiringSoon)
@@ -102,13 +102,12 @@ public class SubscriptionJobService : ISubscriptionJobService
             var toRenew = await _context.Set<Subscription>()
                 .Include(s => s.SubscriptionPlan)
                 .Where(s => s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active
-                    && s.AutoRenew
-                    && s.EndDate <= tomorrow
-                    && s.EndDate > DateTime.UtcNow)
+                            && s.AutoRenew
+                            && s.EndDate <= tomorrow
+                            && s.EndDate > DateTime.UtcNow)
                 .ToListAsync();
 
             foreach (var sub in toRenew)
-            {
                 try
                 {
                     // Check if seller has a stored card
@@ -123,11 +122,9 @@ public class SubscriptionJobService : ISubscriptionJobService
                         // No stored card, notify seller
                         var sellerUser = await _context.Set<Domain.Entities.Common.User>().FirstOrDefaultAsync(u => u.SellerId == sub.SellerId);
                         if (sellerUser != null)
-                        {
                             await _notificationService.SendToUserAsync(sellerUser.Id,
                                 "Otomatik Yenileme Başarısız",
                                 "Kayıtlı kart bulunamadığı için aboneliğiniz yenilenemedi.");
-                        }
                         continue;
                     }
 
@@ -151,11 +148,9 @@ public class SubscriptionJobService : ISubscriptionJobService
 
                     var sellerNotify = await _context.Set<Domain.Entities.Common.User>().FirstOrDefaultAsync(u => u.SellerId == sub.SellerId);
                     if (sellerNotify != null)
-                    {
                         await _notificationService.SendToUserAsync(sellerNotify.Id,
                             "Abonelik Yenilendi",
                             $"Aboneliğiniz otomatik olarak yenilendi. Yeni bitiş tarihi: {newSub.EndDate:dd.MM.yyyy}");
-                    }
 
                     _logger.LogInformation("Auto-renewed subscription {SubId} for restaurant {RestId}", sub.Id, sub.RestaurantId);
                 }
@@ -174,7 +169,6 @@ public class SubscriptionJobService : ISubscriptionJobService
 
                     _logger.LogError(ex, "Failed to auto-renew subscription {SubId}", sub.Id);
                 }
-            }
 
             await _context.SaveChangesAsync();
         }
@@ -199,7 +193,7 @@ public class SubscriptionJobService : ISubscriptionJobService
                 if (sub.SubscriptionPlan == null || sub.SubscriptionPlan.MaxOrdersPerMonth == int.MaxValue)
                     continue;
 
-                var usage = await _context.Set<Domain.Entities.Seller.SubscriptionUsage>()
+                var usage = await _context.Set<SubscriptionUsage>()
                     .FirstOrDefaultAsync(u => u.SubscriptionId == sub.Id && u.Year == now.Year && u.Month == now.Month);
 
                 if (usage == null) continue;
@@ -209,11 +203,9 @@ public class SubscriptionJobService : ISubscriptionJobService
                 {
                     var sellerUser = await _context.Set<Domain.Entities.Common.User>().FirstOrDefaultAsync(u => u.SellerId == sub.SellerId);
                     if (sellerUser != null)
-                    {
                         await _notificationService.SendToUserAsync(sellerUser.Id,
                             "Kullanım Uyarısı",
                             $"Aylık sipariş limitinizin %{percent:F0}'ine ulaştınız. ({usage.OrderCount}/{sub.SubscriptionPlan.MaxOrdersPerMonth})");
-                    }
                 }
             }
         }

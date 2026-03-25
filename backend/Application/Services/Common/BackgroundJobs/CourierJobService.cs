@@ -25,10 +25,10 @@ public class CourierJobService : ICourierJobService
 
             var expiredAssignments = await _context.Set<DeliveryAssignment>()
                 .Where(d => d.DeletedDate == null
-                    && (d.StatusId == (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Pending
-                        || d.StatusId == (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Offered)
-                    && d.ExpiresAt.HasValue
-                    && d.ExpiresAt.Value < now)
+                            && (d.StatusId == (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Pending
+                                || d.StatusId == (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Offered)
+                            && d.ExpiresAt.HasValue
+                            && d.ExpiresAt.Value < now)
                 .ToListAsync();
 
             foreach (var assignment in expiredAssignments)
@@ -40,10 +40,7 @@ public class CourierJobService : ICourierJobService
                 {
                     var courier = await _context.Set<Domain.Entities.Courier.Courier>()
                         .FirstOrDefaultAsync(c => c.Id == assignment.CourierId.Value);
-                    if (courier != null && courier.AvailabilityStatusId == (short)AuthorizationServiceEnums.CourierAvailabilityEnums.OnDelivery)
-                    {
-                        courier.AvailabilityStatusId = (short)AuthorizationServiceEnums.CourierAvailabilityEnums.Online;
-                    }
+                    if (courier != null && courier.AvailabilityStatusId == (short)AuthorizationServiceEnums.CourierAvailabilityEnums.OnDelivery) courier.AvailabilityStatusId = (short)AuthorizationServiceEnums.CourierAvailabilityEnums.Online;
                 }
 
                 _logger.LogWarning("Expired assignment: {AssignmentId} for Order {OrderId}",
@@ -69,9 +66,9 @@ public class CourierJobService : ICourierJobService
 
             var inactiveCouriers = await _context.Set<Domain.Entities.Courier.Courier>()
                 .Where(c => c.DeletedDate == null
-                    && c.AvailabilityStatusId == (short)AuthorizationServiceEnums.CourierAvailabilityEnums.Online
-                    && c.LastLocationUpdate.HasValue
-                    && c.LastLocationUpdate.Value < threshold)
+                            && c.AvailabilityStatusId == (short)AuthorizationServiceEnums.CourierAvailabilityEnums.Online
+                            && c.LastLocationUpdate.HasValue
+                            && c.LastLocationUpdate.Value < threshold)
                 .ToListAsync();
 
             foreach (var courier in inactiveCouriers)

@@ -13,7 +13,10 @@ public class SellerAnalyticsController : BaseController
 {
     private readonly IAnalyticsService _analyticsService;
 
-    public SellerAnalyticsController(IAnalyticsService analyticsService) => _analyticsService = analyticsService;
+    public SellerAnalyticsController(IAnalyticsService analyticsService)
+    {
+        _analyticsService = analyticsService;
+    }
 
     [HttpGet("summary/{restaurantId}")]
     [AuthorizeAPIRequest(true, false,
@@ -23,7 +26,9 @@ public class SellerAnalyticsController : BaseController
         Guid restaurantId,
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate)
-        => await _analyticsService.GetSellerSummary(restaurantId, startDate, endDate);
+    {
+        return await _analyticsService.GetSellerSummary(restaurantId, startDate, endDate);
+    }
 
     [HttpGet("trends/{restaurantId}")]
     [AuthorizeAPIRequest(true, false,
@@ -33,7 +38,9 @@ public class SellerAnalyticsController : BaseController
         Guid restaurantId,
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate)
-        => await _analyticsService.GetSellerOrderTrends(restaurantId, startDate, endDate);
+    {
+        return await _analyticsService.GetSellerOrderTrends(restaurantId, startDate, endDate);
+    }
 
     [HttpGet("top-products/{restaurantId}")]
     [AuthorizeAPIRequest(true, false,
@@ -44,5 +51,7 @@ public class SellerAnalyticsController : BaseController
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate,
         [FromQuery] int limit = 10)
-        => await _analyticsService.GetSellerTopProducts(restaurantId, startDate, endDate, limit);
+    {
+        return await _analyticsService.GetSellerTopProducts(restaurantId, startDate, endDate, limit);
+    }
 }

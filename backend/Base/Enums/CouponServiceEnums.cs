@@ -6,9 +6,9 @@ public static class CouponServiceEnums
 
     public enum CouponTypeEnums : short
     {
-        Percentage = 1,      // Yüzde indirim
-        FixedAmount = 2,     // Sabit tutar indirimi
-        BuyXGetY = 3         // X al Y öde
+        Percentage = 1, // Yüzde indirim
+        FixedAmount = 2, // Sabit tutar indirimi
+        BuyXGetY = 3 // X al Y öde
     }
 
     public static short GetCouponTypeEnumId(CouponTypeEnums couponTypeEnums)
@@ -22,9 +22,9 @@ public static class CouponServiceEnums
 
     public enum CouponApplicableTypeEnums : short
     {
-        AllItems = 1,           // Tüm ürünlerde geçerli
-        SpecificMenus = 2,      // Belirli menülerde geçerli
-        SpecificCategories = 3  // Belirli kategorilerde geçerli
+        AllItems = 1, // Tüm ürünlerde geçerli
+        SpecificMenus = 2, // Belirli menülerde geçerli
+        SpecificCategories = 3 // Belirli kategorilerde geçerli
     }
 
     public static short GetCouponApplicableTypeEnumId(CouponApplicableTypeEnums couponApplicableTypeEnums)

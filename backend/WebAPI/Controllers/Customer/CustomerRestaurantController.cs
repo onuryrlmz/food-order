@@ -1,4 +1,4 @@
-using Application.Services.Seller._2_RestaurantService;
+using Application.Services.Seller.RestaurantService;
 using Base.Enums;
 using Domain.Dto.Seller.Restaurant;
 using Domain.Service;
@@ -13,15 +13,22 @@ public class CustomerRestaurantController : BaseController
 {
     private readonly IRestaurantService _restaurantService;
 
-    public CustomerRestaurantController(IRestaurantService restaurantService) => _restaurantService = restaurantService;
+    public CustomerRestaurantController(IRestaurantService restaurantService)
+    {
+        _restaurantService = restaurantService;
+    }
 
     [HttpGet]
     [AuthorizeAPIRequest(false, false)]
     public async Task<ServiceCollectionResult<GetRestaurantsResponseDto>> GetList([FromQuery] GetRestaurantsRequestDto requestDto)
-        => await _restaurantService.GetRestaurants(requestDto);
+    {
+        return await _restaurantService.GetRestaurants(requestDto);
+    }
 
     [HttpGet("{id}")]
     [AuthorizeAPIRequest(false, false)]
     public async Task<ServiceObjectResult<string>> GetInfo(Guid id)
-        => await _restaurantService.GetRestaurantInfo(new GetRestaurantInformationRequestDto { Id = id });
+    {
+        return await _restaurantService.GetRestaurantInfo(new GetRestaurantInformationRequestDto { Id = id });
+    }
 }

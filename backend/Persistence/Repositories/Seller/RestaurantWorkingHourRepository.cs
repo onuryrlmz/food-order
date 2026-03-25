@@ -7,5 +7,7 @@ namespace Persistence.Repositories.Seller;
 
 public class RestaurantWorkingHourRepository : EfRepositoryBase<RestaurantWorkingHour, Guid, BaseDbContext>, IRestaurantWorkingHourRepository
 {
-    public RestaurantWorkingHourRepository(BaseDbContext context) : base(context) { }
+    public RestaurantWorkingHourRepository(BaseDbContext context) : base(context)
+    {
+    }
 }

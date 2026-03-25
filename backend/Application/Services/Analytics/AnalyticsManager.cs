@@ -52,6 +52,7 @@ public class AnalyticsManager : IAnalyticsService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -89,6 +90,7 @@ public class AnalyticsManager : IAnalyticsService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -130,6 +132,7 @@ public class AnalyticsManager : IAnalyticsService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -165,6 +168,7 @@ public class AnalyticsManager : IAnalyticsService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -201,6 +205,7 @@ public class AnalyticsManager : IAnalyticsService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -240,6 +245,7 @@ public class AnalyticsManager : IAnalyticsService
         {
             result.Fail(e);
         }
+
         return result;
     }
 }

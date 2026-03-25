@@ -12,16 +12,22 @@ public class CustomerCouponController : BaseController
 {
     private readonly ICouponValidationService _couponValidationService;
 
-    public CustomerCouponController(ICouponValidationService couponValidationService) 
-        => _couponValidationService = couponValidationService;
+    public CustomerCouponController(ICouponValidationService couponValidationService)
+    {
+        _couponValidationService = couponValidationService;
+    }
 
     [HttpPost("validate")]
     [AuthorizeAPIRequest(true, false)]
     public async Task<ServiceObjectResult<ValidateCouponResultDto>> Validate([FromBody] ValidateCouponDto requestDto)
-        => await _couponValidationService.ValidateCoupon(requestDto);
+    {
+        return await _couponValidationService.ValidateCoupon(requestDto);
+    }
 
     [HttpGet("available/{restaurantId}")]
     [AuthorizeAPIRequest(true, false)]
     public async Task<ServiceCollectionResult<AvailableCouponDto>> GetAvailable(Guid restaurantId, [FromQuery] decimal orderAmount)
-        => await _couponValidationService.GetAvailableCoupons(restaurantId, orderAmount);
+    {
+        return await _couponValidationService.GetAvailableCoupons(restaurantId, orderAmount);
+    }
 }

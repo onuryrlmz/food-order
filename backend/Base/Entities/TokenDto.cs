@@ -16,5 +16,4 @@ public class TokenDto : IDto
     // For Courier Properties
     public Guid? CourierId { get; set; }
     public Guid? CourierCompanyId { get; set; }
-
 }

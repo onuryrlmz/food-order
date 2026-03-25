@@ -45,7 +45,7 @@ public class UserManager : IUserService
             var mappedUser = _mapper.Map<User>(requestDto);
             mappedUser.Email = requestDto.Email.ToLowerInvariant();
             mappedUser.UserStatusId = (short)AuthorizationServiceEnums.UserStatusEnums.WaitingForActivation;
-            mappedUser.Password = BCrypt.Net.BCrypt.HashPassword(requestDto.Password, workFactor: 12);
+            mappedUser.Password = BCrypt.Net.BCrypt.HashPassword(requestDto.Password, 12);
             mappedUser.ActivationKey = Guid.NewGuid();
             mappedUser.UserRoleId = (short)AuthorizationServiceEnums.UserRoleEnums.User;
 
@@ -169,7 +169,7 @@ public class UserManager : IUserService
                 return response;
             }
 
-            user.Password = BCrypt.Net.BCrypt.HashPassword(requestDto.NewPassword, workFactor: 12);
+            user.Password = BCrypt.Net.BCrypt.HashPassword(requestDto.NewPassword, 12);
             await _userRepository.UpdateAsync(user);
             response.SetData(true);
         }
@@ -188,8 +188,8 @@ public class UserManager : IUserService
         {
             pageSize = Math.Min(pageSize, 100);
             var users = await _userRepository.GetListAsync(
-                predicate: roleId.HasValue ? x => x.UserRoleId == roleId.Value && !x.DeletedDate.HasValue : x => !x.DeletedDate.HasValue,
-                orderBy: q => q.OrderByDescending(u => u.CreatedDate),
+                roleId.HasValue ? x => x.UserRoleId == roleId.Value && !x.DeletedDate.HasValue : x => !x.DeletedDate.HasValue,
+                q => q.OrderByDescending(u => u.CreatedDate),
                 index: page - 1,
                 size: pageSize);
 

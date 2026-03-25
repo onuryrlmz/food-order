@@ -50,11 +50,11 @@ public class OptionTemplateManager : IOptionTemplateService
                 x => x.RestaurantId == restaurantId,
                 include: x => x
                     .Include(t => t.OptionTemplateValues)
-                        .ThenInclude(v => v.Product)
+                    .ThenInclude(v => v.Product)
                     .Include(t => t.OptionTemplateValues)
-                        .ThenInclude(v => v.OptionTemplateValueOptions)
-                            .ThenInclude(o => o.OptionTemplateValueOptionValues)
-                                .ThenInclude(ov => ov.Product),
+                    .ThenInclude(v => v.OptionTemplateValueOptions)
+                    .ThenInclude(o => o.OptionTemplateValueOptionValues)
+                    .ThenInclude(ov => ov.Product),
                 size: 999);
 
             var dtos = templates.Items
@@ -68,6 +68,7 @@ public class OptionTemplateManager : IOptionTemplateService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -78,13 +79,13 @@ public class OptionTemplateManager : IOptionTemplateService
         {
             var template = await _templateRepository.GetAsync(
                 x => x.Id == id,
-                include: x => x
+                x => x
                     .Include(t => t.OptionTemplateValues)
-                        .ThenInclude(v => v.Product)
+                    .ThenInclude(v => v.Product)
                     .Include(t => t.OptionTemplateValues)
-                        .ThenInclude(v => v.OptionTemplateValueOptions)
-                            .ThenInclude(o => o.OptionTemplateValueOptionValues)
-                                .ThenInclude(ov => ov.Product));
+                    .ThenInclude(v => v.OptionTemplateValueOptions)
+                    .ThenInclude(o => o.OptionTemplateValueOptionValues)
+                    .ThenInclude(ov => ov.Product));
 
             if (template == null)
             {
@@ -98,6 +99,7 @@ public class OptionTemplateManager : IOptionTemplateService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -124,6 +126,7 @@ public class OptionTemplateManager : IOptionTemplateService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -162,6 +165,7 @@ public class OptionTemplateManager : IOptionTemplateService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -192,6 +196,7 @@ public class OptionTemplateManager : IOptionTemplateService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -241,6 +246,7 @@ public class OptionTemplateManager : IOptionTemplateService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -275,6 +281,7 @@ public class OptionTemplateManager : IOptionTemplateService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -302,6 +309,7 @@ public class OptionTemplateManager : IOptionTemplateService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -355,6 +363,7 @@ public class OptionTemplateManager : IOptionTemplateService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -393,6 +402,7 @@ public class OptionTemplateManager : IOptionTemplateService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -419,6 +429,7 @@ public class OptionTemplateManager : IOptionTemplateService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -468,6 +479,7 @@ public class OptionTemplateManager : IOptionTemplateService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -501,6 +513,7 @@ public class OptionTemplateManager : IOptionTemplateService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -527,6 +540,7 @@ public class OptionTemplateManager : IOptionTemplateService
         {
             result.Fail(e);
         }
+
         return result;
     }
 
@@ -534,10 +548,10 @@ public class OptionTemplateManager : IOptionTemplateService
     {
         var template = await _templateRepository.GetAsync(
             x => x.Id == optionTemplateId,
-            include: x => x
+            x => x
                 .Include(t => t.OptionTemplateValues)
-                    .ThenInclude(v => v.OptionTemplateValueOptions)
-                        .ThenInclude(o => o.OptionTemplateValueOptionValues));
+                .ThenInclude(v => v.OptionTemplateValueOptions)
+                .ThenInclude(o => o.OptionTemplateValueOptionValues));
 
         if (template == null) return;
 
@@ -550,10 +564,8 @@ public class OptionTemplateManager : IOptionTemplateService
 
             // Remove derived values not in template anymore
             foreach (var existing in existingValues.Items)
-            {
                 if (!template.OptionTemplateValues.Any(tv => tv.Id == existing.OptionTemplateValueId))
                     await _menuOptionValueRepository.DeleteAsync(existing);
-            }
 
             // Upsert template values
             foreach (var tv in template.OptionTemplateValues)

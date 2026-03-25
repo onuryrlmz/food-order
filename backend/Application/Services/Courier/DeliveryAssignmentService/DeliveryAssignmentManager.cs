@@ -36,10 +36,18 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
-            if (courier == null) { result.Fail("Kurye profili bulunamadı."); return result; }
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
 
             var activeStatuses = new[]
             {
@@ -51,12 +59,16 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             var assignment = await _context.Set<Domain.Entities.Courier.DeliveryAssignment>()
                 .Include(d => d.Order)
                 .Where(d => d.CourierId == courier.Id
-                    && activeStatuses.Contains(d.StatusId)
-                    && d.DeletedDate == null)
+                            && activeStatuses.Contains(d.StatusId)
+                            && d.DeletedDate == null)
                 .OrderByDescending(d => d.CreatedDate)
                 .FirstOrDefaultAsync();
 
-            if (assignment == null) { result.Fail("Aktif teslimat bulunamadı."); return result; }
+            if (assignment == null)
+            {
+                result.Fail("Aktif teslimat bulunamadı.");
+                return result;
+            }
 
             var restaurant = await _context.Set<Domain.Entities.Seller.Restaurant>()
                 .FirstOrDefaultAsync(r => r.Id == assignment.RestaurantId);
@@ -94,7 +106,11 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 CustomerPhone = customer?.PhoneNumber
             });
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -104,10 +120,18 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
-            if (courier == null) { result.Fail("Kurye profili bulunamadı."); return result; }
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
 
             var query = _context.Set<Domain.Entities.Courier.DeliveryAssignment>()
                 .Where(d => d.CourierId == courier.Id && d.DeletedDate == null);
@@ -135,7 +159,11 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             result.RawData = assignments;
             result.TotalDataCount = totalCount;
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -145,15 +173,27 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var courier = await _unitOfWork.CourierRepository.GetAsync(
                 x => x.UserId == token.UserId, enableTracking: true);
-            if (courier == null) { result.Fail("Kurye profili bulunamadı."); return result; }
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
 
             var assignment = await _unitOfWork.DeliveryAssignmentRepository.GetAsync(
                 x => x.Id == assignmentId, enableTracking: true);
-            if (assignment == null) { result.Fail("Teslimat ataması bulunamadı."); return result; }
+            if (assignment == null)
+            {
+                result.Fail("Teslimat ataması bulunamadı.");
+                return result;
+            }
 
             if (assignment.StatusId != (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Offered
                 && assignment.StatusId != (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Pending)
@@ -203,13 +243,22 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             // Notify order status change
             _ = Task.Run(async () =>
             {
-                try { await _realtimeNotifier.NotifyOrderStatusChanged(assignment.OrderId, (short)AuthorizationServiceEnums.OrderStatusEnums.CourierAssigned); }
-                catch { }
+                try
+                {
+                    await _realtimeNotifier.NotifyOrderStatusChanged(assignment.OrderId, (short)AuthorizationServiceEnums.OrderStatusEnums.CourierAssigned);
+                }
+                catch
+                {
+                }
             });
 
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -219,14 +268,26 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
-            if (courier == null) { result.Fail("Kurye profili bulunamadı."); return result; }
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
 
             var assignment = await _unitOfWork.DeliveryAssignmentRepository.GetAsync(
                 x => x.Id == assignmentId && x.CourierId == courier.Id, enableTracking: true);
-            if (assignment == null) { result.Fail("Teslimat ataması bulunamadı."); return result; }
+            if (assignment == null)
+            {
+                result.Fail("Teslimat ataması bulunamadı.");
+                return result;
+            }
 
             assignment.StatusId = (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Rejected;
             assignment.RejectedAt = DateTime.UtcNow;
@@ -236,7 +297,11 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
 
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -246,14 +311,26 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
-            if (courier == null) { result.Fail("Kurye profili bulunamadı."); return result; }
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
 
             var assignment = await _unitOfWork.DeliveryAssignmentRepository.GetAsync(
                 x => x.Id == assignmentId && x.CourierId == courier.Id, enableTracking: true);
-            if (assignment == null) { result.Fail("Teslimat ataması bulunamadı."); return result; }
+            if (assignment == null)
+            {
+                result.Fail("Teslimat ataması bulunamadı.");
+                return result;
+            }
 
             if (assignment.StatusId != (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Accepted)
             {
@@ -288,13 +365,22 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
 
             _ = Task.Run(async () =>
             {
-                try { await _realtimeNotifier.NotifyOrderStatusChanged(assignment.OrderId, (short)AuthorizationServiceEnums.OrderStatusEnums.CourierPickedUp); }
-                catch { }
+                try
+                {
+                    await _realtimeNotifier.NotifyOrderStatusChanged(assignment.OrderId, (short)AuthorizationServiceEnums.OrderStatusEnums.CourierPickedUp);
+                }
+                catch
+                {
+                }
             });
 
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -304,15 +390,27 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var courier = await _unitOfWork.CourierRepository.GetAsync(
                 x => x.UserId == token.UserId, enableTracking: true);
-            if (courier == null) { result.Fail("Kurye profili bulunamadı."); return result; }
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
 
             var assignment = await _unitOfWork.DeliveryAssignmentRepository.GetAsync(
                 x => x.Id == assignmentId && x.CourierId == courier.Id, enableTracking: true);
-            if (assignment == null) { result.Fail("Teslimat ataması bulunamadı."); return result; }
+            if (assignment == null)
+            {
+                result.Fail("Teslimat ataması bulunamadı.");
+                return result;
+            }
 
             if (assignment.StatusId != (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.PickedUp)
             {
@@ -352,13 +450,22 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
 
             _ = Task.Run(async () =>
             {
-                try { await _realtimeNotifier.NotifyOrderStatusChanged(assignment.OrderId, (short)AuthorizationServiceEnums.OrderStatusEnums.Delivered); }
-                catch { }
+                try
+                {
+                    await _realtimeNotifier.NotifyOrderStatusChanged(assignment.OrderId, (short)AuthorizationServiceEnums.OrderStatusEnums.Delivered);
+                }
+                catch
+                {
+                }
             });
 
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -368,11 +475,19 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         try
         {
             var order = await _unitOfWork.OrderRepository.GetAsync(x => x.Id == orderId);
-            if (order == null) { result.Fail("Sipariş bulunamadı."); return result; }
+            if (order == null)
+            {
+                result.Fail("Sipariş bulunamadı.");
+                return result;
+            }
 
             var restaurant = await _context.Set<Domain.Entities.Seller.Restaurant>()
                 .FirstOrDefaultAsync(r => r.Id == order.RestaurantId);
-            if (restaurant == null) { result.Fail("Restoran bulunamadı."); return result; }
+            if (restaurant == null)
+            {
+                result.Fail("Restoran bulunamadı.");
+                return result;
+            }
 
             var deliveryAddress = await _context.Set<Domain.Entities.Common.Address>()
                 .FirstOrDefaultAsync(a => a.Id == order.DeliveryAddressId);
@@ -380,15 +495,15 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             // Find best agreement based on priority
             var agreement = await _context.Set<Domain.Entities.Courier.RestaurantCourierAgreement>()
                 .Where(a => a.RestaurantId == order.RestaurantId
-                    && a.StatusId == (short)AuthorizationServiceEnums.CourierAgreementStatusEnums.Active
-                    && a.DeletedDate == null
-                    && (!a.EffectiveUntil.HasValue || a.EffectiveUntil.Value >= DateTime.UtcNow))
+                            && a.StatusId == (short)AuthorizationServiceEnums.CourierAgreementStatusEnums.Active
+                            && a.DeletedDate == null
+                            && (!a.EffectiveUntil.HasValue || a.EffectiveUntil.Value >= DateTime.UtcNow))
                 .OrderBy(a => a.Priority)
                 .FirstOrDefaultAsync();
 
             var strategy = agreement?.AssignmentStrategyId
-                ?? restaurant.DefaultAssignmentStrategyId
-                ?? (short)AuthorizationServiceEnums.CourierAssignmentStrategyEnums.AutoAssignNearest;
+                           ?? restaurant.DefaultAssignmentStrategyId
+                           ?? (short)AuthorizationServiceEnums.CourierAssignmentStrategyEnums.AutoAssignNearest;
 
             var assignmentEntity = new Domain.Entities.Courier.DeliveryAssignment
             {
@@ -437,7 +552,11 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 ExpiresAt = assignmentEntity.ExpiresAt
             });
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -446,8 +565,8 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         // Get couriers with active agreements for this restaurant
         var agreements = await _context.Set<Domain.Entities.Courier.RestaurantCourierAgreement>()
             .Where(a => a.RestaurantId == restaurantId
-                && a.StatusId == (short)AuthorizationServiceEnums.CourierAgreementStatusEnums.Active
-                && a.DeletedDate == null)
+                        && a.StatusId == (short)AuthorizationServiceEnums.CourierAgreementStatusEnums.Active
+                        && a.DeletedDate == null)
             .ToListAsync();
 
         var courierIds = agreements.Where(a => a.CourierId != null).Select(a => a.CourierId!.Value).ToList();
@@ -455,12 +574,12 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
 
         var candidates = await _context.Set<Domain.Entities.Courier.Courier>()
             .Where(c => c.DeletedDate == null
-                && c.StatusId == (short)AuthorizationServiceEnums.CourierStatusEnums.Active
-                && c.AvailabilityStatusId == (short)AuthorizationServiceEnums.CourierAvailabilityEnums.Online
-                && c.CurrentLatitude != null && c.CurrentLongitude != null
-                && (c.RestaurantId == restaurantId
-                    || courierIds.Contains(c.Id)
-                    || (c.CourierCompanyId != null && companyIds.Contains(c.CourierCompanyId.Value))))
+                        && c.StatusId == (short)AuthorizationServiceEnums.CourierStatusEnums.Active
+                        && c.AvailabilityStatusId == (short)AuthorizationServiceEnums.CourierAvailabilityEnums.Online
+                        && c.CurrentLatitude != null && c.CurrentLongitude != null
+                        && (c.RestaurantId == restaurantId
+                            || courierIds.Contains(c.Id)
+                            || (c.CourierCompanyId != null && companyIds.Contains(c.CourierCompanyId.Value))))
             .ToListAsync();
 
         if (!candidates.Any()) return null;
@@ -468,7 +587,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         // Simple distance calculation (Haversine approximation)
         return candidates
             .OrderBy(c => Math.Pow((double)(c.CurrentLatitude!.Value - restaurantLat), 2) +
-                         Math.Pow((double)(c.CurrentLongitude!.Value - restaurantLng), 2))
+                          Math.Pow((double)(c.CurrentLongitude!.Value - restaurantLng), 2))
             .FirstOrDefault();
     }
 
@@ -478,13 +597,25 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var order = await _unitOfWork.OrderRepository.GetAsync(x => x.Id == orderId, enableTracking: true);
-            if (order == null || order.RestaurantId != restaurantId) { result.Fail("Sipariş bulunamadı."); return result; }
+            if (order == null || order.RestaurantId != restaurantId)
+            {
+                result.Fail("Sipariş bulunamadı.");
+                return result;
+            }
 
             var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.Id == courierId);
-            if (courier == null) { result.Fail("Kurye bulunamadı."); return result; }
+            if (courier == null)
+            {
+                result.Fail("Kurye bulunamadı.");
+                return result;
+            }
 
             var restaurant = await _context.Set<Domain.Entities.Seller.Restaurant>()
                 .FirstOrDefaultAsync(r => r.Id == restaurantId);
@@ -516,7 +647,11 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
 
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -527,7 +662,11 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         {
             var assignment = await _unitOfWork.DeliveryAssignmentRepository.GetAsync(
                 x => x.Id == assignmentId, enableTracking: true);
-            if (assignment == null) { result.Fail("Teslimat ataması bulunamadı."); return result; }
+            if (assignment == null)
+            {
+                result.Fail("Teslimat ataması bulunamadı.");
+                return result;
+            }
 
             assignment.StatusId = (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Cancelled;
             assignment.CancelledAt = DateTime.UtcNow;
@@ -549,7 +688,11 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -569,8 +712,8 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             var assignments = await _context.Set<Domain.Entities.Courier.DeliveryAssignment>()
                 .Include(d => d.Courier).ThenInclude(c => c!.User)
                 .Where(d => d.RestaurantId == restaurantId
-                    && activeStatuses.Contains(d.StatusId)
-                    && d.DeletedDate == null)
+                            && activeStatuses.Contains(d.StatusId)
+                            && d.DeletedDate == null)
                 .OrderByDescending(d => d.CreatedDate)
                 .Select(d => new DeliveryAssignmentResponseDto
                 {
@@ -591,7 +734,11 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             result.RawData = assignments;
             result.TotalDataCount = assignments.Count;
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -628,7 +775,11 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             result.RawData = agreements;
             result.TotalDataCount = agreements.Count;
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -638,7 +789,11 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var agreement = new Domain.Entities.Courier.RestaurantCourierAgreement
             {
@@ -676,7 +831,11 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 CreatedDate = agreement.CreatedDate
             });
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -687,7 +846,11 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         {
             var agreement = await _unitOfWork.RestaurantCourierAgreementRepository.GetAsync(
                 x => x.Id == agreementId, enableTracking: true);
-            if (agreement == null) { result.Fail("Anlaşma bulunamadı."); return result; }
+            if (agreement == null)
+            {
+                result.Fail("Anlaşma bulunamadı.");
+                return result;
+            }
 
             agreement.AssignmentStrategyId = requestDto.AssignmentStrategyId;
             agreement.AgreedDeliveryFee = requestDto.AgreedDeliveryFee;
@@ -701,7 +864,11 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -712,14 +879,22 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         {
             var agreement = await _unitOfWork.RestaurantCourierAgreementRepository.GetAsync(
                 x => x.Id == agreementId, enableTracking: true);
-            if (agreement == null) { result.Fail("Anlaşma bulunamadı."); return result; }
+            if (agreement == null)
+            {
+                result.Fail("Anlaşma bulunamadı.");
+                return result;
+            }
 
             agreement.StatusId = (short)AuthorizationServiceEnums.CourierAgreementStatusEnums.Terminated;
             _unitOfWork.RestaurantCourierAgreementRepository.Update(agreement);
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -730,7 +905,11 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         {
             var restaurant = await _context.Set<Domain.Entities.Seller.Restaurant>()
                 .FirstOrDefaultAsync(r => r.Id == restaurantId);
-            if (restaurant == null) { result.Fail("Restoran bulunamadı."); return result; }
+            if (restaurant == null)
+            {
+                result.Fail("Restoran bulunamadı.");
+                return result;
+            }
 
             restaurant.DefaultAssignmentStrategyId = requestDto.DefaultAssignmentStrategyId;
             restaurant.HasOwnCouriers = requestDto.HasOwnCouriers;
@@ -739,7 +918,11 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
 
             result.SetData(true);
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 
@@ -749,10 +932,18 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         try
         {
             var token = _tokenAccessor.GetToken();
-            if (token == null) { result.Fail("Kimlik doğrulama hatası."); return result; }
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
 
             var order = await _unitOfWork.OrderRepository.GetAsync(x => x.Id == orderId);
-            if (order == null) { result.Fail("Sipariş bulunamadı."); return result; }
+            if (order == null)
+            {
+                result.Fail("Sipariş bulunamadı.");
+                return result;
+            }
 
             if (order.CourierId == null)
             {
@@ -780,7 +971,11 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 AssignmentStatusId = assignment?.StatusId
             });
         }
-        catch (Exception e) { result.Fail(e); }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
         return result;
     }
 }

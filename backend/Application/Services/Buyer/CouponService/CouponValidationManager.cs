@@ -37,6 +37,7 @@ public class CouponValidationManager : ICouponValidationService
                 result.Fail("User not authenticated");
                 return result;
             }
+
             var userId = token.UserId;
 
             var coupon = await _context.Coupons
@@ -150,6 +151,7 @@ public class CouponValidationManager : ICouponValidationService
                 result.Fail("User not authenticated");
                 return result;
             }
+
             var userId = token.UserId;
 
             var now = DateTime.UtcNow;
@@ -157,11 +159,11 @@ public class CouponValidationManager : ICouponValidationService
             var coupons = await _context.Coupons
                 .Include(c => c.Restaurant)
                 .Where(c => c.DeletedDate == null
-                    && c.StartDate <= now
-                    && c.EndDate >= now
-                    && (c.RestaurantId == null || c.RestaurantId == restaurantId)
-                    && c.MinOrderAmount <= orderAmount
-                    && (c.UsageLimit == null || c.CurrentUsageCount < c.UsageLimit))
+                            && c.StartDate <= now
+                            && c.EndDate >= now
+                            && (c.RestaurantId == null || c.RestaurantId == restaurantId)
+                            && c.MinOrderAmount <= orderAmount
+                            && (c.UsageLimit == null || c.CurrentUsageCount < c.UsageLimit))
                 .ToListAsync();
 
             var availableCoupons = new List<AvailableCouponDto>();
@@ -214,6 +216,7 @@ public class CouponValidationManager : ICouponValidationService
                 result.Fail("User not authenticated");
                 return result;
             }
+
             var userId = token.UserId;
 
             var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
@@ -274,19 +277,13 @@ public class CouponValidationManager : ICouponValidationService
 
     private decimal CalculateDiscount(Coupon coupon, List<CouponCartItemDto>? items, decimal orderAmount)
     {
-        if (items == null || items.Count == 0)
-        {
-            return CalculateDiscountByType(coupon, orderAmount);
-        }
+        if (items == null || items.Count == 0) return CalculateDiscountByType(coupon, orderAmount);
 
         // Filter applicable items
         var applicableItems = GetApplicableItems(coupon, items);
         var applicableTotal = applicableItems.Sum(i => i.UnitPrice * i.Quantity);
 
-        if (applicableTotal == 0 && coupon.ApplicableType != CouponServiceEnums.CouponApplicableTypeEnums.AllItems)
-        {
-            return 0;
-        }
+        if (applicableTotal == 0 && coupon.ApplicableType != CouponServiceEnums.CouponApplicableTypeEnums.AllItems) return 0;
 
         var amount = coupon.ApplicableType == CouponServiceEnums.CouponApplicableTypeEnums.AllItems ? orderAmount : applicableTotal;
         return CalculateDiscountByType(coupon, amount, applicableItems);
@@ -304,7 +301,7 @@ public class CouponValidationManager : ICouponValidationService
         {
             // Get menu-category mapping from CategoryDetail table
             var menuIds = items.Select(i => i.MenuId).ToList();
-            var menuCategoryMap = _context.Set<Domain.Entities.Seller.CategoryDetail>()
+            var menuCategoryMap = _context.Set<CategoryDetail>()
                 .Where(cd => menuIds.Contains(cd.MenuId))
                 .Select(cd => new { cd.MenuId, cd.CategoryId })
                 .ToList();
@@ -330,10 +327,7 @@ public class CouponValidationManager : ICouponValidationService
         };
 
         // Apply max discount limit for percentage
-        if (coupon.Type == CouponServiceEnums.CouponTypeEnums.Percentage && coupon.MaxDiscountAmount.HasValue)
-        {
-            discount = Math.Min(discount, coupon.MaxDiscountAmount.Value);
-        }
+        if (coupon.Type == CouponServiceEnums.CouponTypeEnums.Percentage && coupon.MaxDiscountAmount.HasValue) discount = Math.Min(discount, coupon.MaxDiscountAmount.Value);
 
         // Discount can't exceed order amount
         return Math.Min(discount, amount);

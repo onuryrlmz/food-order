@@ -3,8 +3,8 @@ version: '3.9'
 services:
   yrlmz-food-order-api:
     build:
-      context: .
-      dockerfile: ./backend/WebAPI/Dockerfile
+      context: ./backend
+      dockerfile: WebAPI/Dockerfile
     logging:
       options:
         max-size: "10m"

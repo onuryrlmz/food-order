@@ -44,10 +44,10 @@ public class UserManager : IUserService
 
             var mappedUser = _mapper.Map<User>(requestDto);
             mappedUser.Email = requestDto.Email.ToLowerInvariant();
-            mappedUser.UserStatusId = (short)AuthorizationServiceEnums.UserStatusEnums.WaitingForActivation;
+            mappedUser.UserStatusId = (short)UserStatusEnums.WaitingForActivation;
             mappedUser.Password = BCrypt.Net.BCrypt.HashPassword(requestDto.Password, 12);
             mappedUser.ActivationKey = Guid.NewGuid();
-            mappedUser.UserRoleId = (short)AuthorizationServiceEnums.UserRoleEnums.User;
+            mappedUser.UserRoleId = (short)UserRoleEnums.User;
 
             await _userRepository.AddAsync(mappedUser);
             response.SetData(true);
@@ -67,7 +67,7 @@ public class UserManager : IUserService
         {
             var user = await _userRepository.GetAsync(x =>
                 x.Email == requestDto.Email.ToLowerInvariant() &&
-                x.UserStatusId == (short)AuthorizationServiceEnums.UserStatusEnums.Active);
+                x.UserStatusId == (short)UserStatusEnums.Active);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(requestDto.Password, user.Password))
             {

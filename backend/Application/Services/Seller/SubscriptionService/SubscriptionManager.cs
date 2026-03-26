@@ -132,12 +132,12 @@ public class SubscriptionManager : ISubscriptionService
             // Mevcut aktif aboneliği iptal et
             var activeSubscription = await _unitOfWork.SubscriptionRepository.GetAsync(x =>
                     x.RestaurantId == requestDto.RestaurantId &&
-                    x.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active,
+                    x.StatusId == (short)SubscriptionStatusEnums.Active,
                 enableTracking: true);
 
             if (activeSubscription != null)
             {
-                activeSubscription.StatusId = (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Cancelled;
+                activeSubscription.StatusId = (short)SubscriptionStatusEnums.Cancelled;
                 _unitOfWork.SubscriptionRepository.Update(activeSubscription);
             }
 
@@ -148,7 +148,7 @@ public class SubscriptionManager : ISubscriptionService
                 SellerId = token.SellerId.Value,
                 RestaurantId = requestDto.RestaurantId,
                 SubscriptionPlanId = requestDto.SubscriptionPlanId,
-                StatusId = (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active,
+                StatusId = (short)SubscriptionStatusEnums.Active,
                 StartDate = now,
                 EndDate = now.AddMonths(1),
                 PaidAmount = plan.MonthlyPrice
@@ -198,14 +198,14 @@ public class SubscriptionManager : ISubscriptionService
                 return result;
             }
 
-            subscription.StatusId = (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Cancelled;
+            subscription.StatusId = (short)SubscriptionStatusEnums.Cancelled;
             _unitOfWork.SubscriptionRepository.Update(subscription);
 
             // Aktif abonelik kalmadıysa restoranı deaktif et
             var hasOtherActive = await _unitOfWork.SubscriptionRepository.AnyAsync(x =>
                 x.RestaurantId == subscription.RestaurantId &&
                 x.Id != subscriptionId &&
-                x.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active &&
+                x.StatusId == (short)SubscriptionStatusEnums.Active &&
                 x.EndDate >= DateTime.UtcNow);
 
             if (!hasOtherActive)
@@ -236,7 +236,7 @@ public class SubscriptionManager : ISubscriptionService
         {
             var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(x =>
                 x.RestaurantId == restaurantId &&
-                x.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active);
+                x.StatusId == (short)SubscriptionStatusEnums.Active);
 
             if (subscription == null)
             {
@@ -339,20 +339,20 @@ public class SubscriptionManager : ISubscriptionService
         try
         {
             var expiredSubscriptions = await _unitOfWork.SubscriptionRepository.GetListAsync(
-                x => x.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active &&
+                x => x.StatusId == (short)SubscriptionStatusEnums.Active &&
                      x.EndDate < DateTime.UtcNow,
                 size: 500,
                 enableTracking: true);
 
             foreach (var subscription in expiredSubscriptions.Items)
             {
-                subscription.StatusId = (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Expired;
+                subscription.StatusId = (short)SubscriptionStatusEnums.Expired;
                 _unitOfWork.SubscriptionRepository.Update(subscription);
 
                 var hasOtherActive = await _unitOfWork.SubscriptionRepository.AnyAsync(x =>
                     x.RestaurantId == subscription.RestaurantId &&
                     x.Id != subscription.Id &&
-                    x.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active &&
+                    x.StatusId == (short)SubscriptionStatusEnums.Active &&
                     x.EndDate >= DateTime.UtcNow);
 
                 if (!hasOtherActive)
@@ -383,7 +383,7 @@ public class SubscriptionManager : ISubscriptionService
         try
         {
             var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(s => s.RestaurantId == restaurantId && s.SellerId == sellerId &&
-                                                                                      s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active);
+                                                                                      s.StatusId == (short)SubscriptionStatusEnums.Active);
 
             if (subscription == null)
             {
@@ -424,7 +424,7 @@ public class SubscriptionManager : ISubscriptionService
         try
         {
             var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(s => s.RestaurantId == restaurantId && s.SellerId == sellerId &&
-                                                                                      s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active);
+                                                                                      s.StatusId == (short)SubscriptionStatusEnums.Active);
 
             if (subscription == null)
             {
@@ -481,7 +481,7 @@ public class SubscriptionManager : ISubscriptionService
         {
             var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(
                 s => s.RestaurantId == request.RestaurantId && s.SellerId == sellerId &&
-                     s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active,
+                     s.StatusId == (short)SubscriptionStatusEnums.Active,
                 enableTracking: true);
 
             if (subscription == null)
@@ -518,7 +518,7 @@ public class SubscriptionManager : ISubscriptionService
         try
         {
             var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(s => s.RestaurantId == restaurantId &&
-                                                                                      s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active);
+                                                                                      s.StatusId == (short)SubscriptionStatusEnums.Active);
 
             if (subscription == null)
             {
@@ -588,7 +588,7 @@ public class SubscriptionManager : ISubscriptionService
             var subscription = await _unitOfWork.SubscriptionRepository.GetAsync(
                 s => s.RestaurantId == restaurantId
                      && s.SellerId == token.SellerId.Value
-                     && s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active,
+                     && s.StatusId == (short)SubscriptionStatusEnums.Active,
                 enableTracking: true);
 
             if (subscription == null)
@@ -637,7 +637,7 @@ public class SubscriptionManager : ISubscriptionService
             PlanName = planName,
             MonthlyPrice = monthlyPrice,
             StatusId = s.StatusId,
-            StatusName = ((AuthorizationServiceEnums.SubscriptionStatusEnums)s.StatusId).ToString(),
+            StatusName = ((SubscriptionStatusEnums)s.StatusId).ToString(),
             StartDate = s.StartDate,
             EndDate = s.EndDate
         };

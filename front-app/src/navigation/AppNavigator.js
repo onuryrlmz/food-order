@@ -37,6 +37,12 @@ import AddAddressScreen from '../screens/Profile/AddAddressScreen';
 import SavedCardsScreen from '../screens/Profile/SavedCardsScreen';
 import FavoritesScreen from '../screens/Profile/FavoritesScreen';
 import ThreeDsWebViewScreen from '../screens/Payment/ThreeDsWebViewScreen';
+import NotificationsScreen from '../screens/Notifications/NotificationsScreen';
+import NotificationPreferencesScreen from '../screens/Notifications/NotificationPreferencesScreen';
+import ScheduledOrdersScreen from '../screens/Orders/ScheduledOrdersScreen';
+import SupportScreen from '../screens/Support/SupportScreen';
+import SupportChatScreen from '../screens/Support/SupportChatScreen';
+import NewTicketScreen from '../screens/Support/NewTicketScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -71,6 +77,12 @@ const ProfileStackNavigator = () => (
     <ProfileStack.Screen name="Favorites" component={FavoritesScreen} />
     <ProfileStack.Screen name="OrderHistory" component={OrderHistoryScreen} />
     <ProfileStack.Screen name="OrderDetail" component={OrderDetailScreen} />
+    <ProfileStack.Screen name="Notifications" component={NotificationsScreen} />
+    <ProfileStack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
+    <ProfileStack.Screen name="Support" component={SupportScreen} />
+    <ProfileStack.Screen name="SupportChat" component={SupportChatScreen} />
+    <ProfileStack.Screen name="NewTicket" component={NewTicketScreen} />
+    <ProfileStack.Screen name="ScheduledOrders" component={ScheduledOrdersScreen} />
   </ProfileStack.Navigator>
 );
 
@@ -203,6 +215,12 @@ const AppNavigator = () => {
         <Stack.Screen name="Favorites" component={FavoritesScreen} />
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+        <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
+        <Stack.Screen name="ScheduledOrders" component={ScheduledOrdersScreen} />
+        <Stack.Screen name="Support" component={SupportScreen} />
+        <Stack.Screen name="SupportChat" component={SupportChatScreen} />
+        <Stack.Screen name="NewTicket" component={NewTicketScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

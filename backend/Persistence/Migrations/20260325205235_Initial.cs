@@ -200,6 +200,39 @@ namespace Persistence.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "ScheduledOrders",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    RestaurantId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    DeliveryAddressId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    InvoiceAddressId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    StatusId = table.Column<short>(type: "smallint", nullable: false),
+                    ScheduledDeliveryTime = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    ProcessAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    PaymentOptionId = table.Column<short>(type: "smallint", nullable: false),
+                    Notes = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CancellationReason = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ConvertedOrderId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    BasketSnapshotJson = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CouponId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    CouponCode = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ScheduledOrders", x => x.Id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "ScheduledTask",
                 columns: table => new
                 {
@@ -325,6 +358,8 @@ namespace Persistence.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     BirthDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     SexId = table.Column<short>(type: "smallint", nullable: true),
+                    ProfilePhotoUrl = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     SellerId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ActivationKey = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
@@ -440,6 +475,34 @@ namespace Persistence.Migrations
                     table.PrimaryKey("PK_Payments", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Payments_Order_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Order",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Tips",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    OrderId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    CourierId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    Amount = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
+                    PresetPercentage = table.Column<short>(type: "smallint", nullable: true),
+                    IsPreDelivery = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    IsSettled = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tips", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Tips_Order_OrderId",
                         column: x => x.OrderId,
                         principalTable: "Order",
                         principalColumn: "Id",
@@ -816,6 +879,62 @@ namespace Persistence.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "NotificationPreferences",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    NotificationTypeId = table.Column<short>(type: "smallint", nullable: false),
+                    IsEnabled = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NotificationPreferences", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_NotificationPreferences_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Notifications",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    TypeId = table.Column<short>(type: "smallint", nullable: false),
+                    Title = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Message = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Data = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsRead = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    ReadAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    RelatedOrderId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Notifications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Notifications_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "PasswordResetToken",
                 columns: table => new
                 {
@@ -897,6 +1016,67 @@ namespace Persistence.Migrations
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Review_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "SearchHistories",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Query = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    SearchType = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ResultCount = table.Column<int>(type: "int", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SearchHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SearchHistories_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "SupportTickets",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    OrderId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    RestaurantId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    TopicId = table.Column<short>(type: "smallint", nullable: false),
+                    StatusId = table.Column<short>(type: "smallint", nullable: false),
+                    Subject = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsEscalated = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    Rating = table.Column<short>(type: "smallint", nullable: true),
+                    RatingComment = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ResolvedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    ClosedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SupportTickets", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SupportTickets_User_UserId",
                         column: x => x.UserId,
                         principalTable: "User",
                         principalColumn: "Id",
@@ -1233,6 +1413,63 @@ namespace Persistence.Migrations
                         name: "FK_RestaurantCourierAgreement_Restaurant_RestaurantId",
                         column: x => x.RestaurantId,
                         principalTable: "Restaurant",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "SupportActions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    TicketId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    ActionType = table.Column<short>(type: "smallint", nullable: false),
+                    ActionData = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsApproved = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    IsExecuted = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    ApprovedByUserId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    ExecutedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SupportActions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SupportActions_SupportTickets_TicketId",
+                        column: x => x.TicketId,
+                        principalTable: "SupportTickets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "SupportMessages",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    TicketId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    SenderType = table.Column<short>(type: "smallint", nullable: false),
+                    Content = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    AiModelUsed = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TokensUsed = table.Column<int>(type: "int", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SupportMessages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SupportMessages_SupportTickets_TicketId",
+                        column: x => x.TicketId,
+                        principalTable: "SupportTickets",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 })
@@ -1736,23 +1973,63 @@ namespace Persistence.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.InsertData(
+                table: "CourierCompany",
+                columns: new[] { "Id", "CommissionRate", "CompanyTypeId", "ContactPerson", "CreatedDate", "DeletedDate", "Email", "IBAN", "IdentityNumber", "LegalName", "LogoUrl", "Name", "Phone", "StatusId", "TaxArea", "TaxCode", "UpdatedDate" },
+                values: new object[] { new Guid("ae011111-1111-1111-1111-111111111111"), 0.15m, (short)2, "Veli Firma", new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "firma@kurye.com", "TR999999999999999999999999", null, "Hızlı Kurye Ltd. Şti.", null, "Hızlı Kurye", "05500000007", (short)2, "Nilüfer", "9999999999", null });
+
+            migrationBuilder.InsertData(
+                table: "Cuisine",
+                columns: new[] { "Id", "CreatedDate", "DeletedDate", "Name", "OrderIndex", "UpdatedDate" },
+                values: new object[,]
+                {
+                    { new Guid("cccc1111-1111-1111-1111-111111111111"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Pizza", 0, null },
+                    { new Guid("cccc2222-2222-2222-2222-222222222222"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Burger", 0, null },
+                    { new Guid("cccc3333-3333-3333-3333-333333333333"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Kebap", 0, null },
+                    { new Guid("cccc4444-4444-4444-4444-444444444444"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Türk Mutfağı", 0, null },
+                    { new Guid("cccc5555-5555-5555-5555-555555555555"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Fast Food", 0, null }
+                });
+
+            migrationBuilder.InsertData(
                 table: "Restaurant",
                 columns: new[] { "Id", "CoverImage", "CreatedDate", "DefaultAssignmentStrategyId", "DeletedDate", "Description", "Email", "HasOwnCouriers", "IsActive", "IsOpen", "Latitude", "Longitude", "MaxDeliveryTime", "MinDeliveryTime", "MinimumOrderPrice", "Name", "Phone", "Rating", "RatingCount", "SellerId", "ServiceAreaPolygonWkt", "UpdatedDate" },
-                values: new object[] { new Guid("3a4d6ba2-593d-4f28-a2ce-89fbbb7fc811"), "https://cdn.getiryemek.com/restaurants/1741075067957_1125x522.webp", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, "Süper lezzetli pizzalar, hızlı teslimat!", "a@a.com", false, false, false, null, null, 45, 25, 250m, "Pizzacı Ahmet", "05551112233", 0m, 0, new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), null, null });
+                values: new object[,]
+                {
+                    { new Guid("bbbb1111-1111-1111-1111-111111111111"), "https://picsum.photos/seed/pizza1/800/400", new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, null, "Taş fırında İtalyan pizzalar", "nilufer@pizzaci.com", false, true, true, 40.2273m, 28.8891m, 45, 25, 150m, "Pizzacı Ahmet - Nilüfer", "05551112233", 4.5m, 120, new Guid("aaaa1111-1111-1111-1111-111111111111"), null, null },
+                    { new Guid("bbbb2222-2222-2222-2222-222222222222"), "https://picsum.photos/seed/pizza2/800/400", new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, null, "Lezzetli pizzalar, hızlı teslimat", "osmangazi@pizzaci.com", false, true, true, 40.1885m, 29.0610m, 50, 30, 100m, "Pizzacı Ahmet - Osmangazi", "05551112244", 4.2m, 85, new Guid("aaaa1111-1111-1111-1111-111111111111"), null, null },
+                    { new Guid("bbbb3333-3333-3333-3333-333333333333"), "https://picsum.photos/seed/kebap1/800/400", new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, null, "Geleneksel Türk kebapları, mangal lezzetleri", "info@kebapci.com", true, true, true, 40.1950m, 29.0200m, 55, 35, 200m, "Kebapçı Mehmet", "05551113355", 4.7m, 230, new Guid("aaaa2222-2222-2222-2222-222222222222"), null, null }
+                });
 
             migrationBuilder.InsertData(
                 table: "Seller",
                 columns: new[] { "Id", "ApiKey", "ApiSecret", "CompanyStatus", "CompanyType", "CreatedDate", "DeletedDate", "IBAN", "IdentityNumber", "IsEInvoiceAvaible", "LegalName", "Name", "TaxArea", "TaxCode", "UpdatedDate" },
-                values: new object[] { new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), null, null, (short)1, (short)2, new DateTime(2026, 3, 24, 21, 16, 54, 414, DateTimeKind.Local).AddTicks(9930), null, "TR260006266822193294982978", null, true, "Pizzacı Ahmet Ltd. Şti.", "Pizzacı Ahmet", "Nilüfer", "1234567890", null });
+                values: new object[,]
+                {
+                    { new Guid("aaaa1111-1111-1111-1111-111111111111"), null, null, (short)2, (short)2, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "TR111111111111111111111111", null, true, "Pizzacı Ahmet Ltd. Şti.", "Pizzacı Ahmet", "Nilüfer", "1111111111", null },
+                    { new Guid("aaaa2222-2222-2222-2222-222222222222"), null, null, (short)2, (short)1, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "TR222222222222222222222222", "12345678901", false, "Mehmet Kebap", "Kebapçı Mehmet", "Osmangazi", "2222222222", null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "SubscriptionPlan",
+                columns: new[] { "Id", "CommissionRate", "CreatedDate", "DeletedDate", "Description", "IsActive", "MaxOrdersPerMonth", "MaxRestaurants", "MonthlyPrice", "Name", "OverageAction", "PlanType", "UpdatedDate" },
+                values: new object[,]
+                {
+                    { new Guid("ab011111-1111-1111-1111-111111111111"), 0.05m, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Küçük işletmeler için", true, 500, 1, 499m, "Başlangıç", (short)1, (short)1, null },
+                    { new Guid("ab022222-2222-2222-2222-222222222222"), 0.03m, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Büyüyen işletmeler için", true, 2000, 3, 999m, "Profesyonel", (short)2, (short)2, null },
+                    { new Guid("ab033333-3333-3333-3333-333333333333"), 0.01m, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Sınırsız kullanım", true, 2147483647, 10, 1999m, "Premium", (short)1, (short)3, null }
+                });
 
             migrationBuilder.InsertData(
                 table: "User",
-                columns: new[] { "Id", "ActivationKey", "BirthDate", "CreatedDate", "DeletedDate", "Email", "FirstName", "LastName", "Password", "PhoneNumber", "SellerId", "SexId", "UpdatedDate", "UserRoleId", "UserStatusId" },
+                columns: new[] { "Id", "ActivationKey", "BirthDate", "CreatedDate", "DeletedDate", "Email", "FirstName", "LastName", "Password", "PhoneNumber", "ProfilePhotoUrl", "SellerId", "SexId", "UpdatedDate", "UserRoleId", "UserStatusId" },
                 values: new object[,]
                 {
-                    { new Guid("4f42f685-b154-460e-bb9e-a4f8402eff0b"), new Guid("0bca0c3b-eed5-45da-8382-a2c1016f8c95"), new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 24, 21, 16, 54, 414, DateTimeKind.Local).AddTicks(2790), null, "info@pizzaci.com", "Pizzacı", "Ahmet", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05519684748", new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), (short)1, null, (short)4, (short)1 },
-                    { new Guid("6005c78b-8728-4d9a-be6f-5554acf8e9a7"), new Guid("98f468df-f65e-44d7-89f9-5863be616a28"), new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 24, 21, 16, 54, 406, DateTimeKind.Local).AddTicks(2720), null, "admin@esnaftan.com", "Esnaftan", "Admin", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05519684748", null, (short)1, null, (short)1, (short)1 },
-                    { new Guid("67d10056-c978-4e93-89d6-ab078cbab543"), new Guid("3beffec0-22cd-4e48-8259-ffd3d9573dac"), new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 24, 21, 16, 54, 414, DateTimeKind.Local).AddTicks(3020), null, "alici@gmail.com", "Alıcı", "Mehmet", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05556667788", null, (short)1, null, (short)2, (short)1 }
+                    { new Guid("11111111-1111-1111-1111-111111111111"), null, new DateTime(1990, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "admin@esnaftan.com", "Esnaftan", "Admin", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05500000001", null, null, (short)1, null, (short)1, (short)1 },
+                    { new Guid("22222222-2222-2222-2222-222222222222"), null, null, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "info@pizzaci.com", "Ahmet", "Pizzacı", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05500000002", null, new Guid("aaaa1111-1111-1111-1111-111111111111"), (short)1, null, (short)4, (short)1 },
+                    { new Guid("33333333-3333-3333-3333-333333333333"), null, null, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "info@kebapci.com", "Mehmet", "Kebapçı", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05500000003", null, new Guid("aaaa2222-2222-2222-2222-222222222222"), (short)1, null, (short)4, (short)1 },
+                    { new Guid("44444444-4444-4444-4444-444444444444"), null, null, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "ali@gmail.com", "Ali", "Yılmaz", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05500000004", null, null, (short)1, null, (short)2, (short)1 },
+                    { new Guid("55555555-5555-5555-5555-555555555555"), null, null, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "ayse@gmail.com", "Ayşe", "Demir", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05500000005", null, null, (short)2, null, (short)2, (short)1 },
+                    { new Guid("66666666-6666-6666-6666-666666666666"), null, null, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "kurye@gmail.com", "Hasan", "Kurye", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05500000006", null, null, (short)1, null, (short)6, (short)1 },
+                    { new Guid("77777777-7777-7777-7777-777777777777"), null, null, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "firma@kurye.com", "Veli", "Firma", "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW", "05500000007", null, null, (short)1, null, (short)7, (short)1 }
                 });
 
             migrationBuilder.InsertData(
@@ -1760,8 +2037,109 @@ namespace Persistence.Migrations
                 columns: new[] { "Id", "AddressLine1", "AddressLine2", "AddressName", "AddressType", "CityId", "CreatedDate", "DeletedDate", "FirstName", "InvoiceType", "IsDefault", "LastName", "Latitude", "Longitude", "NeighbourhoodId", "Phone", "RestaurantId", "SellerId", "TaxArea", "TaxCode", "TownId", "UpdatedDate", "UserId" },
                 values: new object[,]
                 {
-                    { new Guid("28b1293a-4a64-4e0f-ae7b-6e7d6e04b51f"), "Ahmet Yesevi, Bey Sk. No:4/B", null, "Gönderim Adresi", (short)4, new Guid("5d0c385c-810d-4dd6-9462-259183584992"), new DateTime(2026, 3, 24, 21, 16, 54, 422, DateTimeKind.Local).AddTicks(5700), null, "Pizzacı", null, true, "Ahmet", "40.267317071584884", "28.9391322447786", new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"), "05551112233", new Guid("3a4d6ba2-593d-4f28-a2ce-89fbbb7fc811"), new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"), null, null, new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a"), null, null },
-                    { new Guid("8b0fe2ee-669a-4884-b4f4-5bf1b8c8e442"), "Geçit Mah. 1. Begonya Sok. No: 57 Daire: 6", "Oliva Sitesi B Blok", "Teslimat Adresi", (short)2, new Guid("5d0c385c-810d-4dd6-9462-259183584992"), new DateTime(2026, 3, 24, 21, 16, 54, 422, DateTimeKind.Local).AddTicks(8600), null, "Alıcı", (short)1, true, "Mehmet", "40.26587386663734", "28.9617998", new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"), "05556667788", null, null, null, null, new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a"), null, new Guid("67d10056-c978-4e93-89d6-ab078cbab543") }
+                    { new Guid("ad011111-1111-1111-1111-111111111111"), "Ahmet Yesevi Mah. Bey Sk. No:4/B", null, "Restoran Adresi", (short)4, new Guid("5d0c385c-810d-4dd6-9462-259183584992"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Pizzacı", null, true, "Ahmet", "40.2273", "28.8891", new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"), "05551112233", new Guid("bbbb1111-1111-1111-1111-111111111111"), new Guid("aaaa1111-1111-1111-1111-111111111111"), null, null, new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a"), null, null },
+                    { new Guid("ad022222-2222-2222-2222-222222222222"), "Çamlıca Mah. Kebap Sok. No:15", null, "Restoran Adresi", (short)4, new Guid("5d0c385c-810d-4dd6-9462-259183584992"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Kebapçı", null, true, "Mehmet", "40.1950", "29.0200", new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"), "05551113355", new Guid("bbbb3333-3333-3333-3333-333333333333"), new Guid("aaaa2222-2222-2222-2222-222222222222"), null, null, new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a"), null, null },
+                    { new Guid("ad031111-1111-1111-1111-111111111111"), "Geçit Mah. 1. Begonya Sok. No:57 D:6", "Oliva Sitesi B Blok", "Ev", (short)2, new Guid("5d0c385c-810d-4dd6-9462-259183584992"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Ali", (short)1, true, "Yılmaz", "40.2659", "28.9618", new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"), "05500000004", null, null, null, null, new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a"), null, new Guid("44444444-4444-4444-4444-444444444444") },
+                    { new Guid("ad042222-2222-2222-2222-222222222222"), "Özlüce Mah. İş Merkezi No:22 K:3", null, "İş", (short)2, new Guid("5d0c385c-810d-4dd6-9462-259183584992"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Ayşe", (short)1, true, "Demir", "40.2300", "28.9100", new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"), "05500000005", null, null, null, null, new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a"), null, new Guid("55555555-5555-5555-5555-555555555555") }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Category",
+                columns: new[] { "Id", "CreatedDate", "DeletedDate", "Name", "OrderIndex", "RestaurantId", "UpdatedDate" },
+                values: new object[,]
+                {
+                    { new Guid("aabb1111-1111-1111-1111-111111111111"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Pizzalar", 0, new Guid("bbbb1111-1111-1111-1111-111111111111"), null },
+                    { new Guid("aabb2222-2222-2222-2222-222222222222"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "İçecekler", 1, new Guid("bbbb1111-1111-1111-1111-111111111111"), null },
+                    { new Guid("aabb3333-3333-3333-3333-333333333333"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Kebaplar", 0, new Guid("bbbb3333-3333-3333-3333-333333333333"), null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Courier",
+                columns: new[] { "Id", "AvailabilityStatusId", "CourierCompanyId", "CourierTypeId", "CreatedDate", "CurrentLatitude", "CurrentLongitude", "DeletedDate", "IBAN", "IdentityNumber", "LastLocationUpdate", "Rating", "RatingCount", "RestaurantId", "StatusId", "TotalDeliveries", "UpdatedDate", "UserId", "VehiclePlate", "VehicleType" },
+                values: new object[] { new Guid("af011111-1111-1111-1111-111111111111"), (short)1, new Guid("ae011111-1111-1111-1111-111111111111"), (short)3, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), 40.2273m, 28.8891m, null, "TR666666666666666666666666", null, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), 4.8m, 50, null, (short)2, 200, null, new Guid("66666666-6666-6666-6666-666666666666"), "16 AB 123", "Motosiklet" });
+
+            migrationBuilder.InsertData(
+                table: "Menu",
+                columns: new[] { "Id", "CreatedDate", "DeletedDate", "Description", "Name", "OrderIndex", "Price", "RestaurantId", "UpdatedDate" },
+                values: new object[,]
+                {
+                    { new Guid("eeee1111-1111-1111-1111-111111111111"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Klasik İtalyan", "Margarita Pizza (Orta)", 0, 180m, new Guid("bbbb1111-1111-1111-1111-111111111111"), null },
+                    { new Guid("eeee2222-2222-2222-2222-222222222222"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Bol malzemeli", "Karışık Pizza (Orta)", 1, 220m, new Guid("bbbb1111-1111-1111-1111-111111111111"), null },
+                    { new Guid("eeee3333-3333-3333-3333-333333333333"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "", "Cola 330ml", 10, 35m, new Guid("bbbb1111-1111-1111-1111-111111111111"), null },
+                    { new Guid("eeee4444-4444-4444-4444-444444444444"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "", "Ayran", 11, 20m, new Guid("bbbb1111-1111-1111-1111-111111111111"), null },
+                    { new Guid("eeee5555-5555-5555-5555-555555555555"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "2 şiş, lavaş, közlenmiş", "Adana Kebap Porsiyon", 0, 320m, new Guid("bbbb3333-3333-3333-3333-333333333333"), null },
+                    { new Guid("eeee6666-6666-6666-6666-666666666666"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "2 şiş, lavaş, közlenmiş", "Urfa Kebap Porsiyon", 1, 300m, new Guid("bbbb3333-3333-3333-3333-333333333333"), null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Product",
+                columns: new[] { "Id", "CreatedDate", "CuisineId", "DeletedDate", "Description", "Name", "OrderIndex", "Price", "ProductType", "RestaurantId", "UpdatedDate" },
+                values: new object[,]
+                {
+                    { new Guid("dddd1111-1111-1111-1111-111111111111"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), new Guid("cccc1111-1111-1111-1111-111111111111"), null, "Domates sos, mozzarella, fesleğen", "Margarita Pizza", 0, 0m, 1, new Guid("bbbb1111-1111-1111-1111-111111111111"), null },
+                    { new Guid("dddd2222-2222-2222-2222-222222222222"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), new Guid("cccc1111-1111-1111-1111-111111111111"), null, "Sucuk, mantar, biber, mısır", "Karışık Pizza", 1, 0m, 1, new Guid("bbbb1111-1111-1111-1111-111111111111"), null },
+                    { new Guid("dddd3333-3333-3333-3333-333333333333"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), new Guid("cccc1111-1111-1111-1111-111111111111"), null, "", "Sucuk", 0, 0m, 2, new Guid("bbbb1111-1111-1111-1111-111111111111"), null },
+                    { new Guid("dddd4444-4444-4444-4444-444444444444"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), new Guid("cccc1111-1111-1111-1111-111111111111"), null, "", "Mantar", 1, 0m, 2, new Guid("bbbb1111-1111-1111-1111-111111111111"), null },
+                    { new Guid("dddd5555-5555-5555-5555-555555555555"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), new Guid("cccc2222-2222-2222-2222-222222222222"), null, "Özel soslu dana burger", "Cheeseburger", 0, 0m, 1, new Guid("bbbb3333-3333-3333-3333-333333333333"), null },
+                    { new Guid("dddd6666-6666-6666-6666-666666666666"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), new Guid("cccc2222-2222-2222-2222-222222222222"), null, "Çıtır tavuk burger", "Chicken Burger", 1, 0m, 1, new Guid("bbbb3333-3333-3333-3333-333333333333"), null },
+                    { new Guid("dddd7777-7777-7777-7777-777777777777"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), new Guid("cccc3333-3333-3333-3333-333333333333"), null, "Acılı el yapımı kebap", "Adana Kebap", 2, 0m, 1, new Guid("bbbb3333-3333-3333-3333-333333333333"), null },
+                    { new Guid("dddd8888-8888-8888-8888-888888888888"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), new Guid("cccc3333-3333-3333-3333-333333333333"), null, "Acısız kebap", "Urfa Kebap", 3, 0m, 1, new Guid("bbbb3333-3333-3333-3333-333333333333"), null },
+                    { new Guid("dddd9999-9999-9999-9999-999999999999"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), new Guid("cccc5555-5555-5555-5555-555555555555"), null, "", "Cola 330ml", 10, 0m, 1, new Guid("bbbb1111-1111-1111-1111-111111111111"), null },
+                    { new Guid("ddddaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), new Guid("cccc4444-4444-4444-4444-444444444444"), null, "", "Ayran", 11, 0m, 1, new Guid("bbbb1111-1111-1111-1111-111111111111"), null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Subscription",
+                columns: new[] { "Id", "AutoRenew", "CreatedDate", "DeletedDate", "EndDate", "LastRenewalAttemptAt", "Notes", "PaidAmount", "RenewalAttempts", "RestaurantId", "SellerId", "StartDate", "StatusId", "SubscriptionPlanId", "UpdatedDate" },
+                values: new object[,]
+                {
+                    { new Guid("ac011111-1111-1111-1111-111111111111"), true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, new DateTime(2026, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, null, 999m, 0, new Guid("bbbb1111-1111-1111-1111-111111111111"), new Guid("aaaa1111-1111-1111-1111-111111111111"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), (short)1, new Guid("ab022222-2222-2222-2222-222222222222"), null },
+                    { new Guid("ac022222-2222-2222-2222-222222222222"), true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, new DateTime(2025, 7, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, null, 499m, 0, new Guid("bbbb3333-3333-3333-3333-333333333333"), new Guid("aaaa2222-2222-2222-2222-222222222222"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), (short)1, new Guid("ab011111-1111-1111-1111-111111111111"), null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "CategoryDetail",
+                columns: new[] { "Id", "CategoryId", "CreatedDate", "DeletedDate", "MenuId", "OrderIndex", "UpdatedDate" },
+                values: new object[,]
+                {
+                    { new Guid("ca011111-1111-1111-1111-111111111111"), new Guid("aabb1111-1111-1111-1111-111111111111"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, new Guid("eeee1111-1111-1111-1111-111111111111"), 0, null },
+                    { new Guid("ca022222-2222-2222-2222-222222222222"), new Guid("aabb1111-1111-1111-1111-111111111111"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, new Guid("eeee2222-2222-2222-2222-222222222222"), 1, null },
+                    { new Guid("ca033333-3333-3333-3333-333333333333"), new Guid("aabb2222-2222-2222-2222-222222222222"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, new Guid("eeee3333-3333-3333-3333-333333333333"), 0, null },
+                    { new Guid("ca044444-4444-4444-4444-444444444444"), new Guid("aabb2222-2222-2222-2222-222222222222"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, new Guid("eeee4444-4444-4444-4444-444444444444"), 1, null },
+                    { new Guid("ca055555-5555-5555-5555-555555555555"), new Guid("aabb3333-3333-3333-3333-333333333333"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, new Guid("eeee5555-5555-5555-5555-555555555555"), 0, null },
+                    { new Guid("ca066666-6666-6666-6666-666666666666"), new Guid("aabb3333-3333-3333-3333-333333333333"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, new Guid("eeee6666-6666-6666-6666-666666666666"), 1, null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "MenuOption",
+                columns: new[] { "Id", "CreatedDate", "DeletedDate", "Description", "MaxCount", "MenuId", "MinCount", "Name", "OptionTemplateId", "OrderIndex", "UpdatedDate" },
+                values: new object[,]
+                {
+                    { new Guid("ff001111-1111-1111-1111-111111111111"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "Pizza hamur tipini seçin", 1, new Guid("eeee2222-2222-2222-2222-222222222222"), 1, "Pizza Tercihi", null, 0, null },
+                    { new Guid("ff002222-2222-2222-2222-222222222222"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, "İstediğiniz malzemeleri ekleyin", 3, new Guid("eeee2222-2222-2222-2222-222222222222"), 0, "Ekstra Malzeme", null, 1, null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "MenuOptionValue",
+                columns: new[] { "Id", "CreatedDate", "DeletedDate", "MenuOptionId", "OptionTemplateValueId", "OrderIndex", "Price", "ProductId", "UpdatedDate" },
+                values: new object[,]
+                {
+                    { new Guid("ff011111-1111-1111-1111-111111111111"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, new Guid("ff001111-1111-1111-1111-111111111111"), null, 0, 0m, new Guid("dddd2222-2222-2222-2222-222222222222"), null },
+                    { new Guid("ff012222-2222-2222-2222-222222222222"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, new Guid("ff002222-2222-2222-2222-222222222222"), null, 0, 15m, new Guid("dddd3333-3333-3333-3333-333333333333"), null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "MenuOptionValueOption",
+                columns: new[] { "Id", "CreatedDate", "DeletedDate", "Description", "MaxCount", "MenuOptionValueId", "MinCount", "Name", "OptionTemplateValueOptionId", "OrderIndex", "UpdatedDate" },
+                values: new object[] { new Guid("ff021111-1111-1111-1111-111111111111"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, null, 4, new Guid("ff011111-1111-1111-1111-111111111111"), 0, "Çıkarılacak Malzemeler", null, 0, null });
+
+            migrationBuilder.InsertData(
+                table: "MenuOptionValueOptionValue",
+                columns: new[] { "Id", "CreatedDate", "DeletedDate", "MenuOptionValueOptionId", "OptionTemplateValueOptionValueId", "OrderIndex", "Price", "ProductId", "UpdatedDate" },
+                values: new object[,]
+                {
+                    { new Guid("ff031111-1111-1111-1111-111111111111"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, new Guid("ff021111-1111-1111-1111-111111111111"), null, 0, 0m, new Guid("dddd3333-3333-3333-3333-333333333333"), null },
+                    { new Guid("ff032222-2222-2222-2222-222222222222"), new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc), null, new Guid("ff021111-1111-1111-1111-111111111111"), null, 1, 0m, new Guid("dddd4444-4444-4444-4444-444444444444"), null }
                 });
 
             migrationBuilder.CreateIndex(
@@ -1993,6 +2371,16 @@ namespace Persistence.Migrations
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_NotificationPreferences_UserId",
+                table: "NotificationPreferences",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Notifications_UserId",
+                table: "Notifications",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OptionTemplate_RestaurantId",
                 table: "OptionTemplate",
                 column: "RestaurantId");
@@ -2155,6 +2543,11 @@ namespace Persistence.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SearchHistories_UserId",
+                table: "SearchHistories",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Subscription_RestaurantId",
                 table: "Subscription",
                 column: "RestaurantId");
@@ -2174,6 +2567,26 @@ namespace Persistence.Migrations
                 table: "SubscriptionUsage",
                 columns: new[] { "SubscriptionId", "Year", "Month" },
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SupportActions_TicketId",
+                table: "SupportActions",
+                column: "TicketId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SupportMessages_TicketId",
+                table: "SupportMessages",
+                column: "TicketId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SupportTickets_UserId",
+                table: "SupportTickets",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tips_OrderId",
+                table: "Tips",
+                column: "OrderId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserCoupon_CouponId",
@@ -2227,6 +2640,12 @@ namespace Persistence.Migrations
                 name: "FavoriteRestaurant");
 
             migrationBuilder.DropTable(
+                name: "NotificationPreferences");
+
+            migrationBuilder.DropTable(
+                name: "Notifications");
+
+            migrationBuilder.DropTable(
                 name: "OptionTemplateValueOptionValue");
 
             migrationBuilder.DropTable(
@@ -2257,13 +2676,28 @@ namespace Persistence.Migrations
                 name: "Review");
 
             migrationBuilder.DropTable(
+                name: "ScheduledOrders");
+
+            migrationBuilder.DropTable(
                 name: "ScheduledTask");
+
+            migrationBuilder.DropTable(
+                name: "SearchHistories");
 
             migrationBuilder.DropTable(
                 name: "SellerDetail");
 
             migrationBuilder.DropTable(
                 name: "SubscriptionUsage");
+
+            migrationBuilder.DropTable(
+                name: "SupportActions");
+
+            migrationBuilder.DropTable(
+                name: "SupportMessages");
+
+            migrationBuilder.DropTable(
+                name: "Tips");
 
             migrationBuilder.DropTable(
                 name: "UserCoupon");
@@ -2294,6 +2728,9 @@ namespace Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "Subscription");
+
+            migrationBuilder.DropTable(
+                name: "SupportTickets");
 
             migrationBuilder.DropTable(
                 name: "Coupon");

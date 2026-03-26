@@ -20,8 +20,8 @@ public class CustomerAddressController : BaseController
 
     [HttpGet]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.User,
-        AuthorizationServiceEnums.UserRoleEnums.Admin)]
+        UserRoleEnums.User,
+        UserRoleEnums.Admin)]
     public async Task<ServiceCollectionResult<GetAddressDto>> GetList()
     {
         return await _addressService.GetList();
@@ -29,8 +29,8 @@ public class CustomerAddressController : BaseController
 
     [HttpPost]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.User,
-        AuthorizationServiceEnums.UserRoleEnums.Admin)]
+        UserRoleEnums.User,
+        UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> Add([FromBody] AddAddressDto requestDto)
     {
         return await _addressService.Add(requestDto);
@@ -38,8 +38,8 @@ public class CustomerAddressController : BaseController
 
     [HttpPut]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.User,
-        AuthorizationServiceEnums.UserRoleEnums.Admin)]
+        UserRoleEnums.User,
+        UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> Update([FromBody] UpdateAddressDto requestDto)
     {
         return await _addressService.Update(requestDto);
@@ -47,8 +47,8 @@ public class CustomerAddressController : BaseController
 
     [HttpDelete("{id}")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.User,
-        AuthorizationServiceEnums.UserRoleEnums.Admin)]
+        UserRoleEnums.User,
+        UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> Delete(Guid id)
     {
         return await _addressService.Delete(id);
@@ -56,8 +56,8 @@ public class CustomerAddressController : BaseController
 
     [HttpPatch("{id}/set-default")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.User,
-        AuthorizationServiceEnums.UserRoleEnums.Admin)]
+        UserRoleEnums.User,
+        UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> SetDefault(Guid id)
     {
         return await _addressService.SetDefault(id);

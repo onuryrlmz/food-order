@@ -43,14 +43,14 @@ public class CourierManager : ICourierService
             }
 
             // Validate courier type specific rules
-            if (requestDto.CourierTypeId == (short)AuthorizationServiceEnums.CourierTypeEnums.RestaurantOwn
+            if (requestDto.CourierTypeId == (short)CourierTypeEnums.RestaurantOwn
                 && requestDto.RestaurantId == null)
             {
                 result.Fail("Restoran kuryesi için restoran ID gereklidir.");
                 return result;
             }
 
-            if (requestDto.CourierTypeId == (short)AuthorizationServiceEnums.CourierTypeEnums.CompanyMember
+            if (requestDto.CourierTypeId == (short)CourierTypeEnums.CompanyMember
                 && requestDto.CourierCompanyId == null)
             {
                 result.Fail("Firma kuryesi için firma ID gereklidir.");
@@ -64,8 +64,8 @@ public class CourierManager : ICourierService
                 CourierTypeId = requestDto.CourierTypeId,
                 CourierCompanyId = requestDto.CourierCompanyId,
                 RestaurantId = requestDto.RestaurantId,
-                StatusId = (short)AuthorizationServiceEnums.CourierStatusEnums.Pending,
-                AvailabilityStatusId = (short)AuthorizationServiceEnums.CourierAvailabilityEnums.Offline,
+                StatusId = (short)CourierStatusEnums.Pending,
+                AvailabilityStatusId = (short)CourierAvailabilityEnums.Offline,
                 VehicleType = requestDto.VehicleType,
                 VehiclePlate = requestDto.VehiclePlate,
                 IdentityNumber = requestDto.IdentityNumber,
@@ -213,13 +213,13 @@ public class CourierManager : ICourierService
                 return result;
             }
 
-            if (courier.StatusId != (short)AuthorizationServiceEnums.CourierStatusEnums.Active)
+            if (courier.StatusId != (short)CourierStatusEnums.Active)
             {
                 result.Fail("Kurye hesabınız aktif değil.");
                 return result;
             }
 
-            courier.AvailabilityStatusId = (short)AuthorizationServiceEnums.CourierAvailabilityEnums.Online;
+            courier.AvailabilityStatusId = (short)CourierAvailabilityEnums.Online;
             _unitOfWork.CourierRepository.Update(courier);
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
@@ -252,7 +252,7 @@ public class CourierManager : ICourierService
                 return result;
             }
 
-            courier.AvailabilityStatusId = (short)AuthorizationServiceEnums.CourierAvailabilityEnums.Offline;
+            courier.AvailabilityStatusId = (short)CourierAvailabilityEnums.Offline;
             _unitOfWork.CourierRepository.Update(courier);
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
@@ -374,7 +374,7 @@ public class CourierManager : ICourierService
                 return result;
             }
 
-            courier.StatusId = (short)AuthorizationServiceEnums.CourierStatusEnums.Active;
+            courier.StatusId = (short)CourierStatusEnums.Active;
             _unitOfWork.CourierRepository.Update(courier);
 
             // Update user role to Courier
@@ -382,7 +382,7 @@ public class CourierManager : ICourierService
                 .FirstOrDefaultAsync(u => u.Id == courier.UserId);
             if (user != null)
             {
-                user.UserRoleId = (short)AuthorizationServiceEnums.UserRoleEnums.Courier;
+                user.UserRoleId = (short)UserRoleEnums.Courier;
                 _context.Set<Domain.Entities.Common.User>().Update(user);
             }
 
@@ -409,8 +409,8 @@ public class CourierManager : ICourierService
                 return result;
             }
 
-            courier.StatusId = (short)AuthorizationServiceEnums.CourierStatusEnums.Suspended;
-            courier.AvailabilityStatusId = (short)AuthorizationServiceEnums.CourierAvailabilityEnums.Offline;
+            courier.StatusId = (short)CourierStatusEnums.Suspended;
+            courier.AvailabilityStatusId = (short)CourierAvailabilityEnums.Offline;
             _unitOfWork.CourierRepository.Update(courier);
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
@@ -438,7 +438,7 @@ public class CourierManager : ICourierService
             // Get couriers that have an active agreement with this restaurant
             var agreements = await _context.Set<Domain.Entities.Courier.RestaurantCourierAgreement>()
                 .Where(a => a.RestaurantId == restaurantId
-                            && a.StatusId == (short)AuthorizationServiceEnums.CourierAgreementStatusEnums.Active
+                            && a.StatusId == (short)CourierAgreementStatusEnums.Active
                             && a.DeletedDate == null)
                 .ToListAsync();
 
@@ -449,7 +449,7 @@ public class CourierManager : ICourierService
             var couriers = await _context.Set<Domain.Entities.Courier.Courier>()
                 .Include(c => c.User)
                 .Where(c => c.DeletedDate == null
-                            && c.StatusId == (short)AuthorizationServiceEnums.CourierStatusEnums.Active
+                            && c.StatusId == (short)CourierStatusEnums.Active
                             && (c.RestaurantId == restaurantId
                                 || courierIds.Contains(c.Id)
                                 || (c.CourierCompanyId != null && companyIds.Contains(c.CourierCompanyId.Value))))

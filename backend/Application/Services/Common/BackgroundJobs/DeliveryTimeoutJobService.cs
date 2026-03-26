@@ -32,7 +32,7 @@ public class DeliveryTimeoutJobService : IDeliveryTimeoutJobService
 
             // Find OnTheWay orders where CreatedDate + MaxDeliveryTime < now
             var overdueOrders = await _context.Set<Order>()
-                .Where(o => o.StatusId == (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay
+                .Where(o => o.StatusId == (short)OrderStatusEnums.OnTheWay
                             && o.DeletedDate == null)
                 .Join(
                     _context.Set<Restaurant>(),
@@ -54,7 +54,7 @@ public class DeliveryTimeoutJobService : IDeliveryTimeoutJobService
                 // Notify restaurant (seller admin)
                 var sellerUser = await _context.Set<Domain.Entities.Common.User>()
                     .FirstOrDefaultAsync(u => u.SellerId == item.Restaurant.SellerId
-                                              && u.UserRoleId == (short)AuthorizationServiceEnums.UserRoleEnums.SellerAdmin);
+                                              && u.UserRoleId == (short)UserRoleEnums.SellerAdmin);
 
                 if (sellerUser != null)
                     await _notificationService.SendToUserAsync(

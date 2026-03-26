@@ -20,8 +20,8 @@ public class SellerCouponController : BaseController
 
     [HttpGet("list")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceCollectionResult<GetCouponListDto>> GetList()
     {
         return await _couponService.GetCouponsBySeller();
@@ -29,29 +29,29 @@ public class SellerCouponController : BaseController
 
     [HttpGet("{id}")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceObjectResult<GetCouponDetailDto>> GetById(Guid id)
     {
         return await _couponService.GetCouponById(id);
     }
 
     [HttpPost("create")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<Guid>> Create([FromBody] CreateCouponDto requestDto)
     {
         return await _couponService.CreateCoupon(requestDto);
     }
 
     [HttpPut("update")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Update([FromBody] UpdateCouponDto requestDto)
     {
         return await _couponService.UpdateCoupon(requestDto);
     }
 
     [HttpDelete("{id}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Delete(Guid id)
     {
         return await _couponService.DeleteCoupon(id);

@@ -19,21 +19,21 @@ public class CustomerCardController : BaseController
     }
 
     [HttpGet("list")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<List<CardDetailDto>>> GetCards()
     {
         return await _cardService.GetCards();
     }
 
     [HttpPost("create")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<CardStorageResultDto>> CreateCard([FromBody] CreateCardRequestDto requestDto)
     {
         return await _cardService.CreateCard(requestDto);
     }
 
     [HttpDelete("{cardToken}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<bool>> DeleteCard(string cardToken)
     {
         return await _cardService.DeleteCard(cardToken);

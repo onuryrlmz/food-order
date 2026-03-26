@@ -118,7 +118,7 @@ public class OrderManager : IOrderService
             // Aktif abonelik kontrolü
             var hasActiveSubscription = await _subscriptionRepository.AnyAsync(x =>
                 x.RestaurantId == requestDto.RestaurantId &&
-                x.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active &&
+                x.StatusId == (short)SubscriptionStatusEnums.Active &&
                 x.EndDate >= DateTime.UtcNow);
 
             if (!hasActiveSubscription)
@@ -145,8 +145,8 @@ public class OrderManager : IOrderService
                 RestaurantId = requestDto.RestaurantId,
                 DeliveryAddressId = requestDto.DeliveryAddressId,
                 InvoiceAddressId = requestDto.InvoiceAddressId,
-                StatusId = (short)AuthorizationServiceEnums.OrderStatusEnums.PaymentPending,
-                PaymentStatusId = (short)AuthorizationServiceEnums.PaymentStatusEnums.Pending,
+                StatusId = (short)OrderStatusEnums.PaymentPending,
+                PaymentStatusId = (short)PaymentStatusEnums.Pending,
                 PaymentOptionId = requestDto.PaymentOptionId,
                 Notes = requestDto.Notes,
                 TotalProductPrice = 0,
@@ -411,7 +411,7 @@ public class OrderManager : IOrderService
             order.TotalPrice = totalProductPrice + order.ShipmentPrice - discountAmount;
 
             await _unitOfWork.OrderRepository.AddAsync(order);
-            await AddStatusHistory(order.Id, AuthorizationServiceEnums.OrderStatusEnums.PaymentPending);
+            await AddStatusHistory(order.Id, OrderStatusEnums.PaymentPending);
             await _unitOfWork.CompleteAsync();
             await _unitOfWork.CommitTransactionAsync();
 
@@ -423,7 +423,7 @@ public class OrderManager : IOrderService
             };
 
             // Online ödeme ise otomatik ödeme başlat
-            if (order.PaymentOptionId == (short)AuthorizationServiceEnums.PaymentOptionEnums.CreditCard)
+            if (order.PaymentOptionId == (short)PaymentOptionEnums.CreditCard)
             {
                 response.RequiresPayment = true;
 
@@ -516,7 +516,7 @@ public class OrderManager : IOrderService
             }
 
             // Admin veya kendi siparişi olmalı
-            if (token.Role != AuthorizationServiceEnums.UserRoleEnums.Admin && order.UserId != token.UserId)
+            if (token.Role != UserRoleEnums.Admin && order.UserId != token.UserId)
             {
                 result.Fail("Bu siparişe erişim yetkiniz yok.");
                 return result;
@@ -549,9 +549,9 @@ public class OrderManager : IOrderService
 
             var activeStatuses = new List<short>
             {
-                (short)AuthorizationServiceEnums.OrderStatusEnums.WaitingRestaurantApproval,
-                (short)AuthorizationServiceEnums.OrderStatusEnums.Preparing,
-                (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay
+                (short)OrderStatusEnums.WaitingRestaurantApproval,
+                (short)OrderStatusEnums.Preparing,
+                (short)OrderStatusEnums.OnTheWay
             };
 
             var orders = await _unitOfWork.OrderRepository.GetListAsync(
@@ -590,12 +590,12 @@ public class OrderManager : IOrderService
             pageSize = Math.Min(pageSize, 50);
             var allowedStatuses = new List<short>
             {
-                (short)AuthorizationServiceEnums.OrderStatusEnums.WaitingRestaurantApproval,
-                (short)AuthorizationServiceEnums.OrderStatusEnums.Preparing,
-                (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay,
-                (short)AuthorizationServiceEnums.OrderStatusEnums.Delivered,
-                (short)AuthorizationServiceEnums.OrderStatusEnums.CancelledByBuyer,
-                (short)AuthorizationServiceEnums.OrderStatusEnums.RejectedByRestaurant
+                (short)OrderStatusEnums.WaitingRestaurantApproval,
+                (short)OrderStatusEnums.Preparing,
+                (short)OrderStatusEnums.OnTheWay,
+                (short)OrderStatusEnums.Delivered,
+                (short)OrderStatusEnums.CancelledByBuyer,
+                (short)OrderStatusEnums.RejectedByRestaurant
             };
 
             var orders = await _unitOfWork.OrderRepository.GetListAsync(
@@ -641,7 +641,7 @@ public class OrderManager : IOrderService
 
             var cancellableStatuses = new List<short>
             {
-                (short)AuthorizationServiceEnums.OrderStatusEnums.WaitingRestaurantApproval
+                (short)OrderStatusEnums.WaitingRestaurantApproval
             };
 
             if (!cancellableStatuses.Contains(order.StatusId))
@@ -650,10 +650,10 @@ public class OrderManager : IOrderService
                 return result;
             }
 
-            order.StatusId = (short)AuthorizationServiceEnums.OrderStatusEnums.CancelledByBuyer;
+            order.StatusId = (short)OrderStatusEnums.CancelledByBuyer;
             order.CancellationReason = reason;
             _unitOfWork.OrderRepository.Update(order);
-            await AddStatusHistory(order.Id, AuthorizationServiceEnums.OrderStatusEnums.CancelledByBuyer, reason);
+            await AddStatusHistory(order.Id, OrderStatusEnums.CancelledByBuyer, reason);
             await _unitOfWork.CompleteAsync();
 
             // Auto-refund on cancellation
@@ -699,7 +699,7 @@ public class OrderManager : IOrderService
             }
 
             // Satıcı kendi restoranının siparişini güncelleyebilir
-            var isSeller = token.Role is AuthorizationServiceEnums.UserRoleEnums.SellerAdmin or AuthorizationServiceEnums.UserRoleEnums.SellerUser;
+            var isSeller = token.Role is UserRoleEnums.SellerAdmin or UserRoleEnums.SellerUser;
             if (isSeller)
             {
                 if (token.RestaurantIds == null || !token.RestaurantIds.Contains(order.RestaurantId))
@@ -712,16 +712,16 @@ public class OrderManager : IOrderService
                 var sellerTransitions = new Dictionary<short, List<short>>
                 {
                     {
-                        (short)AuthorizationServiceEnums.OrderStatusEnums.WaitingRestaurantApproval, new List<short>
+                        (short)OrderStatusEnums.WaitingRestaurantApproval, new List<short>
                         {
-                            (short)AuthorizationServiceEnums.OrderStatusEnums.Preparing,
-                            (short)AuthorizationServiceEnums.OrderStatusEnums.RejectedByRestaurant
+                            (short)OrderStatusEnums.Preparing,
+                            (short)OrderStatusEnums.RejectedByRestaurant
                         }
                     },
                     {
-                        (short)AuthorizationServiceEnums.OrderStatusEnums.Preparing, new List<short>
+                        (short)OrderStatusEnums.Preparing, new List<short>
                         {
-                            (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay // Fallback for restaurants without courier system
+                            (short)OrderStatusEnums.OnTheWay // Fallback for restaurants without courier system
                         }
                     }
                 };
@@ -734,14 +734,14 @@ public class OrderManager : IOrderService
             }
 
             order.StatusId = statusId;
-            if (statusId == (short)AuthorizationServiceEnums.OrderStatusEnums.RejectedByRestaurant)
+            if (statusId == (short)OrderStatusEnums.RejectedByRestaurant)
                 order.CancellationReason = "Restoran tarafından reddedildi.";
             _unitOfWork.OrderRepository.Update(order);
-            await AddStatusHistory(order.Id, (AuthorizationServiceEnums.OrderStatusEnums)statusId);
+            await AddStatusHistory(order.Id, (OrderStatusEnums)statusId);
             await _unitOfWork.CompleteAsync();
 
             // Auto-trigger courier assignment when order moves to Preparing
-            if (statusId == (short)AuthorizationServiceEnums.OrderStatusEnums.Preparing)
+            if (statusId == (short)OrderStatusEnums.Preparing)
                 _ = Task.Run(async () =>
                 {
                     try
@@ -759,14 +759,14 @@ public class OrderManager : IOrderService
             {
                 try
                 {
-                    var statusName = (AuthorizationServiceEnums.OrderStatusEnums)statusId switch
+                    var statusName = (OrderStatusEnums)statusId switch
                     {
-                        AuthorizationServiceEnums.OrderStatusEnums.Preparing => "Siparişiniz hazırlanıyor",
-                        AuthorizationServiceEnums.OrderStatusEnums.OnTheWay => "Siparişiniz yola çıktı",
-                        AuthorizationServiceEnums.OrderStatusEnums.Delivered => "Siparişiniz teslim edildi",
-                        AuthorizationServiceEnums.OrderStatusEnums.CourierAssigned => "Siparişinize kurye atandı",
-                        AuthorizationServiceEnums.OrderStatusEnums.CourierPickedUp => "Siparişiniz kurye tarafından teslim alındı",
-                        AuthorizationServiceEnums.OrderStatusEnums.RejectedByRestaurant => "Siparişiniz restoran tarafından reddedildi",
+                        OrderStatusEnums.Preparing => "Siparişiniz hazırlanıyor",
+                        OrderStatusEnums.OnTheWay => "Siparişiniz yola çıktı",
+                        OrderStatusEnums.Delivered => "Siparişiniz teslim edildi",
+                        OrderStatusEnums.CourierAssigned => "Siparişinize kurye atandı",
+                        OrderStatusEnums.CourierPickedUp => "Siparişiniz kurye tarafından teslim alındı",
+                        OrderStatusEnums.RejectedByRestaurant => "Siparişiniz restoran tarafından reddedildi",
                         _ => "Sipariş durumu güncellendi"
                     };
 
@@ -776,7 +776,7 @@ public class OrderManager : IOrderService
                     await _realtimeNotifier.NotifyOrderStatusChanged(order.Id, statusId);
 
                     // Auto-refund on rejection
-                    if (statusId == (short)AuthorizationServiceEnums.OrderStatusEnums.RejectedByRestaurant)
+                    if (statusId == (short)OrderStatusEnums.RejectedByRestaurant)
                         await _paymentService.RefundOrderAsync(order.Id, "Restoran tarafından reddedildi");
                 }
                 catch
@@ -803,11 +803,11 @@ public class OrderManager : IOrderService
             pageSize = Math.Min(pageSize, 50);
             var sellerVisibleStatuses = new List<short>
             {
-                (short)AuthorizationServiceEnums.OrderStatusEnums.WaitingRestaurantApproval,
-                (short)AuthorizationServiceEnums.OrderStatusEnums.RejectedByRestaurant,
-                (short)AuthorizationServiceEnums.OrderStatusEnums.Preparing,
-                (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay,
-                (short)AuthorizationServiceEnums.OrderStatusEnums.Delivered
+                (short)OrderStatusEnums.WaitingRestaurantApproval,
+                (short)OrderStatusEnums.RejectedByRestaurant,
+                (short)OrderStatusEnums.Preparing,
+                (short)OrderStatusEnums.OnTheWay,
+                (short)OrderStatusEnums.Delivered
             };
 
             var orders = await _unitOfWork.OrderRepository.GetListAsync(
@@ -847,13 +847,13 @@ public class OrderManager : IOrderService
                 return result;
             }
 
-            if (order.PaymentStatusId != (short)AuthorizationServiceEnums.PaymentStatusEnums.Pending)
+            if (order.PaymentStatusId != (short)PaymentStatusEnums.Pending)
             {
                 result.Fail("Bu sipariş için ödeme zaten işlenmiş.");
                 return result;
             }
 
-            if (order.PaymentOptionId != (short)AuthorizationServiceEnums.PaymentOptionEnums.CreditCard)
+            if (order.PaymentOptionId != (short)PaymentOptionEnums.CreditCard)
             {
                 result.Fail("Bu sipariş kart ödemesi gerektirmiyor.");
                 return result;
@@ -979,7 +979,7 @@ public class OrderManager : IOrderService
             RestaurantId = order.RestaurantId,
             RestaurantName = restaurantName,
             StatusId = order.StatusId,
-            StatusName = ((AuthorizationServiceEnums.OrderStatusEnums)order.StatusId).ToString(),
+            StatusName = ((OrderStatusEnums)order.StatusId).ToString(),
             PaymentStatusId = order.PaymentStatusId,
             PaymentOptionId = order.PaymentOptionId,
             TotalProductPrice = order.TotalProductPrice,
@@ -1022,12 +1022,12 @@ public class OrderManager : IOrderService
             RestaurantName = restaurantName,
             SellerId = order.SellerId,
             StatusId = order.StatusId,
-            StatusName = ((AuthorizationServiceEnums.OrderStatusEnums)order.StatusId).ToString(),
+            StatusName = ((OrderStatusEnums)order.StatusId).ToString(),
             PaymentStatusId = order.PaymentStatusId,
-            PaymentStatusName = ((AuthorizationServiceEnums.PaymentStatusEnums)order.PaymentStatusId).ToString(),
+            PaymentStatusName = ((PaymentStatusEnums)order.PaymentStatusId).ToString(),
             PaymentOptionId = order.PaymentOptionId,
-            PaymentOptionName = Enum.IsDefined(typeof(AuthorizationServiceEnums.PaymentOptionEnums), (short)order.PaymentOptionId)
-                ? ((AuthorizationServiceEnums.PaymentOptionEnums)(short)order.PaymentOptionId).ToString()
+            PaymentOptionName = Enum.IsDefined(typeof(PaymentOptionEnums), (short)order.PaymentOptionId)
+                ? ((PaymentOptionEnums)(short)order.PaymentOptionId).ToString()
                 : order.PaymentOptionId.ToString(),
             TotalProductPrice = order.TotalProductPrice,
             ShipmentPrice = order.ShipmentPrice,
@@ -1060,7 +1060,7 @@ public class OrderManager : IOrderService
                 SellerPayoutAmount = p.SellerPayoutAmount,
                 CommissionAmount = p.CommissionAmount,
                 StatusId = p.StatusId,
-                StatusName = ((AuthorizationServiceEnums.PaymentStatusEnums)p.StatusId).ToString(),
+                StatusName = ((PaymentStatusEnums)p.StatusId).ToString(),
                 ProviderPaymentId = p.ProviderPaymentId,
                 ProviderConversationId = p.ProviderConversationId,
                 ProviderTransactionId = p.ProviderTransactionId,
@@ -1078,7 +1078,7 @@ public class OrderManager : IOrderService
             {
                 Id = sh.Id,
                 StatusId = sh.StatusId,
-                StatusName = ((AuthorizationServiceEnums.OrderStatusEnums)sh.StatusId).ToString(),
+                StatusName = ((OrderStatusEnums)sh.StatusId).ToString(),
                 Note = sh.Note,
                 OccurredAt = sh.OccurredAt
             }).OrderByDescending(sh => sh.OccurredAt).ToList() ?? new List<AdminStatusHistoryDto>()
@@ -1130,7 +1130,7 @@ public class OrderManager : IOrderService
         }
     }
 
-    private async Task AddStatusHistory(Guid orderId, AuthorizationServiceEnums.OrderStatusEnums status, string? note = null)
+    private async Task AddStatusHistory(Guid orderId, OrderStatusEnums status, string? note = null)
     {
         var history = new OrderStatusHistory
         {
@@ -1151,7 +1151,7 @@ public class OrderManager : IOrderService
             var now = DateTime.UtcNow;
 
             var overdueOrders = await _context.Orders
-                .Where(o => o.StatusId == (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay
+                .Where(o => o.StatusId == (short)OrderStatusEnums.OnTheWay
                             && o.DeletedDate == null)
                 .Join(
                     _context.Set<Restaurant>(),
@@ -1165,7 +1165,7 @@ public class OrderManager : IOrderService
                 .ToListAsync();
 
             var totalCount = await _context.Orders
-                .Where(o => o.StatusId == (short)AuthorizationServiceEnums.OrderStatusEnums.OnTheWay
+                .Where(o => o.StatusId == (short)OrderStatusEnums.OnTheWay
                             && o.DeletedDate == null)
                 .Join(
                     _context.Set<Restaurant>(),
@@ -1194,11 +1194,11 @@ public class OrderManager : IOrderService
                     RestaurantName = x.Restaurant.Name,
                     SellerId = x.Order.SellerId,
                     StatusId = x.Order.StatusId,
-                    StatusName = ((AuthorizationServiceEnums.OrderStatusEnums)x.Order.StatusId).ToString(),
+                    StatusName = ((OrderStatusEnums)x.Order.StatusId).ToString(),
                     PaymentStatusId = x.Order.PaymentStatusId,
-                    PaymentStatusName = ((AuthorizationServiceEnums.PaymentStatusEnums)x.Order.PaymentStatusId).ToString(),
+                    PaymentStatusName = ((PaymentStatusEnums)x.Order.PaymentStatusId).ToString(),
                     PaymentOptionId = x.Order.PaymentOptionId,
-                    PaymentOptionName = ((AuthorizationServiceEnums.PaymentOptionEnums)x.Order.PaymentOptionId).ToString(),
+                    PaymentOptionName = ((PaymentOptionEnums)x.Order.PaymentOptionId).ToString(),
                     TotalProductPrice = x.Order.TotalProductPrice,
                     ShipmentPrice = x.Order.ShipmentPrice,
                     DiscountAmount = x.Order.DiscountAmount,
@@ -1242,7 +1242,7 @@ public class OrderManager : IOrderService
                 return result;
             }
 
-            if (order.StatusId != (short)AuthorizationServiceEnums.OrderStatusEnums.Delivered)
+            if (order.StatusId != (short)OrderStatusEnums.Delivered)
             {
                 result.Fail("Sadece teslim edilmiş siparişler tekrar sipariş edilebilir.");
                 return result;

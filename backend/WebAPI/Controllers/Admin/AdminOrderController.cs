@@ -22,7 +22,7 @@ public class AdminOrderController : BaseController
     }
 
     [HttpGet("list")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceCollectionResult<AdminGetOrderResponseDto>> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -32,28 +32,28 @@ public class AdminOrderController : BaseController
     }
 
     [HttpGet("{orderId}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<AdminGetOrderResponseDto>> GetDetail(Guid orderId)
     {
         return await _orderService.GetOrderDetailForAdmin(orderId);
     }
 
     [HttpPut("{orderId}/status")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> UpdateStatus(Guid orderId, [FromQuery] short statusId)
     {
         return await _orderService.UpdateOrderStatus(orderId, statusId);
     }
 
     [HttpPost("{orderId}/refund")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> RefundOrder(Guid orderId, [FromQuery] string? reason = null)
     {
         return await _paymentService.RefundOrderAsync(orderId, reason);
     }
 
     [HttpGet("overdue")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceCollectionResult<AdminGetOrderResponseDto>> GetOverdueOrders(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)

@@ -20,8 +20,8 @@ public class SellerOptionTemplateController : BaseController
 
     [HttpGet("by-restaurant/{restaurantId}")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceCollectionResult<OptionTemplateResponseDto>> GetByRestaurant(Guid restaurantId)
     {
         return await _optionTemplateService.GetTemplatesByRestaurantId(restaurantId);
@@ -29,29 +29,29 @@ public class SellerOptionTemplateController : BaseController
 
     [HttpGet("{id}")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceObjectResult<OptionTemplateResponseDto>> GetById(Guid id)
     {
         return await _optionTemplateService.GetTemplateById(id);
     }
 
     [HttpPost]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<Guid>> Create([FromBody] CreateOptionTemplateRequestDto requestDto)
     {
         return await _optionTemplateService.CreateTemplate(requestDto);
     }
 
     [HttpPut]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Update([FromBody] UpdateOptionTemplateRequestDto requestDto)
     {
         return await _optionTemplateService.UpdateTemplate(requestDto);
     }
 
     [HttpDelete]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Delete([FromBody] DeleteOptionTemplateRequestDto requestDto)
     {
         return await _optionTemplateService.DeleteTemplate(requestDto);
@@ -59,21 +59,21 @@ public class SellerOptionTemplateController : BaseController
 
     // Template Value endpoints
     [HttpPost("value")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<Guid>> AddValue([FromBody] AddOptionTemplateValueRequestDto requestDto)
     {
         return await _optionTemplateService.AddTemplateValue(requestDto);
     }
 
     [HttpPut("value")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> UpdateValue([FromBody] UpdateOptionTemplateValueRequestDto requestDto)
     {
         return await _optionTemplateService.UpdateTemplateValue(requestDto);
     }
 
     [HttpDelete("value")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> DeleteValue([FromBody] DeleteOptionTemplateValueRequestDto requestDto)
     {
         return await _optionTemplateService.DeleteTemplateValue(requestDto);
@@ -81,21 +81,21 @@ public class SellerOptionTemplateController : BaseController
 
     // Template ValueOption endpoints
     [HttpPost("value-option")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<Guid>> AddValueOption([FromBody] AddOptionTemplateValueOptionRequestDto requestDto)
     {
         return await _optionTemplateService.AddTemplateValueOption(requestDto);
     }
 
     [HttpPut("value-option")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> UpdateValueOption([FromBody] UpdateOptionTemplateValueOptionRequestDto requestDto)
     {
         return await _optionTemplateService.UpdateTemplateValueOption(requestDto);
     }
 
     [HttpDelete("value-option")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> DeleteValueOption([FromBody] DeleteOptionTemplateValueOptionRequestDto requestDto)
     {
         return await _optionTemplateService.DeleteTemplateValueOption(requestDto);
@@ -103,21 +103,21 @@ public class SellerOptionTemplateController : BaseController
 
     // Template ValueOptionValue endpoints
     [HttpPost("value-option-value")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<Guid>> AddValueOptionValue([FromBody] AddOptionTemplateValueOptionValueRequestDto requestDto)
     {
         return await _optionTemplateService.AddTemplateValueOptionValue(requestDto);
     }
 
     [HttpPut("value-option-value")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> UpdateValueOptionValue([FromBody] UpdateOptionTemplateValueOptionValueRequestDto requestDto)
     {
         return await _optionTemplateService.UpdateTemplateValueOptionValue(requestDto);
     }
 
     [HttpDelete("value-option-value")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> DeleteValueOptionValue([FromBody] DeleteOptionTemplateValueOptionValueRequestDto requestDto)
     {
         return await _optionTemplateService.DeleteTemplateValueOptionValue(requestDto);

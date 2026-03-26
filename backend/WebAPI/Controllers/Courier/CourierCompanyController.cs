@@ -19,49 +19,49 @@ public class CourierCompanyController : BaseController
     }
 
     [HttpPost("register")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<CourierCompanyResponseDto>> Register([FromBody] RegisterCourierCompanyRequestDto requestDto)
     {
         return await _courierCompanyService.Register(requestDto);
     }
 
     [HttpGet("profile")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.CourierCompanyAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.CourierCompanyAdmin)]
     public async Task<ServiceObjectResult<CourierCompanyResponseDto>> GetProfile()
     {
         return await _courierCompanyService.GetProfile();
     }
 
     [HttpPut("profile")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.CourierCompanyAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.CourierCompanyAdmin)]
     public async Task<ServiceObjectResult<bool>> UpdateProfile([FromBody] RegisterCourierCompanyRequestDto requestDto)
     {
         return await _courierCompanyService.UpdateProfile(requestDto);
     }
 
     [HttpGet("members")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.CourierCompanyAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.CourierCompanyAdmin)]
     public async Task<ServiceCollectionResult> GetMembers([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         return await _courierCompanyService.GetMembers(page, pageSize);
     }
 
     [HttpPost("members/{courierId}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.CourierCompanyAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.CourierCompanyAdmin)]
     public async Task<ServiceObjectResult<bool>> AddMember(Guid courierId)
     {
         return await _courierCompanyService.AddMember(courierId);
     }
 
     [HttpDelete("members/{courierId}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.CourierCompanyAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.CourierCompanyAdmin)]
     public async Task<ServiceObjectResult<bool>> RemoveMember(Guid courierId)
     {
         return await _courierCompanyService.RemoveMember(courierId);
     }
 
     [HttpGet("earnings")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.CourierCompanyAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.CourierCompanyAdmin)]
     public async Task<ServiceCollectionResult> GetEarnings([FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
     {
         return await _courierCompanyService.GetCompanyEarnings(from, to);

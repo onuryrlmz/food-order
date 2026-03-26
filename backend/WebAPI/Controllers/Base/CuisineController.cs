@@ -25,21 +25,21 @@ public class CuisineController : BaseController
     }
 
     [HttpPost]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> Add([FromBody] AddCuisineDto requestDto)
     {
         return await _cuisineService.Add(requestDto);
     }
 
     [HttpPut]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> Update([FromBody] UpdateCuisineDto requestDto)
     {
         return await _cuisineService.Update(requestDto);
     }
 
     [HttpDelete("{id}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> Delete(Guid id)
     {
         return await _cuisineService.Delete(id);

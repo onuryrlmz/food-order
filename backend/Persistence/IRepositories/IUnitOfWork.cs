@@ -53,6 +53,22 @@ public interface IUnitOfWork : IDisposable
     IDeliveryAssignmentRepository DeliveryAssignmentRepository { get; }
     ICourierEarningRepository CourierEarningRepository { get; }
 
+    // Buyer - Tip & Search
+    ITipRepository TipRepository { get; }
+    ISearchHistoryRepository SearchHistoryRepository { get; }
+
+    // Buyer - Notification
+    INotificationRepository NotificationRepository { get; }
+    INotificationPreferenceRepository NotificationPreferenceRepository { get; }
+
+    // Buyer - Scheduled Order
+    IScheduledOrderRepository ScheduledOrderRepository { get; }
+
+    // Buyer - AI Support
+    ISupportTicketRepository SupportTicketRepository { get; }
+    ISupportMessageRepository SupportMessageRepository { get; }
+    ISupportActionRepository SupportActionRepository { get; }
+
     Task<int> CompleteAsync();
     Task BeginTransactionAsync();
     Task CommitTransactionAsync();

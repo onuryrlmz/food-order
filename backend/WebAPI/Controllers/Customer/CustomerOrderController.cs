@@ -23,21 +23,21 @@ public class CustomerOrderController : BaseController
     }
 
     [HttpPost("place")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<PlaceOrderResponseDto>> PlaceOrder([FromBody] PlaceOrderRequestDto requestDto)
     {
         return await _orderService.PlaceOrder(requestDto);
     }
 
     [HttpGet("active")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceCollectionResult<GetOrderResponseDto>> GetActive()
     {
         return await _orderService.GetActiveOrders();
     }
 
     [HttpGet("history")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceCollectionResult<GetOrderResponseDto>> GetHistory(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
@@ -46,21 +46,21 @@ public class CustomerOrderController : BaseController
     }
 
     [HttpGet("{orderId}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<GetOrderResponseDto>> GetById(Guid orderId)
     {
         return await _orderService.GetOrderById(orderId);
     }
 
     [HttpPost("{orderId}/cancel")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<bool>> Cancel(Guid orderId, [FromQuery] string? reason = null)
     {
         return await _orderService.CancelOrder(orderId, reason ?? string.Empty);
     }
 
     [HttpPost("{orderId}/payment/initiate")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<InitiatePaymentResponseDto>> InitiatePayment(
         Guid orderId, [FromBody] InitiatePaymentRequestDto requestDto)
     {
@@ -68,14 +68,14 @@ public class CustomerOrderController : BaseController
     }
 
     [HttpPost("{orderId}/reorder")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<ReorderResponseDto>> Reorder(Guid orderId)
     {
         return await _orderService.ReorderAsync(orderId);
     }
 
     [HttpGet("{orderId}/tracking")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<CourierTrackingResponseDto>> GetTracking(Guid orderId)
     {
         return await _deliveryAssignmentService.GetOrderTracking(orderId);

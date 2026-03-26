@@ -19,21 +19,21 @@ public class AdminRestaurantController : BaseController
     }
 
     [HttpGet("list")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceCollectionResult<GetAdminRestaurantListResponseDto>> GetList([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         return await _restaurantService.GetAllRestaurantsForAdmin(page, pageSize);
     }
 
     [HttpGet("{id}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<GetAdminRestaurantListResponseDto>> GetById(Guid id)
     {
         return await _restaurantService.GetRestaurantByIdForAdmin(id);
     }
 
     [HttpPut("{id}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> Update(Guid id, [FromBody] UpdateAdminRestaurantDto requestDto)
     {
         requestDto.Id = id;
@@ -41,7 +41,7 @@ public class AdminRestaurantController : BaseController
     }
 
     [HttpPatch("{id}/toggle-active")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> ToggleActive(Guid id)
     {
         return await _restaurantService.ToggleActive(id);

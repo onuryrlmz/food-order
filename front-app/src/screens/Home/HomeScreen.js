@@ -20,7 +20,7 @@ import CuisineFilter from '../../components/CuisineFilter';
 import EmptyState from '../../components/EmptyState';
 import ActiveOrderBanner, {ActiveOrdersSummary} from '../../components/ActiveOrderBanner';
 import FilterModal from '../../components/FilterModal';
-import {orderService} from '../../api';
+import {orderService, notificationService} from '../../api';
 
 const HomeScreen = ({navigation}) => {
   const {user, isAuthenticated} = useAuth();
@@ -34,6 +34,7 @@ const HomeScreen = ({navigation}) => {
   const [activeOrders, setActiveOrders] = useState([]);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [activeFilters, setActiveFilters] = useState({});
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const loadActiveOrders = useCallback(async () => {
     if (!isAuthenticated) {
@@ -50,11 +51,22 @@ const HomeScreen = ({navigation}) => {
     }
   }, [isAuthenticated]);
 
+  const loadUnreadCount = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const res = await notificationService.getUnreadCount();
+      if (res.data && !res.data.hasFailed) {
+        setUnreadCount(res.data.data?.count || 0);
+      }
+    } catch (e) {}
+  }, [isAuthenticated]);
+
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       if (isAuthenticated) {
         refreshAddress();
         loadActiveOrders();
+        loadUnreadCount();
       }
     });
     return unsubscribe;
@@ -141,9 +153,16 @@ const HomeScreen = ({navigation}) => {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.notificationButton}
-          onPress={() => navigation.navigate('OrderHistory')}
+          onPress={() => navigation.navigate('Notifications')}
         >
           <Icon name="bell-outline" size={24} color={Colors.text} />
+          {unreadCount > 0 && (
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationBadgeText}>
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -290,6 +309,25 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 4,
     elevation: 2,
+  },
+  notificationBadge: {
+    position: 'absolute',
+    right: -2,
+    top: -2,
+    backgroundColor: Colors.primary,
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: Colors.surface,
+  },
+  notificationBadgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '700',
   },
   greetingContainer: {
     paddingHorizontal: Spacing.base,

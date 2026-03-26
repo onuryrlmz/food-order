@@ -24,56 +24,56 @@ public class SellerCourierController : BaseController
     }
 
     [HttpGet("restaurant/{restaurantId}/agreements")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceCollectionResult> GetAgreements(Guid restaurantId)
     {
         return await _deliveryAssignmentService.GetAgreements(restaurantId);
     }
 
     [HttpPost("restaurant/{restaurantId}/agreements")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<AgreementResponseDto>> CreateAgreement(Guid restaurantId, [FromBody] CreateAgreementRequestDto requestDto)
     {
         return await _deliveryAssignmentService.CreateAgreement(restaurantId, requestDto);
     }
 
     [HttpPut("agreements/{agreementId}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> UpdateAgreement(Guid agreementId, [FromBody] CreateAgreementRequestDto requestDto)
     {
         return await _deliveryAssignmentService.UpdateAgreement(agreementId, requestDto);
     }
 
     [HttpDelete("agreements/{agreementId}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> TerminateAgreement(Guid agreementId)
     {
         return await _deliveryAssignmentService.TerminateAgreement(agreementId);
     }
 
     [HttpGet("restaurant/{restaurantId}/couriers")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceCollectionResult> GetAvailableCouriers(Guid restaurantId)
     {
         return await _courierService.GetAvailableCouriersForRestaurant(restaurantId);
     }
 
     [HttpPost("restaurant/{restaurantId}/assign/{orderId}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> AssignCourier(Guid restaurantId, Guid orderId, [FromQuery] Guid courierId)
     {
         return await _deliveryAssignmentService.AssignManually(restaurantId, orderId, courierId);
     }
 
     [HttpGet("restaurant/{restaurantId}/deliveries")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin, AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin, UserRoleEnums.SellerUser)]
     public async Task<ServiceCollectionResult> GetActiveDeliveries(Guid restaurantId)
     {
         return await _deliveryAssignmentService.GetActiveDeliveries(restaurantId);
     }
 
     [HttpPut("restaurant/{restaurantId}/settings")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> UpdateDeliverySettings(Guid restaurantId, [FromBody] UpdateDeliverySettingsRequestDto requestDto)
     {
         return await _deliveryAssignmentService.UpdateDeliverySettings(restaurantId, requestDto);

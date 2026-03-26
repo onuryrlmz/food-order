@@ -1,4 +1,5 @@
-﻿using Infrastructure.Adapters.AwsS3;
+﻿using Infrastructure.Adapters.AiSupportAdapter;
+using Infrastructure.Adapters.AwsS3;
 using Infrastructure.Adapters.GetirAdapter;
 using Infrastructure.Adapters.IyzicoServiceAdapter;
 using Infrastructure.Adapters.OneSignalAdapter;
@@ -18,6 +19,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IYemekSepetiAdapter, YemekSepetiAdapter>();
         services.AddScoped<ISmsSender, NetGsmSmsSender>();
         services.AddHttpClient<INotificationService, OneSignalNotificationService>();
+        services.AddHttpClient<IAiSupportAdapter, ClaudeAiSupportAdapter>();
 
         return services;
     }

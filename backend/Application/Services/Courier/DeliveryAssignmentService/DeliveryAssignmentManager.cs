@@ -51,9 +51,9 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
 
             var activeStatuses = new[]
             {
-                (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Offered,
-                (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Accepted,
-                (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.PickedUp
+                (short)DeliveryAssignmentStatusEnums.Offered,
+                (short)DeliveryAssignmentStatusEnums.Accepted,
+                (short)DeliveryAssignmentStatusEnums.PickedUp
             };
 
             var assignment = await _context.Set<Domain.Entities.Courier.DeliveryAssignment>()
@@ -195,8 +195,8 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 return result;
             }
 
-            if (assignment.StatusId != (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Offered
-                && assignment.StatusId != (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Pending)
+            if (assignment.StatusId != (short)DeliveryAssignmentStatusEnums.Offered
+                && assignment.StatusId != (short)DeliveryAssignmentStatusEnums.Pending)
             {
                 result.Fail("Bu teslimat kabul edilebilir durumda değil.");
                 return result;
@@ -209,12 +209,12 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             }
 
             assignment.CourierId = courier.Id;
-            assignment.StatusId = (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Accepted;
+            assignment.StatusId = (short)DeliveryAssignmentStatusEnums.Accepted;
             assignment.AcceptedAt = DateTime.UtcNow;
             _unitOfWork.DeliveryAssignmentRepository.Update(assignment);
 
             // Update courier availability
-            courier.AvailabilityStatusId = (short)AuthorizationServiceEnums.CourierAvailabilityEnums.OnDelivery;
+            courier.AvailabilityStatusId = (short)CourierAvailabilityEnums.OnDelivery;
             _unitOfWork.CourierRepository.Update(courier);
 
             // Update order status and courier reference
@@ -224,7 +224,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             {
                 order.CourierId = courier.Id;
                 order.DeliveryAssignmentId = assignment.Id;
-                order.StatusId = (short)AuthorizationServiceEnums.OrderStatusEnums.CourierAssigned;
+                order.StatusId = (short)OrderStatusEnums.CourierAssigned;
                 _unitOfWork.OrderRepository.Update(order);
 
                 // Add status history
@@ -232,7 +232,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 {
                     Id = Guid.NewGuid(),
                     OrderId = order.Id,
-                    StatusId = (short)AuthorizationServiceEnums.OrderStatusEnums.CourierAssigned,
+                    StatusId = (short)OrderStatusEnums.CourierAssigned,
                     Note = $"Kurye atandı: {courier.Id}",
                     OccurredAt = DateTime.UtcNow
                 });
@@ -245,7 +245,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             {
                 try
                 {
-                    await _realtimeNotifier.NotifyOrderStatusChanged(assignment.OrderId, (short)AuthorizationServiceEnums.OrderStatusEnums.CourierAssigned);
+                    await _realtimeNotifier.NotifyOrderStatusChanged(assignment.OrderId, (short)OrderStatusEnums.CourierAssigned);
                 }
                 catch
                 {
@@ -289,7 +289,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 return result;
             }
 
-            assignment.StatusId = (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Rejected;
+            assignment.StatusId = (short)DeliveryAssignmentStatusEnums.Rejected;
             assignment.RejectedAt = DateTime.UtcNow;
             assignment.RejectionReason = reason;
             _unitOfWork.DeliveryAssignmentRepository.Update(assignment);
@@ -332,13 +332,13 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 return result;
             }
 
-            if (assignment.StatusId != (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Accepted)
+            if (assignment.StatusId != (short)DeliveryAssignmentStatusEnums.Accepted)
             {
                 result.Fail("Teslimat henüz kabul edilmedi.");
                 return result;
             }
 
-            assignment.StatusId = (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.PickedUp;
+            assignment.StatusId = (short)DeliveryAssignmentStatusEnums.PickedUp;
             assignment.PickedUpAt = DateTime.UtcNow;
             _unitOfWork.DeliveryAssignmentRepository.Update(assignment);
 
@@ -347,7 +347,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 x => x.Id == assignment.OrderId, enableTracking: true);
             if (order != null)
             {
-                order.StatusId = (short)AuthorizationServiceEnums.OrderStatusEnums.CourierPickedUp;
+                order.StatusId = (short)OrderStatusEnums.CourierPickedUp;
                 order.PickedUpAt = DateTime.UtcNow;
                 _unitOfWork.OrderRepository.Update(order);
 
@@ -355,7 +355,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 {
                     Id = Guid.NewGuid(),
                     OrderId = order.Id,
-                    StatusId = (short)AuthorizationServiceEnums.OrderStatusEnums.CourierPickedUp,
+                    StatusId = (short)OrderStatusEnums.CourierPickedUp,
                     Note = "Kurye siparişi teslim aldı",
                     OccurredAt = DateTime.UtcNow
                 });
@@ -367,7 +367,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             {
                 try
                 {
-                    await _realtimeNotifier.NotifyOrderStatusChanged(assignment.OrderId, (short)AuthorizationServiceEnums.OrderStatusEnums.CourierPickedUp);
+                    await _realtimeNotifier.NotifyOrderStatusChanged(assignment.OrderId, (short)OrderStatusEnums.CourierPickedUp);
                 }
                 catch
                 {
@@ -412,13 +412,13 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 return result;
             }
 
-            if (assignment.StatusId != (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.PickedUp)
+            if (assignment.StatusId != (short)DeliveryAssignmentStatusEnums.PickedUp)
             {
                 result.Fail("Sipariş henüz teslim alınmadı.");
                 return result;
             }
 
-            assignment.StatusId = (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Delivered;
+            assignment.StatusId = (short)DeliveryAssignmentStatusEnums.Delivered;
             assignment.DeliveredAt = DateTime.UtcNow;
             _unitOfWork.DeliveryAssignmentRepository.Update(assignment);
 
@@ -427,7 +427,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 x => x.Id == assignment.OrderId, enableTracking: true);
             if (order != null)
             {
-                order.StatusId = (short)AuthorizationServiceEnums.OrderStatusEnums.Delivered;
+                order.StatusId = (short)OrderStatusEnums.Delivered;
                 order.DeliveredAt = DateTime.UtcNow;
                 _unitOfWork.OrderRepository.Update(order);
 
@@ -435,14 +435,14 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 {
                     Id = Guid.NewGuid(),
                     OrderId = order.Id,
-                    StatusId = (short)AuthorizationServiceEnums.OrderStatusEnums.Delivered,
+                    StatusId = (short)OrderStatusEnums.Delivered,
                     Note = "Kurye teslim etti",
                     OccurredAt = DateTime.UtcNow
                 });
             }
 
             // Update courier availability back to online
-            courier.AvailabilityStatusId = (short)AuthorizationServiceEnums.CourierAvailabilityEnums.Online;
+            courier.AvailabilityStatusId = (short)CourierAvailabilityEnums.Online;
             courier.TotalDeliveries += 1;
             _unitOfWork.CourierRepository.Update(courier);
 
@@ -452,7 +452,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             {
                 try
                 {
-                    await _realtimeNotifier.NotifyOrderStatusChanged(assignment.OrderId, (short)AuthorizationServiceEnums.OrderStatusEnums.Delivered);
+                    await _realtimeNotifier.NotifyOrderStatusChanged(assignment.OrderId, (short)OrderStatusEnums.Delivered);
                 }
                 catch
                 {
@@ -495,7 +495,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             // Find best agreement based on priority
             var agreement = await _context.Set<Domain.Entities.Courier.RestaurantCourierAgreement>()
                 .Where(a => a.RestaurantId == order.RestaurantId
-                            && a.StatusId == (short)AuthorizationServiceEnums.CourierAgreementStatusEnums.Active
+                            && a.StatusId == (short)CourierAgreementStatusEnums.Active
                             && a.DeletedDate == null
                             && (!a.EffectiveUntil.HasValue || a.EffectiveUntil.Value >= DateTime.UtcNow))
                 .OrderBy(a => a.Priority)
@@ -503,7 +503,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
 
             var strategy = agreement?.AssignmentStrategyId
                            ?? restaurant.DefaultAssignmentStrategyId
-                           ?? (short)AuthorizationServiceEnums.CourierAssignmentStrategyEnums.AutoAssignNearest;
+                           ?? (short)CourierAssignmentStrategyEnums.AutoAssignNearest;
 
             var assignmentEntity = new Domain.Entities.Courier.DeliveryAssignment
             {
@@ -512,7 +512,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 RestaurantId = order.RestaurantId,
                 CourierCompanyId = agreement?.CourierCompanyId,
                 AgreementId = agreement?.Id,
-                StatusId = (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Pending,
+                StatusId = (short)DeliveryAssignmentStatusEnums.Pending,
                 AssignmentStrategyId = strategy,
                 DeliveryFee = agreement?.AgreedDeliveryFee,
                 RestaurantLatitude = restaurant.Latitude,
@@ -524,14 +524,14 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             };
 
             // Auto-assign nearest courier
-            if (strategy == (short)AuthorizationServiceEnums.CourierAssignmentStrategyEnums.AutoAssignNearest
+            if (strategy == (short)CourierAssignmentStrategyEnums.AutoAssignNearest
                 && restaurant.Latitude.HasValue && restaurant.Longitude.HasValue)
             {
                 var nearestCourier = await FindNearestAvailableCourier(order.RestaurantId, restaurant.Latitude.Value, restaurant.Longitude.Value);
                 if (nearestCourier != null)
                 {
                     assignmentEntity.CourierId = nearestCourier.Id;
-                    assignmentEntity.StatusId = (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Offered;
+                    assignmentEntity.StatusId = (short)DeliveryAssignmentStatusEnums.Offered;
                     assignmentEntity.OfferedAt = DateTime.UtcNow;
                 }
             }
@@ -565,7 +565,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         // Get couriers with active agreements for this restaurant
         var agreements = await _context.Set<Domain.Entities.Courier.RestaurantCourierAgreement>()
             .Where(a => a.RestaurantId == restaurantId
-                        && a.StatusId == (short)AuthorizationServiceEnums.CourierAgreementStatusEnums.Active
+                        && a.StatusId == (short)CourierAgreementStatusEnums.Active
                         && a.DeletedDate == null)
             .ToListAsync();
 
@@ -574,8 +574,8 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
 
         var candidates = await _context.Set<Domain.Entities.Courier.Courier>()
             .Where(c => c.DeletedDate == null
-                        && c.StatusId == (short)AuthorizationServiceEnums.CourierStatusEnums.Active
-                        && c.AvailabilityStatusId == (short)AuthorizationServiceEnums.CourierAvailabilityEnums.Online
+                        && c.StatusId == (short)CourierStatusEnums.Active
+                        && c.AvailabilityStatusId == (short)CourierAvailabilityEnums.Online
                         && c.CurrentLatitude != null && c.CurrentLongitude != null
                         && (c.RestaurantId == restaurantId
                             || courierIds.Contains(c.Id)
@@ -629,8 +629,8 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 OrderId = orderId,
                 RestaurantId = restaurantId,
                 CourierId = courierId,
-                StatusId = (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Offered,
-                AssignmentStrategyId = (short)AuthorizationServiceEnums.CourierAssignmentStrategyEnums.ManualByRestaurant,
+                StatusId = (short)DeliveryAssignmentStatusEnums.Offered,
+                AssignmentStrategyId = (short)CourierAssignmentStrategyEnums.ManualByRestaurant,
                 RestaurantLatitude = restaurant?.Latitude,
                 RestaurantLongitude = restaurant?.Longitude,
                 CustomerLatitude = decimal.TryParse(deliveryAddress?.Latitude, out var lat) ? lat : null,
@@ -668,7 +668,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 return result;
             }
 
-            assignment.StatusId = (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Cancelled;
+            assignment.StatusId = (short)DeliveryAssignmentStatusEnums.Cancelled;
             assignment.CancelledAt = DateTime.UtcNow;
             assignment.CancellationReason = reason;
             _unitOfWork.DeliveryAssignmentRepository.Update(assignment);
@@ -680,7 +680,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                     x => x.Id == assignment.CourierId.Value, enableTracking: true);
                 if (courier != null)
                 {
-                    courier.AvailabilityStatusId = (short)AuthorizationServiceEnums.CourierAvailabilityEnums.Online;
+                    courier.AvailabilityStatusId = (short)CourierAvailabilityEnums.Online;
                     _unitOfWork.CourierRepository.Update(courier);
                 }
             }
@@ -703,10 +703,10 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         {
             var activeStatuses = new[]
             {
-                (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Pending,
-                (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Offered,
-                (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.Accepted,
-                (short)AuthorizationServiceEnums.DeliveryAssignmentStatusEnums.PickedUp
+                (short)DeliveryAssignmentStatusEnums.Pending,
+                (short)DeliveryAssignmentStatusEnums.Offered,
+                (short)DeliveryAssignmentStatusEnums.Accepted,
+                (short)DeliveryAssignmentStatusEnums.PickedUp
             };
 
             var assignments = await _context.Set<Domain.Entities.Courier.DeliveryAssignment>()
@@ -801,7 +801,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 RestaurantId = restaurantId,
                 CourierCompanyId = requestDto.CourierCompanyId,
                 CourierId = requestDto.CourierId,
-                StatusId = (short)AuthorizationServiceEnums.CourierAgreementStatusEnums.Active,
+                StatusId = (short)CourierAgreementStatusEnums.Active,
                 AssignmentStrategyId = requestDto.AssignmentStrategyId,
                 AgreedDeliveryFee = requestDto.AgreedDeliveryFee,
                 PerKmFee = requestDto.PerKmFee,
@@ -885,7 +885,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 return result;
             }
 
-            agreement.StatusId = (short)AuthorizationServiceEnums.CourierAgreementStatusEnums.Terminated;
+            agreement.StatusId = (short)CourierAgreementStatusEnums.Terminated;
             _unitOfWork.RestaurantCourierAgreementRepository.Update(agreement);
             await _unitOfWork.CompleteAsync();
             result.SetData(true);

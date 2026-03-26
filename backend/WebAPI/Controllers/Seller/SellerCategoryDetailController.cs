@@ -20,22 +20,22 @@ public class SellerCategoryDetailController : BaseController
 
     [HttpGet]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceCollectionResult<CategoryDetailResponse>> GetList([FromQuery] GetCategoryDetailsByCategoryIdRequestDto requestDto)
     {
         return await _categoryDetailService.GetCategoryDetailsByCategoryId(requestDto);
     }
 
     [HttpPost]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<Guid>> Create([FromBody] CreateCategoryDetailRequestDto requestDto)
     {
         return await _categoryDetailService.CreateCategoryDetail(requestDto);
     }
 
     [HttpDelete]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Delete([FromBody] DeleteCategoryDetailRequestDto requestDto)
     {
         return await _categoryDetailService.DeleteCategoryDetail(requestDto);

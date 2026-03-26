@@ -60,6 +60,22 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     public IDeliveryAssignmentRepository DeliveryAssignmentRepository { get; }
     public ICourierEarningRepository CourierEarningRepository { get; }
 
+    // Buyer - Tip & Search
+    public ITipRepository TipRepository { get; }
+    public ISearchHistoryRepository SearchHistoryRepository { get; }
+
+    // Buyer - Notification
+    public INotificationRepository NotificationRepository { get; }
+    public INotificationPreferenceRepository NotificationPreferenceRepository { get; }
+
+    // Buyer - Scheduled Order
+    public IScheduledOrderRepository ScheduledOrderRepository { get; }
+
+    // Buyer - AI Support
+    public ISupportTicketRepository SupportTicketRepository { get; }
+    public ISupportMessageRepository SupportMessageRepository { get; }
+    public ISupportActionRepository SupportActionRepository { get; }
+
     public UnitOfWork(BaseDbContext context,
         ICuisineRepository cuisineRepository,
         ISellerRepository sellerRepository,
@@ -97,7 +113,15 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         ICourierRepository courierRepository,
         IRestaurantCourierAgreementRepository restaurantCourierAgreementRepository,
         IDeliveryAssignmentRepository deliveryAssignmentRepository,
-        ICourierEarningRepository courierEarningRepository)
+        ICourierEarningRepository courierEarningRepository,
+        ITipRepository tipRepository,
+        ISearchHistoryRepository searchHistoryRepository,
+        INotificationRepository notificationRepository,
+        INotificationPreferenceRepository notificationPreferenceRepository,
+        IScheduledOrderRepository scheduledOrderRepository,
+        ISupportTicketRepository supportTicketRepository,
+        ISupportMessageRepository supportMessageRepository,
+        ISupportActionRepository supportActionRepository)
     {
         _context = context;
         CuisineRepository = cuisineRepository;
@@ -137,6 +161,14 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         RestaurantCourierAgreementRepository = restaurantCourierAgreementRepository;
         DeliveryAssignmentRepository = deliveryAssignmentRepository;
         CourierEarningRepository = courierEarningRepository;
+        TipRepository = tipRepository;
+        SearchHistoryRepository = searchHistoryRepository;
+        NotificationRepository = notificationRepository;
+        NotificationPreferenceRepository = notificationPreferenceRepository;
+        ScheduledOrderRepository = scheduledOrderRepository;
+        SupportTicketRepository = supportTicketRepository;
+        SupportMessageRepository = supportMessageRepository;
+        SupportActionRepository = supportActionRepository;
     }
 
     public async Task BeginTransactionAsync()

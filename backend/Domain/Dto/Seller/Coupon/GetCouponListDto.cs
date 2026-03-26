@@ -28,13 +28,3 @@ public class GetCouponListDto
     public List<CouponApplicableItemDto> ApplicableMenus { get; set; } = new();
     public List<CouponApplicableItemDto> ApplicableCategories { get; set; } = new();
 }
-
-public class GetCouponDetailDto : GetCouponListDto
-{
-}
-
-public class CouponApplicableItemDto
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; }
-}

@@ -18,7 +18,7 @@ public class SellerImageController : BaseController
     }
 
     [HttpPost("upload")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin, AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin, UserRoleEnums.SellerUser)]
     public async Task<ServiceObjectResult<ImageUploadResponseDto>> Upload(
         IFormFile file,
         [FromQuery] Guid? productId = null)
@@ -27,7 +27,7 @@ public class SellerImageController : BaseController
     }
 
     [HttpDelete("{imageId}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin, AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin, UserRoleEnums.SellerUser)]
     public async Task<ServiceObjectResult<bool>> Delete(Guid imageId)
     {
         return await _imageUploadService.DeleteImage(imageId);

@@ -12,8 +12,8 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
 {
     private readonly Options options = new()
     {
-        ApiKey = "sandbox-bTL1IvKTv1M3zPJ3Lai68zhBB4OIDS3J",
-        SecretKey = "sandbox-OmiR6AhVQOm4cZDjHpb0714LQx86vGSR",
+        ApiKey = "sandbox-RuX849dNiatUoKes5j5emO5yWUG1EZuo",
+        SecretKey = "sandbox-ktxv0YAsXyMalrukIy4JLPpEq1bAfhvl",
         BaseUrl = "https://sandbox-api.iyzipay.com"
     };
 
@@ -24,7 +24,7 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
         {
             result.SetData(string.Empty);
 
-            var isIndividual = requestDto.CompanyType == (short)AuthorizationServiceEnums.CompanyTypeEnums.Individual;
+            var isIndividual = requestDto.CompanyType == (short)CompanyTypeEnums.Individual;
             var merchantType = isIndividual
                 ? SubMerchantType.PERSONAL.ToString()
                 : SubMerchantType.LIMITED_OR_JOINT_STOCK_COMPANY.ToString();

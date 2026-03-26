@@ -51,7 +51,7 @@ public class ReviewManager : IReviewService
                 return result;
             }
 
-            if (order.StatusId != (short)AuthorizationServiceEnums.OrderStatusEnums.Delivered)
+            if (order.StatusId != (short)OrderStatusEnums.Delivered)
             {
                 result.Fail("Only delivered orders can be reviewed");
                 return result;

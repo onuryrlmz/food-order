@@ -20,8 +20,8 @@ public class SellerAnalyticsController : BaseController
 
     [HttpGet("summary/{restaurantId}")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceObjectResult<AnalyticsSummaryDto>> GetSummary(
         Guid restaurantId,
         [FromQuery] DateTime startDate,
@@ -32,8 +32,8 @@ public class SellerAnalyticsController : BaseController
 
     [HttpGet("trends/{restaurantId}")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceCollectionResult<OrderTrendDto>> GetOrderTrends(
         Guid restaurantId,
         [FromQuery] DateTime startDate,
@@ -44,8 +44,8 @@ public class SellerAnalyticsController : BaseController
 
     [HttpGet("top-products/{restaurantId}")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceCollectionResult<TopProductDto>> GetTopProducts(
         Guid restaurantId,
         [FromQuery] DateTime startDate,

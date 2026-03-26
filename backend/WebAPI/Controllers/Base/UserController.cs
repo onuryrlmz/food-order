@@ -62,10 +62,10 @@ public class UserController : BaseController
 
     [HttpPost("logout")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.User,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser,
-        AuthorizationServiceEnums.UserRoleEnums.Admin)]
+        UserRoleEnums.User,
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser,
+        UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> Logout([FromBody] LogoutRequestDto request)
     {
         var response = new ServiceObjectResult<bool>();
@@ -87,10 +87,10 @@ public class UserController : BaseController
 
     [HttpGet("profile")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.User,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser,
-        AuthorizationServiceEnums.UserRoleEnums.Admin)]
+        UserRoleEnums.User,
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser,
+        UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<GetUserProfileDto>> GetProfile()
     {
         return await _userService.GetProfile();
@@ -98,10 +98,10 @@ public class UserController : BaseController
 
     [HttpPut("profile")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.User,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser,
-        AuthorizationServiceEnums.UserRoleEnums.Admin)]
+        UserRoleEnums.User,
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser,
+        UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> UpdateProfile([FromBody] UpdateUserProfileDto requestDto)
     {
         return await _userService.UpdateProfile(requestDto);
@@ -109,10 +109,10 @@ public class UserController : BaseController
 
     [HttpPut("change-password")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.User,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser,
-        AuthorizationServiceEnums.UserRoleEnums.Admin)]
+        UserRoleEnums.User,
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser,
+        UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> ChangePassword([FromBody] ChangePasswordDto requestDto)
     {
         return await _userService.ChangePassword(requestDto);

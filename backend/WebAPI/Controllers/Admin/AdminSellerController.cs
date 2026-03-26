@@ -20,28 +20,28 @@ public class AdminSellerController : BaseController
     }
 
     [HttpGet("list")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceCollectionResult<GetSellerListResponseDto>> GetList([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         return await _sellerService.GetSellerList(page, pageSize);
     }
 
     [HttpPost("add")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> Add([FromBody] AddSellerDto requestDto)
     {
         return await _sellerService.AddSeller(requestDto);
     }
 
     [HttpPost("confirm")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> Confirm([FromBody] ConfirmSellerDto requestDto)
     {
         return await _sellerService.ConfirmSeller(requestDto);
     }
 
     [HttpPut("{id}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> Update(Guid id, [FromBody] UpdateSellerDto requestDto)
     {
         requestDto.Id = id;
@@ -49,7 +49,7 @@ public class AdminSellerController : BaseController
     }
 
     [HttpPut("sellers/{id}/retry-iyzico")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> RetryIyzico(Guid id)
     {
         return await _sellerService.RetryIyzicoRegistrationAsync(id);

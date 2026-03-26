@@ -19,21 +19,21 @@ public class CustomerFavoriteController : BaseController
     }
 
     [HttpPost("{restaurantId}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<bool>> Add(Guid restaurantId)
     {
         return await _favoriteService.AddFavorite(restaurantId);
     }
 
     [HttpDelete("{restaurantId}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<bool>> Remove(Guid restaurantId)
     {
         return await _favoriteService.RemoveFavorite(restaurantId);
     }
 
     [HttpGet]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceCollectionResult<FavoriteRestaurantDto>> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
@@ -42,7 +42,7 @@ public class CustomerFavoriteController : BaseController
     }
 
     [HttpGet("ids")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<HashSet<Guid>>> GetIds()
     {
         return await _favoriteService.GetFavoriteRestaurantIds();

@@ -20,14 +20,14 @@ public class AdminFinanceController : BaseController
     }
 
     [HttpGet("summary")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<object>> GetSummary()
     {
         var result = new ServiceObjectResult<object>();
         try
         {
             var completedPayments = await _context.Set<Domain.Entities.Buyer.Payment>()
-                .Where(p => p.StatusId == (short)AuthorizationServiceEnums.PaymentStatusEnums.Completed)
+                .Where(p => p.StatusId == (short)PaymentStatusEnums.Completed)
                 .ToListAsync();
 
             var summary = new
@@ -49,14 +49,14 @@ public class AdminFinanceController : BaseController
     }
 
     [HttpGet("sellers/{sellerId}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<object>> GetSellerFinance(Guid sellerId)
     {
         var result = new ServiceObjectResult<object>();
         try
         {
             var payments = await _context.Set<Domain.Entities.Buyer.Payment>()
-                .Where(p => p.SellerId == sellerId && p.StatusId == (short)AuthorizationServiceEnums.PaymentStatusEnums.Completed)
+                .Where(p => p.SellerId == sellerId && p.StatusId == (short)PaymentStatusEnums.Completed)
                 .OrderByDescending(p => p.CompletedAt)
                 .Select(p => new
                 {
@@ -90,7 +90,7 @@ public class AdminFinanceController : BaseController
     }
 
     [HttpPut("settings/commission-rate")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> UpdateCommissionRate([FromBody] UpdateCommissionRateRequest request)
     {
         var result = new ServiceObjectResult<bool>();

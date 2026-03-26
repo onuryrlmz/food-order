@@ -77,11 +77,25 @@ const ProfileScreen = ({navigation}) => {
       color: '#5856D6',
     },
     {
+      icon: 'bell-outline',
+      label: 'Bildirimler',
+      subtitle: 'Bildirimlerinizi ve tercihlerinizi yönetin',
+      onPress: () => navigation.navigate('Notifications'),
+      color: '#FF9500',
+    },
+    {
       icon: 'receipt',
       label: 'Sipariş Geçmişi',
       subtitle: 'Geçmiş siparişlerinizi görüntüleyin',
       onPress: () => navigation.navigate('OrderHistory'),
       color: Colors.secondary,
+    },
+    {
+      icon: 'calendar-clock',
+      label: 'Zamanlı Siparişler',
+      subtitle: 'Planlanmış siparişlerinizi görüntüleyin',
+      onPress: () => navigation.navigate('ScheduledOrders'),
+      color: '#5856D6',
     },
     {
       icon: 'lock-outline',
@@ -91,11 +105,11 @@ const ProfileScreen = ({navigation}) => {
       color: Colors.warning,
     },
     {
-      icon: 'help-circle-outline',
-      label: 'Yardım & Destek',
-      subtitle: 'Sıkça sorulan sorular',
-      onPress: () => {},
-      color: '#8E8E93',
+      icon: 'headset',
+      label: 'Destek',
+      subtitle: 'AI destekli müşteri hizmetleri',
+      onPress: () => navigation.navigate('Support'),
+      color: '#007AFF',
     },
     {
       icon: 'information-outline',

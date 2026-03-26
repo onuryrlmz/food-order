@@ -20,22 +20,22 @@ public class SellerRestaurantController : BaseController
 
     [HttpGet("list")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceCollectionResult<GetRestaurantListForSellerResponseDto>> GetList()
     {
         return await _restaurantService.GetRestaurantListForSeller();
     }
 
     [HttpPost("add")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<Guid>> Add([FromBody] AddRestaurantDto requestDto)
     {
         return await _restaurantService.AddRestaurant(requestDto);
     }
 
     [HttpPut("update")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Update([FromBody] UpdateRestaurantDto requestDto)
     {
         return await _restaurantService.UpdateRestaurant(requestDto);
@@ -43,8 +43,8 @@ public class SellerRestaurantController : BaseController
 
     [HttpGet("{id}/info")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceObjectResult<string>> GetInfo(Guid id)
     {
         return await _restaurantService.GetRestaurantInfoForSeller(new GetRestaurantInformationRequestDto { Id = id });
@@ -52,8 +52,8 @@ public class SellerRestaurantController : BaseController
 
     [HttpPatch("{id}/toggle-open")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceObjectResult<bool>> ToggleOpen(Guid id)
     {
         return await _restaurantService.ToggleOpen(id);
@@ -61,15 +61,15 @@ public class SellerRestaurantController : BaseController
 
     [HttpGet("{restaurantId}/working-hours")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceCollectionResult<WorkingHourDto>> GetWorkingHours(Guid restaurantId)
     {
         return await _restaurantService.GetWorkingHours(restaurantId);
     }
 
     [HttpPut("{restaurantId}/working-hours")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> UpsertWorkingHour(Guid restaurantId, [FromBody] UpsertWorkingHourDto requestDto)
     {
         requestDto.RestaurantId = restaurantId;

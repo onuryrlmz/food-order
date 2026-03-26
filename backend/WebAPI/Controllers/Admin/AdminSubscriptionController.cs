@@ -25,28 +25,28 @@ public class AdminSubscriptionController : BaseController
     }
 
     [HttpPost("plans")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<Guid>> CreatePlan([FromBody] CreateSubscriptionPlanDto requestDto)
     {
         return await _subscriptionService.CreatePlan(requestDto);
     }
 
     [HttpPut("plans/{planId}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> UpdatePlan(Guid planId, [FromBody] CreateSubscriptionPlanDto requestDto)
     {
         return await _subscriptionService.UpdatePlan(planId, requestDto);
     }
 
     [HttpGet("all")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceCollectionResult<GetSubscriptionResponseDto>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         return await _subscriptionService.GetAllSubscriptions(page, pageSize);
     }
 
     [HttpPost("expire-check")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> ExpireCheck()
     {
         return await _subscriptionService.CheckAndExpireSubscriptions();

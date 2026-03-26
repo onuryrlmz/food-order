@@ -45,3 +45,36 @@ export const CUISINE_ICONS = {
   'Tavuk': '🍗',
   'default': '🍽️',
 };
+
+export const NOTIFICATION_TYPES = {
+  1: {label: 'Sipariş Durumu', icon: 'package-variant'},
+  2: {label: 'Kampanyalar', icon: 'tag-outline'},
+  3: {label: 'Yorum Yanıtları', icon: 'comment-text-outline'},
+  4: {label: 'Teslimat Güncellemeleri', icon: 'truck-delivery-outline'},
+};
+
+export const SCHEDULED_ORDER_STATUS = {
+  1: {label: 'Planlandı', color: '#5856D6', icon: 'calendar-clock'},
+  2: {label: 'İşleniyor', color: '#FF9500', icon: 'progress-clock'},
+  3: {label: 'İptal Edildi', color: '#FF3B30', icon: 'calendar-remove'},
+  4: {label: 'Siparişe Dönüştü', color: '#34C759', icon: 'calendar-check'},
+};
+
+export const SUPPORT_TOPICS = {
+  1: {label: 'Sipariş Sorunu', icon: 'package-variant-closed'},
+  2: {label: 'İptal Talebi', icon: 'cancel'},
+  3: {label: 'Teslimat Problemi', icon: 'truck-alert-outline'},
+  4: {label: 'Genel Soru', icon: 'help-circle-outline'},
+  5: {label: 'Hesap Sorunu', icon: 'account-alert-outline'},
+  6: {label: 'Ödeme Sorunu', icon: 'credit-card-off-outline'},
+};
+
+export const SUPPORT_STATUS = {
+  1: {label: 'Açık', color: '#5856D6'},
+  2: {label: 'İşlemde', color: '#FF9500'},
+  3: {label: 'Çözüldü', color: '#34C759'},
+  4: {label: 'Kapatıldı', color: '#8E8E93'},
+  5: {label: 'Yönlendirildi', color: '#FF3B30'},
+};
+
+export const TIP_PERCENTAGES = [10, 15, 20];

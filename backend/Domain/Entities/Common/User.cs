@@ -14,8 +14,9 @@ public class User : Entity<Guid>
     public string LastName { get; set; }
     public DateTime? BirthDate { get; set; }
     public short? SexId { get; set; }
+    public string? ProfilePhotoUrl { get; set; }
     public Guid? SellerId { get; set; }
     public Guid? ActivationKey { get; set; }
-    public virtual AuthorizationServiceEnums.UserRoleEnums UserRoleEnum => (AuthorizationServiceEnums.UserRoleEnums)UserRoleId;
-    public virtual AuthorizationServiceEnums.UserStatusEnums UserStatusEnum => (AuthorizationServiceEnums.UserStatusEnums)UserStatusId;
+    public virtual UserRoleEnums UserRoleEnum => (UserRoleEnums)UserRoleId;
+    public virtual UserStatusEnums UserStatusEnum => (UserStatusEnums)UserStatusId;
 }

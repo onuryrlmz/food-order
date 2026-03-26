@@ -20,34 +20,3 @@ public class GetOrderResponseDto
     public DateTime CreatedDate { get; set; }
     public List<GetOrderItemResponseDto> Items { get; set; } = new();
 }
-
-public class GetOrderItemResponseDto
-{
-    public Guid Id { get; set; }
-    public Guid MenuId { get; set; }
-    public string MenuName { get; set; }
-    public string? Description { get; set; }
-    public int Quantity { get; set; }
-    public decimal UnitPrice { get; set; }
-    public decimal TotalPrice { get; set; }
-    public List<OrderItemValueDto> Values { get; set; } = new();
-}
-
-public class OrderItemValueDto
-{
-    public string OptionName { get; set; }
-    public string ValueName { get; set; }
-    public int Quantity { get; set; }
-    public decimal UnitPrice { get; set; }
-    public decimal TotalPrice { get; set; }
-    public List<OrderItemValueOptionDto> Options { get; set; } = new();
-}
-
-public class OrderItemValueOptionDto
-{
-    public string OptionName { get; set; }
-    public string ValueName { get; set; }
-    public int Quantity { get; set; }
-    public decimal UnitPrice { get; set; }
-    public decimal TotalPrice { get; set; }
-}

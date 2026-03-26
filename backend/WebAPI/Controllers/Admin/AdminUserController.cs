@@ -19,7 +19,7 @@ public class AdminUserController : BaseController
     }
 
     [HttpGet("list")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceCollectionResult<GetUserListResponseDto>> GetList(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,

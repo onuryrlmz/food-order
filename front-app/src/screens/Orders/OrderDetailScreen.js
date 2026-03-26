@@ -17,6 +17,7 @@ import {ORDER_STATUS, PAYMENT_OPTIONS} from '../../utils/constants';
 import OrderStatusBadge from '../../components/OrderStatusBadge';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import ReviewModal from '../../components/ReviewModal';
+import TipModal from '../../components/TipModal';
 import {createOrderConnection} from '../../utils/signalr';
 
 const OrderDetailScreen = ({route, navigation}) => {
@@ -26,6 +27,7 @@ const OrderDetailScreen = ({route, navigation}) => {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
+  const [tipModalVisible, setTipModalVisible] = useState(false);
   const [reordering, setReordering] = useState(false);
   const [courierInfo, setCourierInfo] = useState(null);
 
@@ -384,6 +386,14 @@ const OrderDetailScreen = ({route, navigation}) => {
               <Text style={styles.reviewButtonText}>Degerlendir</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              style={styles.tipButton}
+              onPress={() => setTipModalVisible(true)}
+              activeOpacity={0.8}
+            >
+              <Icon name="hand-heart-outline" size={20} color={Colors.primary} />
+              <Text style={styles.tipButtonText}>Bahşiş</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={styles.reorderButton}
               onPress={handleReorder}
               activeOpacity={0.8}
@@ -425,6 +435,13 @@ const OrderDetailScreen = ({route, navigation}) => {
         onClose={() => setReviewModalVisible(false)}
         onSubmit={handleReviewSubmit}
         restaurantName={order?.restaurantName}
+      />
+
+      <TipModal
+        visible={tipModalVisible}
+        onClose={() => setTipModalVisible(false)}
+        orderId={orderId}
+        onTipAdded={() => loadOrder()}
       />
     </View>
   );
@@ -773,6 +790,23 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sizes.md,
     fontWeight: Fonts.weights.bold,
     color: '#B8860B',
+    marginLeft: 6,
+  },
+  tipButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.primary + '10',
+    borderWidth: 1,
+    borderColor: Colors.primary + '30',
+  },
+  tipButtonText: {
+    fontSize: Fonts.sizes.md,
+    fontWeight: Fonts.weights.bold,
+    color: Colors.primary,
     marginLeft: 6,
   },
   reorderButton: {

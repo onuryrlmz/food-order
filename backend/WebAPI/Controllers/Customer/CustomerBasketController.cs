@@ -20,21 +20,21 @@ public class CustomerBasketController : BaseController
     }
 
     [HttpGet]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<GetBasketDto>> GetBasket()
     {
         return await _basketService.GetBasketByIdForRedis();
     }
 
     [HttpPut]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<bool>> UpdateBasket([FromBody] UpdateBasketDto requestDto)
     {
         return await _basketService.UpdateBasketForRedis(requestDto);
     }
 
     [HttpDelete]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<bool>> ClearBasket()
     {
         return await _basketService.ClearBasketForRedis();

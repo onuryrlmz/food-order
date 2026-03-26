@@ -19,7 +19,7 @@ public class AdminAnalyticsController : BaseController
     }
 
     [HttpGet("summary")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<AnalyticsSummaryDto>> GetSummary(
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate)
@@ -28,7 +28,7 @@ public class AdminAnalyticsController : BaseController
     }
 
     [HttpGet("trends")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceCollectionResult<OrderTrendDto>> GetOrderTrends(
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate)
@@ -37,7 +37,7 @@ public class AdminAnalyticsController : BaseController
     }
 
     [HttpGet("top-restaurants")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceCollectionResult<TopRestaurantDto>> GetTopRestaurants(
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate,

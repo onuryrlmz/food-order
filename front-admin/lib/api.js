@@ -125,4 +125,23 @@ export const getReviews = (page = 1, status = '') =>
 export const deleteReview = (reviewId) =>
   api.delete(`/v1/admin/reviews/${reviewId}`).then(r => r.data);
 
+// Support
+export const getSupportStats = () =>
+  api.get('/v1/admin/support/stats').then(r => r.data);
+
+export const getAllTickets = (page = 1, statusId = '', topicId = '') =>
+  api.get(`/v1/admin/support/tickets?page=${page}&pageSize=20${statusId ? `&statusId=${statusId}` : ''}${topicId ? `&topicId=${topicId}` : ''}`).then(r => r.data);
+
+export const getEscalatedTickets = (page = 1) =>
+  api.get(`/v1/admin/support/escalated?page=${page}&pageSize=20`).then(r => r.data);
+
+export const getTicketDetail = (ticketId) =>
+  api.get(`/v1/admin/support/ticket/${ticketId}`).then(r => r.data);
+
+export const approveAction = (actionId) =>
+  api.post(`/v1/admin/support/action/${actionId}/approve`).then(r => r.data);
+
+export const rejectAction = (actionId) =>
+  api.post(`/v1/admin/support/action/${actionId}/reject`).then(r => r.data);
+
 export default api;

@@ -44,17 +44,17 @@ public class AuthTokenManager : IAuthTokenService
             UserId = user.Id,
             Token = Guid.NewGuid(),
             Expiration = accessTokenExpiration,
-            Role = AuthorizationServiceEnums.UserRoleEnumList[user.UserRoleId]
+            Role = EnumLookups.UserRoleEnumList[user.UserRoleId]
         };
 
-        if (user.UserRoleId is (short)AuthorizationServiceEnums.UserRoleEnums.SellerAdmin or (short)AuthorizationServiceEnums.UserRoleEnums.SellerUser)
+        if (user.UserRoleId is (short)UserRoleEnums.SellerAdmin or (short)UserRoleEnums.SellerUser)
         {
             tokenDto.SellerId = user.SellerId;
             var restaurants = _restaurantRepository.GetList(x => x.SellerId == user.SellerId && !x.DeletedDate.HasValue, size: 100);
             tokenDto.RestaurantIds = restaurants?.Items?.Select(x => x.Id)?.ToList();
         }
 
-        if (user.UserRoleId is (short)AuthorizationServiceEnums.UserRoleEnums.Courier or (short)AuthorizationServiceEnums.UserRoleEnums.CourierCompanyAdmin)
+        if (user.UserRoleId is (short)UserRoleEnums.Courier or (short)UserRoleEnums.CourierCompanyAdmin)
         {
             var courier = await _courierRepository.GetAsync(x => x.UserId == user.Id && !x.DeletedDate.HasValue);
             if (courier != null)
@@ -104,7 +104,7 @@ public class AuthTokenManager : IAuthTokenService
             existingToken.RevokedAt = DateTime.UtcNow;
 
             var user = await _userRepository.GetAsync(x => x.Id == existingToken.UserId &&
-                                                           x.UserStatusId == (short)AuthorizationServiceEnums.UserStatusEnums.Active);
+                                                           x.UserStatusId == (short)UserStatusEnums.Active);
 
             if (user == null)
             {

@@ -20,29 +20,29 @@ public class SellerMenuOptionValueOptionController : BaseController
 
     [HttpGet]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceCollectionResult<MenuOptionValueOptionResponseDto>> GetList([FromQuery] GetMenuOptionValueOptionRequestDto requestDto)
     {
         return await _menuOptionValueOptionService.GetMenuOptionValueOptionsByMenuOptionValueId(requestDto);
     }
 
     [HttpPost]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<Guid>> Add([FromBody] CreateMenuOptionValueOptionRequestDto requestDto)
     {
         return await _menuOptionValueOptionService.Add(requestDto);
     }
 
     [HttpPut]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Update([FromBody] UpdateMenuOptionValueOptionRequestDto requestDto)
     {
         return await _menuOptionValueOptionService.Update(requestDto);
     }
 
     [HttpDelete]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Delete([FromBody] DeleteMenuOptionValueOptionRequestDto requestDto)
     {
         return await _menuOptionValueOptionService.Delete(requestDto);

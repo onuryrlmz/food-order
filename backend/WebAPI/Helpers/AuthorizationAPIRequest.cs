@@ -8,7 +8,7 @@ namespace WebAPI.Helpers;
 
 public class AuthorizeAPIRequestAttribute : ActionFilterAttribute
 {
-    public AuthorizeAPIRequestAttribute(bool requireLogin, bool requireAnonToken, params AuthorizationServiceEnums.UserRoleEnums[] roleList)
+    public AuthorizeAPIRequestAttribute(bool requireLogin, bool requireAnonToken, params UserRoleEnums[] roleList)
     {
         RequireLogin = requireLogin;
         RequireAnonToken = requireAnonToken;
@@ -17,7 +17,7 @@ public class AuthorizeAPIRequestAttribute : ActionFilterAttribute
 
     private bool RequireLogin { get; set; }
     private bool RequireAnonToken { get; set; }
-    private List<AuthorizationServiceEnums.UserRoleEnums> RoleList { get; set; }
+    private List<UserRoleEnums> RoleList { get; set; }
 
     public override void OnActionExecuting(ActionExecutingContext actionContext)
     {

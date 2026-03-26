@@ -30,6 +30,12 @@ using Application.Services.Seller.SubscriptionService;
 using Application.Services.Buyer.CardService;
 using Application.Services.Buyer.CouponService;
 using Application.Services.Buyer.PaymentService;
+using Application.Services.Buyer.TipService;
+using Application.Services.Buyer.SearchHistoryService;
+using Application.Services.Buyer.ProfileService;
+using Application.Services.Buyer.NotificationService;
+using Application.Services.Buyer.AiSupportService;
+using Application.Services.Buyer.ScheduledOrderService;
 using Application.Services.Buyer.FavoriteService;
 using Application.Services.Buyer.ReviewService;
 using Application.Services.Analytics;
@@ -122,6 +128,12 @@ public static class ApplicationServiceRegistration
         services.AddScoped<IFavoriteService, FavoriteManager>();
         services.AddScoped<ICardService, CardManager>();
         services.AddScoped<IPaymentService, PaymentManager>();
+        services.AddScoped<ITipService, TipManager>();
+        services.AddScoped<ISearchHistoryService, SearchHistoryManager>();
+        services.AddScoped<IProfileService, ProfileManager>();
+        services.AddScoped<INotificationSettingsService, NotificationSettingsManager>();
+        services.AddScoped<IScheduledOrderService, ScheduledOrderManager>();
+        services.AddScoped<IAiSupportService, AiSupportManager>();
 
         //Subscription
         services.AddScoped<ISubscriptionService, SubscriptionManager>();
@@ -145,6 +157,7 @@ public static class ApplicationServiceRegistration
         services.AddScoped<ICleanupJobService, CleanupJobService>();
         services.AddScoped<IDeliveryTimeoutJobService, DeliveryTimeoutJobService>();
         services.AddScoped<ICourierJobService, CourierJobService>();
+        services.AddScoped<IScheduledOrderJobService, ScheduledOrderJobService>();
 
         //Courier
         services.AddScoped<ICourierService, CourierManager>();

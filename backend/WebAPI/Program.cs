@@ -172,5 +172,6 @@ RecurringJob.AddOrUpdate<ICleanupJobService>("cleanup-refresh-tokens", s => s.Cl
 RecurringJob.AddOrUpdate<IDeliveryTimeoutJobService>("check-delivery-timeouts", s => s.CheckDeliveryTimeouts(), "*/15 * * * *");
 RecurringJob.AddOrUpdate<ICourierJobService>("check-expired-assignments", s => s.CheckExpiredAssignments(), "*/1 * * * *");
 RecurringJob.AddOrUpdate<ICourierJobService>("auto-offline-couriers", s => s.AutoOfflineInactiveCouriers(), "*/5 * * * *");
+RecurringJob.AddOrUpdate<IScheduledOrderJobService>("process-scheduled-orders", s => s.ProcessDueScheduledOrders(), "*/5 * * * *");
 
 app.Run();

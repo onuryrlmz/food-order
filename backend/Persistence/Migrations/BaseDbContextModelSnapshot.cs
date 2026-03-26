@@ -271,6 +271,85 @@ namespace Persistence.Migrations
                     b.ToTable("FavoriteRestaurant", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.Buyer.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Data")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("RelatedOrderId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<short>("TypeId")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.NotificationPreference", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<short>("NotificationTypeId")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("NotificationPreferences");
+                });
+
             modelBuilder.Entity("Domain.Entities.Buyer.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -710,6 +789,285 @@ namespace Persistence.Migrations
                     b.ToTable("Review", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.Buyer.ScheduledOrder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("BasketSnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CancellationReason")
+                        .HasColumnType("longtext");
+
+                    b.Property<Guid?>("ConvertedOrderId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("CouponCode")
+                        .HasColumnType("longtext");
+
+                    b.Property<Guid?>("CouponId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("DeliveryAddressId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid?>("InvoiceAddressId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("longtext");
+
+                    b.Property<short>("PaymentOptionId")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime>("ProcessAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("RestaurantId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("ScheduledDeliveryTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ScheduledOrders");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.SearchHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Query")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("ResultCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SearchType")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SearchHistories");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.SupportAction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("ActionData")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<short>("ActionType")
+                        .HasColumnType("smallint");
+
+                    b.Property<Guid?>("ApprovedByUserId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("ExecutedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsExecuted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("SupportActions");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.SupportMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("AiModelUsed")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<short>("SenderType")
+                        .HasColumnType("smallint");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int?>("TokensUsed")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("SupportMessages");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.SupportTicket", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsEscalated")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<short?>("Rating")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("RatingComment")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("RestaurantId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<short>("TopicId")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SupportTickets");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.Tip", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<Guid?>("CourierId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsPreDelivery")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsSettled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<short?>("PresetPercentage")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("Tips");
+                });
+
             modelBuilder.Entity("Domain.Entities.Buyer.UserCoupon", b =>
                 {
                     b.Property<Guid>("Id")
@@ -851,42 +1209,80 @@ namespace Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("28b1293a-4a64-4e0f-ae7b-6e7d6e04b51f"),
-                            AddressLine1 = "Ahmet Yesevi, Bey Sk. No:4/B",
-                            AddressName = "Gönderim Adresi",
+                            Id = new Guid("ad011111-1111-1111-1111-111111111111"),
+                            AddressLine1 = "Ahmet Yesevi Mah. Bey Sk. No:4/B",
+                            AddressName = "Restoran Adresi",
                             AddressType = (short)4,
                             CityId = new Guid("5d0c385c-810d-4dd6-9462-259183584992"),
-                            CreatedDate = new DateTime(2026, 3, 24, 21, 16, 54, 422, DateTimeKind.Local).AddTicks(5700),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             FirstName = "Pizzacı",
                             IsDefault = true,
                             LastName = "Ahmet",
-                            Latitude = "40.267317071584884",
-                            Longitude = "28.9391322447786",
+                            Latitude = "40.2273",
+                            Longitude = "28.8891",
                             NeighbourhoodId = new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"),
                             Phone = "05551112233",
-                            RestaurantId = new Guid("3a4d6ba2-593d-4f28-a2ce-89fbbb7fc811"),
-                            SellerId = new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"),
+                            RestaurantId = new Guid("bbbb1111-1111-1111-1111-111111111111"),
+                            SellerId = new Guid("aaaa1111-1111-1111-1111-111111111111"),
                             TownId = new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a")
                         },
                         new
                         {
-                            Id = new Guid("8b0fe2ee-669a-4884-b4f4-5bf1b8c8e442"),
-                            AddressLine1 = "Geçit Mah. 1. Begonya Sok. No: 57 Daire: 6",
-                            AddressLine2 = "Oliva Sitesi B Blok",
-                            AddressName = "Teslimat Adresi",
-                            AddressType = (short)2,
+                            Id = new Guid("ad022222-2222-2222-2222-222222222222"),
+                            AddressLine1 = "Çamlıca Mah. Kebap Sok. No:15",
+                            AddressName = "Restoran Adresi",
+                            AddressType = (short)4,
                             CityId = new Guid("5d0c385c-810d-4dd6-9462-259183584992"),
-                            CreatedDate = new DateTime(2026, 3, 24, 21, 16, 54, 422, DateTimeKind.Local).AddTicks(8600),
-                            FirstName = "Alıcı",
-                            InvoiceType = (short)1,
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            FirstName = "Kebapçı",
                             IsDefault = true,
                             LastName = "Mehmet",
-                            Latitude = "40.26587386663734",
-                            Longitude = "28.9617998",
+                            Latitude = "40.1950",
+                            Longitude = "29.0200",
                             NeighbourhoodId = new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"),
-                            Phone = "05556667788",
+                            Phone = "05551113355",
+                            RestaurantId = new Guid("bbbb3333-3333-3333-3333-333333333333"),
+                            SellerId = new Guid("aaaa2222-2222-2222-2222-222222222222"),
+                            TownId = new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a")
+                        },
+                        new
+                        {
+                            Id = new Guid("ad031111-1111-1111-1111-111111111111"),
+                            AddressLine1 = "Geçit Mah. 1. Begonya Sok. No:57 D:6",
+                            AddressLine2 = "Oliva Sitesi B Blok",
+                            AddressName = "Ev",
+                            AddressType = (short)2,
+                            CityId = new Guid("5d0c385c-810d-4dd6-9462-259183584992"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            FirstName = "Ali",
+                            InvoiceType = (short)1,
+                            IsDefault = true,
+                            LastName = "Yılmaz",
+                            Latitude = "40.2659",
+                            Longitude = "28.9618",
+                            NeighbourhoodId = new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"),
+                            Phone = "05500000004",
                             TownId = new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a"),
-                            UserId = new Guid("67d10056-c978-4e93-89d6-ab078cbab543")
+                            UserId = new Guid("44444444-4444-4444-4444-444444444444")
+                        },
+                        new
+                        {
+                            Id = new Guid("ad042222-2222-2222-2222-222222222222"),
+                            AddressLine1 = "Özlüce Mah. İş Merkezi No:22 K:3",
+                            AddressName = "İş",
+                            AddressType = (short)2,
+                            CityId = new Guid("5d0c385c-810d-4dd6-9462-259183584992"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            FirstName = "Ayşe",
+                            InvoiceType = (short)1,
+                            IsDefault = true,
+                            LastName = "Demir",
+                            Latitude = "40.2300",
+                            Longitude = "28.9100",
+                            NeighbourhoodId = new Guid("1c2d8a14-38df-448c-8125-14535bf0b7b3"),
+                            Phone = "05500000005",
+                            TownId = new Guid("342b6d4d-42bf-4085-92e7-8d2b51de130a"),
+                            UserId = new Guid("55555555-5555-5555-5555-555555555555")
                         });
                 });
 
@@ -919,6 +1315,43 @@ namespace Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Cuisine", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("cccc1111-1111-1111-1111-111111111111"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Pizza",
+                            OrderIndex = 0
+                        },
+                        new
+                        {
+                            Id = new Guid("cccc2222-2222-2222-2222-222222222222"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Burger",
+                            OrderIndex = 0
+                        },
+                        new
+                        {
+                            Id = new Guid("cccc3333-3333-3333-3333-333333333333"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Kebap",
+                            OrderIndex = 0
+                        },
+                        new
+                        {
+                            Id = new Guid("cccc4444-4444-4444-4444-444444444444"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Türk Mutfağı",
+                            OrderIndex = 0
+                        },
+                        new
+                        {
+                            Id = new Guid("cccc5555-5555-5555-5555-555555555555"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Fast Food",
+                            OrderIndex = 0
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Common.PasswordResetToken", b =>
@@ -1065,6 +1498,9 @@ namespace Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("ProfilePhotoUrl")
+                        .HasColumnType("longtext");
+
                     b.Property<Guid?>("SellerId")
                         .HasColumnType("char(36)");
 
@@ -1087,48 +1523,96 @@ namespace Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("6005c78b-8728-4d9a-be6f-5554acf8e9a7"),
-                            ActivationKey = new Guid("98f468df-f65e-44d7-89f9-5863be616a28"),
-                            BirthDate = new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedDate = new DateTime(2026, 3, 24, 21, 16, 54, 406, DateTimeKind.Local).AddTicks(2720),
+                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
+                            BirthDate = new DateTime(1990, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@esnaftan.com",
                             FirstName = "Esnaftan",
                             LastName = "Admin",
                             Password = "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW",
-                            PhoneNumber = "05519684748",
+                            PhoneNumber = "05500000001",
                             SexId = (short)1,
                             UserRoleId = (short)1,
                             UserStatusId = (short)1
                         },
                         new
                         {
-                            Id = new Guid("4f42f685-b154-460e-bb9e-a4f8402eff0b"),
-                            ActivationKey = new Guid("0bca0c3b-eed5-45da-8382-a2c1016f8c95"),
-                            BirthDate = new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedDate = new DateTime(2026, 3, 24, 21, 16, 54, 414, DateTimeKind.Local).AddTicks(2790),
+                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
                             Email = "info@pizzaci.com",
-                            FirstName = "Pizzacı",
-                            LastName = "Ahmet",
+                            FirstName = "Ahmet",
+                            LastName = "Pizzacı",
                             Password = "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW",
-                            PhoneNumber = "05519684748",
-                            SellerId = new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"),
+                            PhoneNumber = "05500000002",
+                            SellerId = new Guid("aaaa1111-1111-1111-1111-111111111111"),
                             SexId = (short)1,
                             UserRoleId = (short)4,
                             UserStatusId = (short)1
                         },
                         new
                         {
-                            Id = new Guid("67d10056-c978-4e93-89d6-ab078cbab543"),
-                            ActivationKey = new Guid("3beffec0-22cd-4e48-8259-ffd3d9573dac"),
-                            BirthDate = new DateTime(1994, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedDate = new DateTime(2026, 3, 24, 21, 16, 54, 414, DateTimeKind.Local).AddTicks(3020),
-                            Email = "alici@gmail.com",
-                            FirstName = "Alıcı",
-                            LastName = "Mehmet",
+                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "info@kebapci.com",
+                            FirstName = "Mehmet",
+                            LastName = "Kebapçı",
                             Password = "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW",
-                            PhoneNumber = "05556667788",
+                            PhoneNumber = "05500000003",
+                            SellerId = new Guid("aaaa2222-2222-2222-2222-222222222222"),
+                            SexId = (short)1,
+                            UserRoleId = (short)4,
+                            UserStatusId = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("44444444-4444-4444-4444-444444444444"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "ali@gmail.com",
+                            FirstName = "Ali",
+                            LastName = "Yılmaz",
+                            Password = "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW",
+                            PhoneNumber = "05500000004",
                             SexId = (short)1,
                             UserRoleId = (short)2,
+                            UserStatusId = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("55555555-5555-5555-5555-555555555555"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "ayse@gmail.com",
+                            FirstName = "Ayşe",
+                            LastName = "Demir",
+                            Password = "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW",
+                            PhoneNumber = "05500000005",
+                            SexId = (short)2,
+                            UserRoleId = (short)2,
+                            UserStatusId = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-666666666666"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "kurye@gmail.com",
+                            FirstName = "Hasan",
+                            LastName = "Kurye",
+                            Password = "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW",
+                            PhoneNumber = "05500000006",
+                            SexId = (short)1,
+                            UserRoleId = (short)6,
+                            UserStatusId = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("77777777-7777-7777-7777-777777777777"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "firma@kurye.com",
+                            FirstName = "Veli",
+                            LastName = "Firma",
+                            Password = "$2a$12$FSkQpNFCoggkjDbhmQIKLuk2XIF6GF0lCW7nPK7vbJPsV91.zdvzW",
+                            PhoneNumber = "05500000007",
+                            SexId = (short)1,
+                            UserRoleId = (short)7,
                             UserStatusId = (short)1
                         });
                 });
@@ -1272,6 +1756,27 @@ namespace Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Courier", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("af011111-1111-1111-1111-111111111111"),
+                            AvailabilityStatusId = (short)1,
+                            CourierCompanyId = new Guid("ae011111-1111-1111-1111-111111111111"),
+                            CourierTypeId = (short)3,
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            CurrentLatitude = 40.2273m,
+                            CurrentLongitude = 28.8891m,
+                            IBAN = "TR666666666666666666666666",
+                            LastLocationUpdate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Rating = 4.8m,
+                            RatingCount = 50,
+                            StatusId = (short)2,
+                            TotalDeliveries = 200,
+                            UserId = new Guid("66666666-6666-6666-6666-666666666666"),
+                            VehiclePlate = "16 AB 123",
+                            VehicleType = "Motosiklet"
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Courier.CourierCompany", b =>
@@ -1364,6 +1869,24 @@ namespace Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("CourierCompany", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("ae011111-1111-1111-1111-111111111111"),
+                            CommissionRate = 0.15m,
+                            CompanyTypeId = (short)2,
+                            ContactPerson = "Veli Firma",
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "firma@kurye.com",
+                            IBAN = "TR999999999999999999999999",
+                            LegalName = "Hızlı Kurye Ltd. Şti.",
+                            Name = "Hızlı Kurye",
+                            Phone = "05500000007",
+                            StatusId = (short)2,
+                            TaxArea = "Nilüfer",
+                            TaxCode = "9999999999"
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Courier.CourierEarning", b =>
@@ -1737,6 +2260,32 @@ namespace Persistence.Migrations
                     b.HasIndex("RestaurantId");
 
                     b.ToTable("Category", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aabb1111-1111-1111-1111-111111111111"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Pizzalar",
+                            OrderIndex = 0,
+                            RestaurantId = new Guid("bbbb1111-1111-1111-1111-111111111111")
+                        },
+                        new
+                        {
+                            Id = new Guid("aabb2222-2222-2222-2222-222222222222"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "İçecekler",
+                            OrderIndex = 1,
+                            RestaurantId = new Guid("bbbb1111-1111-1111-1111-111111111111")
+                        },
+                        new
+                        {
+                            Id = new Guid("aabb3333-3333-3333-3333-333333333333"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Kebaplar",
+                            OrderIndex = 0,
+                            RestaurantId = new Guid("bbbb3333-3333-3333-3333-333333333333")
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Seller.CategoryDetail", b =>
@@ -1772,6 +2321,56 @@ namespace Persistence.Migrations
                     b.HasIndex("CategoryId");
 
                     b.ToTable("CategoryDetail", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("ca011111-1111-1111-1111-111111111111"),
+                            CategoryId = new Guid("aabb1111-1111-1111-1111-111111111111"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            MenuId = new Guid("eeee1111-1111-1111-1111-111111111111"),
+                            OrderIndex = 0
+                        },
+                        new
+                        {
+                            Id = new Guid("ca022222-2222-2222-2222-222222222222"),
+                            CategoryId = new Guid("aabb1111-1111-1111-1111-111111111111"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            MenuId = new Guid("eeee2222-2222-2222-2222-222222222222"),
+                            OrderIndex = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("ca033333-3333-3333-3333-333333333333"),
+                            CategoryId = new Guid("aabb2222-2222-2222-2222-222222222222"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            MenuId = new Guid("eeee3333-3333-3333-3333-333333333333"),
+                            OrderIndex = 0
+                        },
+                        new
+                        {
+                            Id = new Guid("ca044444-4444-4444-4444-444444444444"),
+                            CategoryId = new Guid("aabb2222-2222-2222-2222-222222222222"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            MenuId = new Guid("eeee4444-4444-4444-4444-444444444444"),
+                            OrderIndex = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("ca055555-5555-5555-5555-555555555555"),
+                            CategoryId = new Guid("aabb3333-3333-3333-3333-333333333333"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            MenuId = new Guid("eeee5555-5555-5555-5555-555555555555"),
+                            OrderIndex = 0
+                        },
+                        new
+                        {
+                            Id = new Guid("ca066666-6666-6666-6666-666666666666"),
+                            CategoryId = new Guid("aabb3333-3333-3333-3333-333333333333"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            MenuId = new Guid("eeee6666-6666-6666-6666-666666666666"),
+                            OrderIndex = 1
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Seller.Coupon", b =>
@@ -1957,6 +2556,68 @@ namespace Persistence.Migrations
                     b.HasIndex("RestaurantId");
 
                     b.ToTable("Menu", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("eeee1111-1111-1111-1111-111111111111"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Klasik İtalyan",
+                            Name = "Margarita Pizza (Orta)",
+                            OrderIndex = 0,
+                            Price = 180m,
+                            RestaurantId = new Guid("bbbb1111-1111-1111-1111-111111111111")
+                        },
+                        new
+                        {
+                            Id = new Guid("eeee2222-2222-2222-2222-222222222222"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Bol malzemeli",
+                            Name = "Karışık Pizza (Orta)",
+                            OrderIndex = 1,
+                            Price = 220m,
+                            RestaurantId = new Guid("bbbb1111-1111-1111-1111-111111111111")
+                        },
+                        new
+                        {
+                            Id = new Guid("eeee3333-3333-3333-3333-333333333333"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "",
+                            Name = "Cola 330ml",
+                            OrderIndex = 10,
+                            Price = 35m,
+                            RestaurantId = new Guid("bbbb1111-1111-1111-1111-111111111111")
+                        },
+                        new
+                        {
+                            Id = new Guid("eeee4444-4444-4444-4444-444444444444"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "",
+                            Name = "Ayran",
+                            OrderIndex = 11,
+                            Price = 20m,
+                            RestaurantId = new Guid("bbbb1111-1111-1111-1111-111111111111")
+                        },
+                        new
+                        {
+                            Id = new Guid("eeee5555-5555-5555-5555-555555555555"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "2 şiş, lavaş, közlenmiş",
+                            Name = "Adana Kebap Porsiyon",
+                            OrderIndex = 0,
+                            Price = 320m,
+                            RestaurantId = new Guid("bbbb3333-3333-3333-3333-333333333333")
+                        },
+                        new
+                        {
+                            Id = new Guid("eeee6666-6666-6666-6666-666666666666"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "2 şiş, lavaş, közlenmiş",
+                            Name = "Urfa Kebap Porsiyon",
+                            OrderIndex = 1,
+                            Price = 300m,
+                            RestaurantId = new Guid("bbbb3333-3333-3333-3333-333333333333")
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Seller.MenuOption", b =>
@@ -2008,6 +2669,30 @@ namespace Persistence.Migrations
                     b.HasIndex("OptionTemplateId");
 
                     b.ToTable("MenuOption", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("ff001111-1111-1111-1111-111111111111"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Pizza hamur tipini seçin",
+                            MaxCount = 1,
+                            MenuId = new Guid("eeee2222-2222-2222-2222-222222222222"),
+                            MinCount = 1,
+                            Name = "Pizza Tercihi",
+                            OrderIndex = 0
+                        },
+                        new
+                        {
+                            Id = new Guid("ff002222-2222-2222-2222-222222222222"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "İstediğiniz malzemeleri ekleyin",
+                            MaxCount = 3,
+                            MenuId = new Guid("eeee2222-2222-2222-2222-222222222222"),
+                            MinCount = 0,
+                            Name = "Ekstra Malzeme",
+                            OrderIndex = 1
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Seller.MenuOptionValue", b =>
@@ -2052,6 +2737,26 @@ namespace Persistence.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("MenuOptionValue", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("ff011111-1111-1111-1111-111111111111"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            MenuOptionId = new Guid("ff001111-1111-1111-1111-111111111111"),
+                            OrderIndex = 0,
+                            Price = 0m,
+                            ProductId = new Guid("dddd2222-2222-2222-2222-222222222222")
+                        },
+                        new
+                        {
+                            Id = new Guid("ff012222-2222-2222-2222-222222222222"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            MenuOptionId = new Guid("ff002222-2222-2222-2222-222222222222"),
+                            OrderIndex = 0,
+                            Price = 15m,
+                            ProductId = new Guid("dddd3333-3333-3333-3333-333333333333")
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Seller.MenuOptionValueOption", b =>
@@ -2101,6 +2806,18 @@ namespace Persistence.Migrations
                     b.HasIndex("MenuOptionValueId");
 
                     b.ToTable("MenuOptionValueOption", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("ff021111-1111-1111-1111-111111111111"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            MaxCount = 4,
+                            MenuOptionValueId = new Guid("ff011111-1111-1111-1111-111111111111"),
+                            MinCount = 0,
+                            Name = "Çıkarılacak Malzemeler",
+                            OrderIndex = 0
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Seller.MenuOptionValueOptionValue", b =>
@@ -2145,6 +2862,26 @@ namespace Persistence.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("MenuOptionValueOptionValue", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("ff031111-1111-1111-1111-111111111111"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            MenuOptionValueOptionId = new Guid("ff021111-1111-1111-1111-111111111111"),
+                            OrderIndex = 0,
+                            Price = 0m,
+                            ProductId = new Guid("dddd3333-3333-3333-3333-333333333333")
+                        },
+                        new
+                        {
+                            Id = new Guid("ff032222-2222-2222-2222-222222222222"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            MenuOptionValueOptionId = new Guid("ff021111-1111-1111-1111-111111111111"),
+                            OrderIndex = 1,
+                            Price = 0m,
+                            ProductId = new Guid("dddd4444-4444-4444-4444-444444444444")
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Seller.OptionTemplate", b =>
@@ -2383,6 +3120,128 @@ namespace Persistence.Migrations
                     b.HasIndex("RestaurantId");
 
                     b.ToTable("Product", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("dddd1111-1111-1111-1111-111111111111"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            CuisineId = new Guid("cccc1111-1111-1111-1111-111111111111"),
+                            Description = "Domates sos, mozzarella, fesleğen",
+                            Name = "Margarita Pizza",
+                            OrderIndex = 0,
+                            Price = 0m,
+                            ProductType = 1,
+                            RestaurantId = new Guid("bbbb1111-1111-1111-1111-111111111111")
+                        },
+                        new
+                        {
+                            Id = new Guid("dddd2222-2222-2222-2222-222222222222"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            CuisineId = new Guid("cccc1111-1111-1111-1111-111111111111"),
+                            Description = "Sucuk, mantar, biber, mısır",
+                            Name = "Karışık Pizza",
+                            OrderIndex = 1,
+                            Price = 0m,
+                            ProductType = 1,
+                            RestaurantId = new Guid("bbbb1111-1111-1111-1111-111111111111")
+                        },
+                        new
+                        {
+                            Id = new Guid("dddd3333-3333-3333-3333-333333333333"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            CuisineId = new Guid("cccc1111-1111-1111-1111-111111111111"),
+                            Description = "",
+                            Name = "Sucuk",
+                            OrderIndex = 0,
+                            Price = 0m,
+                            ProductType = 2,
+                            RestaurantId = new Guid("bbbb1111-1111-1111-1111-111111111111")
+                        },
+                        new
+                        {
+                            Id = new Guid("dddd4444-4444-4444-4444-444444444444"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            CuisineId = new Guid("cccc1111-1111-1111-1111-111111111111"),
+                            Description = "",
+                            Name = "Mantar",
+                            OrderIndex = 1,
+                            Price = 0m,
+                            ProductType = 2,
+                            RestaurantId = new Guid("bbbb1111-1111-1111-1111-111111111111")
+                        },
+                        new
+                        {
+                            Id = new Guid("dddd9999-9999-9999-9999-999999999999"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            CuisineId = new Guid("cccc5555-5555-5555-5555-555555555555"),
+                            Description = "",
+                            Name = "Cola 330ml",
+                            OrderIndex = 10,
+                            Price = 0m,
+                            ProductType = 1,
+                            RestaurantId = new Guid("bbbb1111-1111-1111-1111-111111111111")
+                        },
+                        new
+                        {
+                            Id = new Guid("ddddaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            CuisineId = new Guid("cccc4444-4444-4444-4444-444444444444"),
+                            Description = "",
+                            Name = "Ayran",
+                            OrderIndex = 11,
+                            Price = 0m,
+                            ProductType = 1,
+                            RestaurantId = new Guid("bbbb1111-1111-1111-1111-111111111111")
+                        },
+                        new
+                        {
+                            Id = new Guid("dddd5555-5555-5555-5555-555555555555"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            CuisineId = new Guid("cccc2222-2222-2222-2222-222222222222"),
+                            Description = "Özel soslu dana burger",
+                            Name = "Cheeseburger",
+                            OrderIndex = 0,
+                            Price = 0m,
+                            ProductType = 1,
+                            RestaurantId = new Guid("bbbb3333-3333-3333-3333-333333333333")
+                        },
+                        new
+                        {
+                            Id = new Guid("dddd6666-6666-6666-6666-666666666666"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            CuisineId = new Guid("cccc2222-2222-2222-2222-222222222222"),
+                            Description = "Çıtır tavuk burger",
+                            Name = "Chicken Burger",
+                            OrderIndex = 1,
+                            Price = 0m,
+                            ProductType = 1,
+                            RestaurantId = new Guid("bbbb3333-3333-3333-3333-333333333333")
+                        },
+                        new
+                        {
+                            Id = new Guid("dddd7777-7777-7777-7777-777777777777"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            CuisineId = new Guid("cccc3333-3333-3333-3333-333333333333"),
+                            Description = "Acılı el yapımı kebap",
+                            Name = "Adana Kebap",
+                            OrderIndex = 2,
+                            Price = 0m,
+                            ProductType = 1,
+                            RestaurantId = new Guid("bbbb3333-3333-3333-3333-333333333333")
+                        },
+                        new
+                        {
+                            Id = new Guid("dddd8888-8888-8888-8888-888888888888"),
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            CuisineId = new Guid("cccc3333-3333-3333-3333-333333333333"),
+                            Description = "Acısız kebap",
+                            Name = "Urfa Kebap",
+                            OrderIndex = 3,
+                            Price = 0m,
+                            ProductType = 1,
+                            RestaurantId = new Guid("bbbb3333-3333-3333-3333-333333333333")
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Seller.ProductAttribute", b =>
@@ -2573,22 +3432,66 @@ namespace Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("3a4d6ba2-593d-4f28-a2ce-89fbbb7fc811"),
-                            CoverImage = "https://cdn.getiryemek.com/restaurants/1741075067957_1125x522.webp",
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Süper lezzetli pizzalar, hızlı teslimat!",
-                            Email = "a@a.com",
+                            Id = new Guid("bbbb1111-1111-1111-1111-111111111111"),
+                            CoverImage = "https://picsum.photos/seed/pizza1/800/400",
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Taş fırında İtalyan pizzalar",
+                            Email = "nilufer@pizzaci.com",
                             HasOwnCouriers = false,
-                            IsActive = false,
-                            IsOpen = false,
+                            IsActive = true,
+                            IsOpen = true,
+                            Latitude = 40.2273m,
+                            Longitude = 28.8891m,
                             MaxDeliveryTime = 45,
                             MinDeliveryTime = 25,
-                            MinimumOrderPrice = 250m,
-                            Name = "Pizzacı Ahmet",
+                            MinimumOrderPrice = 150m,
+                            Name = "Pizzacı Ahmet - Nilüfer",
                             Phone = "05551112233",
-                            Rating = 0m,
-                            RatingCount = 0,
-                            SellerId = new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf")
+                            Rating = 4.5m,
+                            RatingCount = 120,
+                            SellerId = new Guid("aaaa1111-1111-1111-1111-111111111111")
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbb2222-2222-2222-2222-222222222222"),
+                            CoverImage = "https://picsum.photos/seed/pizza2/800/400",
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Lezzetli pizzalar, hızlı teslimat",
+                            Email = "osmangazi@pizzaci.com",
+                            HasOwnCouriers = false,
+                            IsActive = true,
+                            IsOpen = true,
+                            Latitude = 40.1885m,
+                            Longitude = 29.0610m,
+                            MaxDeliveryTime = 50,
+                            MinDeliveryTime = 30,
+                            MinimumOrderPrice = 100m,
+                            Name = "Pizzacı Ahmet - Osmangazi",
+                            Phone = "05551112244",
+                            Rating = 4.2m,
+                            RatingCount = 85,
+                            SellerId = new Guid("aaaa1111-1111-1111-1111-111111111111")
+                        },
+                        new
+                        {
+                            Id = new Guid("bbbb3333-3333-3333-3333-333333333333"),
+                            CoverImage = "https://picsum.photos/seed/kebap1/800/400",
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Geleneksel Türk kebapları, mangal lezzetleri",
+                            Email = "info@kebapci.com",
+                            HasOwnCouriers = true,
+                            IsActive = true,
+                            IsOpen = true,
+                            Latitude = 40.1950m,
+                            Longitude = 29.0200m,
+                            MaxDeliveryTime = 55,
+                            MinDeliveryTime = 35,
+                            MinimumOrderPrice = 200m,
+                            Name = "Kebapçı Mehmet",
+                            Phone = "05551113355",
+                            Rating = 4.7m,
+                            RatingCount = 230,
+                            SellerId = new Guid("aaaa2222-2222-2222-2222-222222222222")
                         });
                 });
 
@@ -2784,16 +3687,30 @@ namespace Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("bab60c66-11df-4c2d-8fc3-b8702664d9cf"),
-                            CompanyStatus = (short)1,
+                            Id = new Guid("aaaa1111-1111-1111-1111-111111111111"),
+                            CompanyStatus = (short)2,
                             CompanyType = (short)2,
-                            CreatedDate = new DateTime(2026, 3, 24, 21, 16, 54, 414, DateTimeKind.Local).AddTicks(9930),
-                            IBAN = "TR260006266822193294982978",
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            IBAN = "TR111111111111111111111111",
                             IsEInvoiceAvaible = true,
                             LegalName = "Pizzacı Ahmet Ltd. Şti.",
                             Name = "Pizzacı Ahmet",
                             TaxArea = "Nilüfer",
-                            TaxCode = "1234567890"
+                            TaxCode = "1111111111"
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaa2222-2222-2222-2222-222222222222"),
+                            CompanyStatus = (short)2,
+                            CompanyType = (short)1,
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            IBAN = "TR222222222222222222222222",
+                            IdentityNumber = "12345678901",
+                            IsEInvoiceAvaible = false,
+                            LegalName = "Mehmet Kebap",
+                            Name = "Kebapçı Mehmet",
+                            TaxArea = "Osmangazi",
+                            TaxCode = "2222222222"
                         });
                 });
 
@@ -2912,6 +3829,36 @@ namespace Persistence.Migrations
                     b.HasIndex("SubscriptionPlanId");
 
                     b.ToTable("Subscription", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("ac011111-1111-1111-1111-111111111111"),
+                            AutoRenew = true,
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            EndDate = new DateTime(2026, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            PaidAmount = 999m,
+                            RenewalAttempts = 0,
+                            RestaurantId = new Guid("bbbb1111-1111-1111-1111-111111111111"),
+                            SellerId = new Guid("aaaa1111-1111-1111-1111-111111111111"),
+                            StartDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            StatusId = (short)1,
+                            SubscriptionPlanId = new Guid("ab022222-2222-2222-2222-222222222222")
+                        },
+                        new
+                        {
+                            Id = new Guid("ac022222-2222-2222-2222-222222222222"),
+                            AutoRenew = true,
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            EndDate = new DateTime(2025, 7, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            PaidAmount = 499m,
+                            RenewalAttempts = 0,
+                            RestaurantId = new Guid("bbbb3333-3333-3333-3333-333333333333"),
+                            SellerId = new Guid("aaaa2222-2222-2222-2222-222222222222"),
+                            StartDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            StatusId = (short)1,
+                            SubscriptionPlanId = new Guid("ab011111-1111-1111-1111-111111111111")
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Seller.SubscriptionPlan", b =>
@@ -2973,6 +3920,50 @@ namespace Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SubscriptionPlan", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("ab011111-1111-1111-1111-111111111111"),
+                            CommissionRate = 0.05m,
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Küçük işletmeler için",
+                            IsActive = true,
+                            MaxOrdersPerMonth = 500,
+                            MaxRestaurants = 1,
+                            MonthlyPrice = 499m,
+                            Name = "Başlangıç",
+                            OverageAction = (short)1,
+                            PlanType = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("ab022222-2222-2222-2222-222222222222"),
+                            CommissionRate = 0.03m,
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Büyüyen işletmeler için",
+                            IsActive = true,
+                            MaxOrdersPerMonth = 2000,
+                            MaxRestaurants = 3,
+                            MonthlyPrice = 999m,
+                            Name = "Profesyonel",
+                            OverageAction = (short)2,
+                            PlanType = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("ab033333-3333-3333-3333-333333333333"),
+                            CommissionRate = 0.01m,
+                            CreatedDate = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Sınırsız kullanım",
+                            IsActive = true,
+                            MaxOrdersPerMonth = 2147483647,
+                            MaxRestaurants = 10,
+                            MonthlyPrice = 1999m,
+                            Name = "Premium",
+                            OverageAction = (short)1,
+                            PlanType = (short)3
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Seller.SubscriptionUsage", b =>
@@ -3118,6 +4109,28 @@ namespace Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Buyer.Notification", b =>
+                {
+                    b.HasOne("Domain.Entities.Common.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.NotificationPreference", b =>
+                {
+                    b.HasOne("Domain.Entities.Common.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Domain.Entities.Buyer.OrderItem", b =>
                 {
                     b.HasOne("Domain.Entities.Buyer.Order", "Order")
@@ -3238,6 +4251,61 @@ namespace Persistence.Migrations
                     b.Navigation("Restaurant");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.SearchHistory", b =>
+                {
+                    b.HasOne("Domain.Entities.Common.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.SupportAction", b =>
+                {
+                    b.HasOne("Domain.Entities.Buyer.SupportTicket", "Ticket")
+                        .WithMany("Actions")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ticket");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.SupportMessage", b =>
+                {
+                    b.HasOne("Domain.Entities.Buyer.SupportTicket", "Ticket")
+                        .WithMany("Messages")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ticket");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.SupportTicket", b =>
+                {
+                    b.HasOne("Domain.Entities.Common.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.Tip", b =>
+                {
+                    b.HasOne("Domain.Entities.Buyer.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("Domain.Entities.Buyer.UserCoupon", b =>
@@ -3767,6 +4835,13 @@ namespace Persistence.Migrations
             modelBuilder.Entity("Domain.Entities.Buyer.OrderItemValue", b =>
                 {
                     b.Navigation("OrderItemValueOptions");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Buyer.SupportTicket", b =>
+                {
+                    b.Navigation("Actions");
+
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("Domain.Entities.Courier.Courier", b =>

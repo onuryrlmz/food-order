@@ -44,7 +44,7 @@ public class PaymentManager : IPaymentService
             Amount = amount,
             SellerPayoutAmount = 0,
             CommissionAmount = 0,
-            StatusId = (short)AuthorizationServiceEnums.PaymentStatusEnums.Pending,
+            StatusId = (short)PaymentStatusEnums.Pending,
             PaymentOptionId = paymentOptionId,
             ProviderConversationId = providerConversationId,
             CardAlias = cardAlias
@@ -76,7 +76,7 @@ public class PaymentManager : IPaymentService
             }
 
             var payment = await _unitOfWork.PaymentRepository.GetAsync(
-                x => x.OrderId == orderId && x.StatusId == (short)AuthorizationServiceEnums.PaymentStatusEnums.Pending,
+                x => x.OrderId == orderId && x.StatusId == (short)PaymentStatusEnums.Pending,
                 enableTracking: true);
 
             if (isSuccess)
@@ -89,7 +89,7 @@ public class PaymentManager : IPaymentService
                     // Ödeme başarılı
                     if (payment != null)
                     {
-                        payment.StatusId = (short)AuthorizationServiceEnums.PaymentStatusEnums.Completed;
+                        payment.StatusId = (short)PaymentStatusEnums.Completed;
                         payment.ProviderPaymentId = paymentId;
                         payment.CompletedAt = DateTime.UtcNow;
 
@@ -97,7 +97,7 @@ public class PaymentManager : IPaymentService
                         var subscription = await _context.Set<Domain.Entities.Seller.Subscription>()
                             .Include(s => s.SubscriptionPlan)
                             .FirstOrDefaultAsync(s => s.RestaurantId == order.RestaurantId
-                                                      && s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active);
+                                                      && s.StatusId == (short)SubscriptionStatusEnums.Active);
                         var commissionRate = subscription?.SubscriptionPlan?.CommissionRate ?? 0.10m;
                         payment.CommissionAmount = payment.Amount * commissionRate;
                         payment.SellerPayoutAmount = payment.Amount - payment.CommissionAmount;
@@ -105,10 +105,10 @@ public class PaymentManager : IPaymentService
                         _unitOfWork.PaymentRepository.Update(payment);
                     }
 
-                    order.PaymentStatusId = (short)AuthorizationServiceEnums.PaymentStatusEnums.Completed;
-                    order.StatusId = (short)AuthorizationServiceEnums.OrderStatusEnums.WaitingRestaurantApproval;
+                    order.PaymentStatusId = (short)PaymentStatusEnums.Completed;
+                    order.StatusId = (short)OrderStatusEnums.WaitingRestaurantApproval;
                     _unitOfWork.OrderRepository.Update(order);
-                    await AddStatusHistory(order.Id, AuthorizationServiceEnums.OrderStatusEnums.WaitingRestaurantApproval);
+                    await AddStatusHistory(order.Id, OrderStatusEnums.WaitingRestaurantApproval);
 
                     // Kart kaydedildiyse CardUserKey ve kart bilgilerini UserExternalInfo'ya yaz
                     if (!string.IsNullOrEmpty(completeResult.Data.CardUserKey))
@@ -171,7 +171,7 @@ public class PaymentManager : IPaymentService
 
                             await _realtimeNotifier.NotifyNewOrderToRestaurant(order.RestaurantId, order.Id, order.TotalPrice);
                             await _realtimeNotifier.NotifyOrderStatusChanged(order.Id,
-                                (short)AuthorizationServiceEnums.OrderStatusEnums.WaitingRestaurantApproval);
+                                (short)OrderStatusEnums.WaitingRestaurantApproval);
                         }
                         catch
                         {
@@ -212,7 +212,7 @@ public class PaymentManager : IPaymentService
         try
         {
             var payment = await _unitOfWork.PaymentRepository.GetAsync(
-                x => x.OrderId == orderId && x.StatusId == (short)AuthorizationServiceEnums.PaymentStatusEnums.Completed,
+                x => x.OrderId == orderId && x.StatusId == (short)PaymentStatusEnums.Completed,
                 enableTracking: true);
 
             if (payment == null)
@@ -239,7 +239,7 @@ public class PaymentManager : IPaymentService
                 return result;
             }
 
-            payment.StatusId = (short)AuthorizationServiceEnums.PaymentStatusEnums.Refunded;
+            payment.StatusId = (short)PaymentStatusEnums.Refunded;
             payment.RefundedAt = DateTime.UtcNow;
             payment.RefundTransactionId = refundResult.Data.TransactionId;
             payment.RefundReason = reason;
@@ -275,21 +275,21 @@ public class PaymentManager : IPaymentService
     {
         if (payment != null)
         {
-            payment.StatusId = (short)AuthorizationServiceEnums.PaymentStatusEnums.Failed;
+            payment.StatusId = (short)PaymentStatusEnums.Failed;
             payment.ProviderPaymentId = paymentId;
             payment.ErrorMessage = errorMessage;
             payment.FailedAt = DateTime.UtcNow;
             _unitOfWork.PaymentRepository.Update(payment);
         }
 
-        order.PaymentStatusId = (short)AuthorizationServiceEnums.PaymentStatusEnums.Failed;
-        order.StatusId = (short)AuthorizationServiceEnums.OrderStatusEnums.PaymentFailed;
+        order.PaymentStatusId = (short)PaymentStatusEnums.Failed;
+        order.StatusId = (short)OrderStatusEnums.PaymentFailed;
         order.CancellationReason = $"Ödeme başarısız: {errorMessage}";
         _unitOfWork.OrderRepository.Update(order);
-        await AddStatusHistory(order.Id, AuthorizationServiceEnums.OrderStatusEnums.PaymentFailed, errorMessage);
+        await AddStatusHistory(order.Id, OrderStatusEnums.PaymentFailed, errorMessage);
     }
 
-    private async Task AddStatusHistory(Guid orderId, AuthorizationServiceEnums.OrderStatusEnums status, string? note = null)
+    private async Task AddStatusHistory(Guid orderId, OrderStatusEnums status, string? note = null)
     {
         var history = new OrderStatusHistory
         {

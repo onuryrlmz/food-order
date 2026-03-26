@@ -12,10 +12,3 @@ public class ReviewDto
     public string UserLastName { get; set; }
     public DateTime CreatedDate { get; set; }
 }
-
-public class CreateReviewRequestDto
-{
-    public Guid OrderId { get; set; }
-    public short Rating { get; set; }
-    public string? Comment { get; set; }
-}

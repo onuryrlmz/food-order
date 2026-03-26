@@ -20,9 +20,9 @@ public class SellerOrderController : BaseController
 
     [HttpGet("restaurant/{restaurantId}")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser,
-        AuthorizationServiceEnums.UserRoleEnums.Admin)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser,
+        UserRoleEnums.Admin)]
     public async Task<ServiceCollectionResult<GetOrderResponseDto>> GetByRestaurant(
         Guid restaurantId,
         [FromQuery] short? statusId = null,
@@ -34,9 +34,9 @@ public class SellerOrderController : BaseController
 
     [HttpGet("{orderId}")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser,
-        AuthorizationServiceEnums.UserRoleEnums.Admin)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser,
+        UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<GetOrderResponseDto>> GetById(Guid orderId)
     {
         return await _orderService.GetOrderById(orderId);
@@ -44,8 +44,8 @@ public class SellerOrderController : BaseController
 
     [HttpPut("{orderId}/status")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.Admin)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> UpdateStatus(Guid orderId, [FromQuery] short statusId)
     {
         return await _orderService.UpdateOrderStatus(orderId, statusId);

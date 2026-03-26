@@ -42,15 +42,15 @@ public class SellerManager : ISellerService
             }
             else
             {
-                var companyType = requestDto.CompanyType == (short)AuthorizationServiceEnums.CompanyTypeEnums.Company
-                    ? AuthorizationServiceEnums.CompanyTypeEnums.Company
-                    : AuthorizationServiceEnums.CompanyTypeEnums.Individual;
+                var companyType = requestDto.CompanyType == (short)CompanyTypeEnums.Company
+                    ? CompanyTypeEnums.Company
+                    : CompanyTypeEnums.Individual;
 
                 seller = await _sellerRepository.AddAsync(new Domain.Entities.Seller.Seller
                 {
                     Id = Guid.NewGuid(),
                     CompanyType = (short)companyType,
-                    CompanyStatus = (short)AuthorizationServiceEnums.CompanyStatusEnums.Pending,
+                    CompanyStatus = (short)CompanyStatusEnums.Pending,
                     Name = requestDto.Name,
                     LegalName = requestDto.LegalName,
                     TaxCode = requestDto.TaxCode,
@@ -63,7 +63,7 @@ public class SellerManager : ISellerService
                 {
                     Id = Guid.NewGuid(),
                     SellerId = seller.Id,
-                    AddressType = (short)AuthorizationServiceEnums.AddressTypeEnums.Invoice,
+                    AddressType = (short)AddressTypeEnums.Invoice,
                     AddressName = "Fatura Adresi",
                     FirstName = requestDto.OwnerFirstName,
                     LastName = requestDto.OwnerLastName,
@@ -79,19 +79,19 @@ public class SellerManager : ISellerService
 
                 address.Id = Guid.NewGuid();
                 address.AddressName = "Kargo Adresi";
-                address.AddressType = (short)AuthorizationServiceEnums.AddressTypeEnums.Shipping;
+                address.AddressType = (short)AddressTypeEnums.Shipping;
                 await _addressRepository.AddAsync(address);
 
                 address.Id = Guid.NewGuid();
                 address.AddressName = "İade Adresi";
-                address.AddressType = (short)AuthorizationServiceEnums.AddressTypeEnums.Return;
+                address.AddressType = (short)AddressTypeEnums.Return;
                 await _addressRepository.AddAsync(address);
 
                 await _userRepository.AddAsync(new User
                 {
                     Id = Guid.NewGuid(),
-                    UserRoleId = (short)AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-                    UserStatusId = (short)AuthorizationServiceEnums.UserStatusEnums.WaitingForActivation,
+                    UserRoleId = (short)UserRoleEnums.SellerAdmin,
+                    UserStatusId = (short)UserStatusEnums.WaitingForActivation,
                     Email = requestDto.OwnerEmail,
                     Password = BCrypt.Net.BCrypt.HashPassword(requestDto.Password, 12),
                     FirstName = requestDto.OwnerFirstName,
@@ -126,22 +126,22 @@ public class SellerManager : ISellerService
             }
             else
             {
-                if (seller.CompanyStatus == (short)AuthorizationServiceEnums.CompanyStatusEnums.Approved)
+                if (seller.CompanyStatus == (short)CompanyStatusEnums.Approved)
                 {
                     result.AddErrorMessage("Satıcı zaten onaylanmış");
                 }
                 else
                 {
-                    var sellerUser = await _userRepository.GetAsync(x => x.SellerId == seller.Id && x.UserRoleId == (short)AuthorizationServiceEnums.UserRoleEnums.SellerAdmin, withDeleted: false);
+                    var sellerUser = await _userRepository.GetAsync(x => x.SellerId == seller.Id && x.UserRoleId == (short)UserRoleEnums.SellerAdmin, withDeleted: false);
                     if (sellerUser != null)
                     {
                         // Get seller address for iyzico
                         var sellerAddress = await _addressRepository.GetAsync(a => a.SellerId == seller.Id &&
-                                                                                   a.AddressType == (short)AuthorizationServiceEnums.AddressTypeEnums.Invoice);
+                                                                                   a.AddressType == (short)AddressTypeEnums.Invoice);
                         var addressStr = sellerAddress?.AddressLine1 ?? "Adres bilgisi yok";
 
                         // Validate TC kimlik for Individual sellers
-                        if (seller.CompanyType == (short)AuthorizationServiceEnums.CompanyTypeEnums.Individual &&
+                        if (seller.CompanyType == (short)CompanyTypeEnums.Individual &&
                             (string.IsNullOrEmpty(seller.IdentityNumber) || seller.IdentityNumber.Length != 11))
                         {
                             result.AddErrorMessage("Şahıs firması için 11 haneli TC kimlik numarası gereklidir.");
@@ -173,15 +173,15 @@ public class SellerManager : ISellerService
                         await _sellerDetailRepository.AddAsync(new SellerDetail
                         {
                             SellerId = seller.Id,
-                            Key1 = (int)AuthorizationServiceEnums.SellerDetailKey1.PaymentSubMerchantKey,
-                            Key2 = (int)AuthorizationServiceEnums.SellerDetailKey2.Iyzico,
+                            Key1 = (int)SellerDetailKey1.PaymentSubMerchantKey,
+                            Key2 = (int)SellerDetailKey2.Iyzico,
                             ValueStr = paymentSellerResponse.Data
                         });
 
-                        seller.CompanyStatus = (short)AuthorizationServiceEnums.CompanyStatusEnums.Approved;
+                        seller.CompanyStatus = (short)CompanyStatusEnums.Approved;
                         await _sellerRepository.UpdateAsync(seller);
 
-                        sellerUser.UserStatusId = (short)AuthorizationServiceEnums.UserStatusEnums.Active;
+                        sellerUser.UserStatusId = (short)UserStatusEnums.Active;
                         await _userRepository.UpdateAsync(sellerUser);
 
                         result.SetData(true);
@@ -246,7 +246,7 @@ public class SellerManager : ISellerService
             var sellerIds = sellers.Items.Select(s => s.Id).ToList();
             var ownerUsers = await _userRepository.GetListAsync(
                 x => sellerIds.Contains(x.SellerId!.Value) &&
-                     x.UserRoleId == (short)AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
+                     x.UserRoleId == (short)UserRoleEnums.SellerAdmin,
                 size: sellerIds.Count * 2);
 
             var ownerDict = ownerUsers.Items
@@ -306,7 +306,7 @@ public class SellerManager : ISellerService
 
             var sellerUser = await _userRepository.GetAsync(
                 x => x.SellerId == seller.Id &&
-                     x.UserRoleId == (short)AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
+                     x.UserRoleId == (short)UserRoleEnums.SellerAdmin,
                 withDeleted: false);
 
             if (sellerUser == null)
@@ -316,13 +316,13 @@ public class SellerManager : ISellerService
             }
 
             var sellerAddress = await _addressRepository.GetAsync(a => a.SellerId == seller.Id &&
-                                                                       a.AddressType == (short)AuthorizationServiceEnums.AddressTypeEnums.Invoice);
+                                                                       a.AddressType == (short)AddressTypeEnums.Invoice);
             var addressStr = sellerAddress?.AddressLine1 ?? "Adres bilgisi yok";
 
             // Check if subMerchantKey already exists
             var existingDetail = await _sellerDetailRepository.GetAsync(d => d.SellerId == seller.Id &&
-                                                                             d.Key1 == (int)AuthorizationServiceEnums.SellerDetailKey1.PaymentSubMerchantKey &&
-                                                                             d.Key2 == (int)AuthorizationServiceEnums.SellerDetailKey2.Iyzico);
+                                                                             d.Key1 == (int)SellerDetailKey1.PaymentSubMerchantKey &&
+                                                                             d.Key2 == (int)SellerDetailKey2.Iyzico);
 
             if (existingDetail != null)
             {
@@ -376,8 +376,8 @@ public class SellerManager : ISellerService
                 await _sellerDetailRepository.AddAsync(new SellerDetail
                 {
                     SellerId = seller.Id,
-                    Key1 = (int)AuthorizationServiceEnums.SellerDetailKey1.PaymentSubMerchantKey,
-                    Key2 = (int)AuthorizationServiceEnums.SellerDetailKey2.Iyzico,
+                    Key1 = (int)SellerDetailKey1.PaymentSubMerchantKey,
+                    Key2 = (int)SellerDetailKey2.Iyzico,
                     ValueStr = createResult.Data
                 });
 

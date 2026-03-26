@@ -30,18 +30,18 @@ public class SubscriptionJobService : ISubscriptionJobService
         try
         {
             var expired = await _context.Set<Subscription>()
-                .Where(s => s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active
+                .Where(s => s.StatusId == (short)SubscriptionStatusEnums.Active
                             && s.EndDate < DateTime.UtcNow)
                 .ToListAsync();
 
             foreach (var sub in expired)
             {
-                sub.StatusId = (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Expired;
+                sub.StatusId = (short)SubscriptionStatusEnums.Expired;
 
                 var hasOtherActive = await _context.Set<Subscription>()
                     .AnyAsync(s => s.RestaurantId == sub.RestaurantId
                                    && s.Id != sub.Id
-                                   && s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active
+                                   && s.StatusId == (short)SubscriptionStatusEnums.Active
                                    && s.EndDate >= DateTime.UtcNow);
 
                 if (!hasOtherActive)
@@ -68,7 +68,7 @@ public class SubscriptionJobService : ISubscriptionJobService
         {
             var threeDaysFromNow = DateTime.UtcNow.AddDays(3);
             var expiringSoon = await _context.Set<Subscription>()
-                .Where(s => s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active
+                .Where(s => s.StatusId == (short)SubscriptionStatusEnums.Active
                             && s.EndDate <= threeDaysFromNow
                             && s.EndDate > DateTime.UtcNow)
                 .ToListAsync();
@@ -101,7 +101,7 @@ public class SubscriptionJobService : ISubscriptionJobService
             var tomorrow = DateTime.UtcNow.AddDays(1);
             var toRenew = await _context.Set<Subscription>()
                 .Include(s => s.SubscriptionPlan)
-                .Where(s => s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active
+                .Where(s => s.StatusId == (short)SubscriptionStatusEnums.Active
                             && s.AutoRenew
                             && s.EndDate <= tomorrow
                             && s.EndDate > DateTime.UtcNow)
@@ -135,7 +135,7 @@ public class SubscriptionJobService : ISubscriptionJobService
                         SellerId = sub.SellerId,
                         RestaurantId = sub.RestaurantId,
                         SubscriptionPlanId = sub.SubscriptionPlanId,
-                        StatusId = (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active,
+                        StatusId = (short)SubscriptionStatusEnums.Active,
                         StartDate = sub.EndDate,
                         EndDate = sub.EndDate.AddMonths(1),
                         PaidAmount = sub.SubscriptionPlan?.MonthlyPrice ?? sub.PaidAmount,
@@ -143,7 +143,7 @@ public class SubscriptionJobService : ISubscriptionJobService
                         RenewalAttempts = 0
                     };
 
-                    sub.StatusId = (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Expired;
+                    sub.StatusId = (short)SubscriptionStatusEnums.Expired;
                     _context.Set<Subscription>().Add(newSub);
 
                     var sellerNotify = await _context.Set<Domain.Entities.Common.User>().FirstOrDefaultAsync(u => u.SellerId == sub.SellerId);
@@ -161,7 +161,7 @@ public class SubscriptionJobService : ISubscriptionJobService
 
                     if (sub.RenewalAttempts >= 3)
                     {
-                        sub.StatusId = (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Expired;
+                        sub.StatusId = (short)SubscriptionStatusEnums.Expired;
                         var restaurant = await _context.Set<Restaurant>().FirstOrDefaultAsync(r => r.Id == sub.RestaurantId);
                         if (restaurant != null)
                             restaurant.IsActive = false;
@@ -185,7 +185,7 @@ public class SubscriptionJobService : ISubscriptionJobService
             var now = DateTime.UtcNow;
             var activeSubscriptions = await _context.Set<Subscription>()
                 .Include(s => s.SubscriptionPlan)
-                .Where(s => s.StatusId == (short)AuthorizationServiceEnums.SubscriptionStatusEnums.Active)
+                .Where(s => s.StatusId == (short)SubscriptionStatusEnums.Active)
                 .ToListAsync();
 
             foreach (var sub in activeSubscriptions)

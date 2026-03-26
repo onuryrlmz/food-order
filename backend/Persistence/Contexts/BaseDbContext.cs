@@ -51,6 +51,22 @@ public sealed class BaseDbContext : DbContext
     public DbSet<CourierEarning> CourierEarnings { get; set; }
     public DbSet<CourierLocationHistory> CourierLocationHistories { get; set; }
 
+    // Buyer - Tip & Search
+    public DbSet<Tip> Tips { get; set; }
+    public DbSet<SearchHistory> SearchHistories { get; set; }
+
+    // Buyer - Notification
+    public DbSet<Notification> Notifications { get; set; }
+    public DbSet<NotificationPreference> NotificationPreferences { get; set; }
+
+    // Buyer - Scheduled Order
+    public DbSet<ScheduledOrder> ScheduledOrders { get; set; }
+
+    // Buyer - AI Support
+    public DbSet<SupportTicket> SupportTickets { get; set; }
+    public DbSet<SupportMessage> SupportMessages { get; set; }
+    public DbSet<SupportAction> SupportActions { get; set; }
+
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())
     {
         var entries = ChangeTracker.Entries<Entity<Guid>>().Where(e => e.State is EntityState.Added or EntityState.Modified);

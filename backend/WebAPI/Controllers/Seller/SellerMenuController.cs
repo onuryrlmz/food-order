@@ -20,8 +20,8 @@ public class SellerMenuController : BaseController
 
     [HttpGet("{id}")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceObjectResult<MenuResponseDto>> GetById([FromRoute] Guid id, [FromQuery] Guid restaurantId)
     {
         return await _menuService.GetMenuById(new GetMenuRequestDto { MenuId = id, RestaurantId = restaurantId });
@@ -29,8 +29,8 @@ public class SellerMenuController : BaseController
 
     [HttpGet("by-restaurant/{restaurantId}")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceCollectionResult<MenuResponseDto>> GetByRestaurant(Guid restaurantId)
     {
         return await _menuService.GetMenusByRestaurantId(new GetMenusByRestaurantIdRequestDto { RestaurantId = restaurantId });
@@ -38,29 +38,29 @@ public class SellerMenuController : BaseController
 
     [HttpGet("by-restaurant/{restaurantId}/with-options")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceCollectionResult<MenuResponseDto>> GetByRestaurantWithOptions(Guid restaurantId)
     {
         return await _menuService.GetMenusByRestaurantIdWithOptions(new GetMenusByRestaurantIdRequestDto { RestaurantId = restaurantId });
     }
 
     [HttpPost]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<Guid>> Create([FromBody] CreateMenuRequestDto requestDto)
     {
         return await _menuService.Create(requestDto);
     }
 
     [HttpPut]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Update([FromBody] UpdateMenuRequestDto requestDto)
     {
         return await _menuService.Update(requestDto);
     }
 
     [HttpDelete]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Delete([FromBody] DeleteMenuRequestDto requestDto)
     {
         return await _menuService.Delete(requestDto);

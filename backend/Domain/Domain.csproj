@@ -11,8 +11,4 @@
         <ProjectReference Include="..\Base\Base.csproj"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <Folder Include="Dto\Base\"/>
-    </ItemGroup>
-
 </Project>

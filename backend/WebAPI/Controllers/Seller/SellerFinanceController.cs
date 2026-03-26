@@ -23,8 +23,8 @@ public class SellerFinanceController : BaseController
 
     [HttpGet("summary")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceObjectResult<object>> GetSummary()
     {
         var result = new ServiceObjectResult<object>();
@@ -38,7 +38,7 @@ public class SellerFinanceController : BaseController
             }
 
             var payments = await _context.Set<Domain.Entities.Buyer.Payment>()
-                .Where(p => p.SellerId == token.SellerId.Value && p.StatusId == (short)AuthorizationServiceEnums.PaymentStatusEnums.Completed)
+                .Where(p => p.SellerId == token.SellerId.Value && p.StatusId == (short)PaymentStatusEnums.Completed)
                 .ToListAsync();
 
             var summary = new
@@ -61,8 +61,8 @@ public class SellerFinanceController : BaseController
 
     [HttpGet("payments")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceCollectionResult<object>> GetPayments([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var result = new ServiceCollectionResult<object>();
@@ -78,7 +78,7 @@ public class SellerFinanceController : BaseController
             pageSize = Math.Min(pageSize, 50);
 
             var payments = await _context.Set<Domain.Entities.Buyer.Payment>()
-                .Where(p => p.SellerId == token.SellerId.Value && p.StatusId == (short)AuthorizationServiceEnums.PaymentStatusEnums.Completed)
+                .Where(p => p.SellerId == token.SellerId.Value && p.StatusId == (short)PaymentStatusEnums.Completed)
                 .OrderByDescending(p => p.CompletedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)

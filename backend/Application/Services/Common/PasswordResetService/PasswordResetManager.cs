@@ -52,8 +52,8 @@ public class PasswordResetManager : IPasswordResetService
             // Determine method
             var isEmail = emailOrPhone.Contains('@');
             var method = isEmail
-                ? (short)AuthorizationServiceEnums.PasswordResetMethodEnums.Email
-                : (short)AuthorizationServiceEnums.PasswordResetMethodEnums.Sms;
+                ? (short)PasswordResetMethodEnums.Email
+                : (short)PasswordResetMethodEnums.Sms;
 
             // Generate 6-digit code
             var code = GenerateSixDigitCode();
@@ -157,12 +157,12 @@ public class PasswordResetManager : IPasswordResetService
         if (isEmail)
             return await _userRepository.GetAsync(x =>
                     x.Email == emailOrPhone.ToLowerInvariant() &&
-                    x.UserStatusId == (short)AuthorizationServiceEnums.UserStatusEnums.Active,
+                    x.UserStatusId == (short)UserStatusEnums.Active,
                 enableTracking: true);
 
         return await _userRepository.GetAsync(x =>
                 x.PhoneNumber == emailOrPhone &&
-                x.UserStatusId == (short)AuthorizationServiceEnums.UserStatusEnums.Active,
+                x.UserStatusId == (short)UserStatusEnums.Active,
             enableTracking: true);
     }
 

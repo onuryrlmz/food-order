@@ -23,27 +23,3 @@ public class PlaceOrderRequestDto
     // Online ödeme - kayıtlı kart
     public string? CardToken { get; set; }
 }
-
-public class PlaceOrderItemDto
-{
-    public Guid MenuId { get; set; }
-    public int Quantity { get; set; }
-    public List<PlaceOrderItemValueDto> Values { get; set; } = new();
-}
-
-public class PlaceOrderItemValueDto
-{
-    public Guid MenuOptionId { get; set; }
-    public Guid MenuOptionValueId { get; set; }
-    public Guid? ProductId { get; set; }
-    public int Quantity { get; set; }
-    public List<PlaceOrderItemValueOptionDto> Options { get; set; } = new();
-}
-
-public class PlaceOrderItemValueOptionDto
-{
-    public Guid MenuOptionValueOptionId { get; set; }
-    public Guid MenuOptionValueOptionValueId { get; set; }
-    public Guid? ProductId { get; set; }
-    public int Quantity { get; set; }
-}

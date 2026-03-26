@@ -26,8 +26,8 @@ public class SellerSubscriptionController : BaseController
 
     [HttpGet("my")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceCollectionResult<GetSubscriptionResponseDto>> GetMySubscriptions()
     {
         return await _subscriptionService.GetSellerSubscriptions();
@@ -35,22 +35,22 @@ public class SellerSubscriptionController : BaseController
 
     [HttpGet("{restaurantId}/active")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceObjectResult<GetSubscriptionResponseDto>> GetActive(Guid restaurantId)
     {
         return await _subscriptionService.GetActiveSubscription(restaurantId);
     }
 
     [HttpPost("subscribe")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<Guid>> Subscribe([FromBody] SubscribeRequestDto requestDto)
     {
         return await _subscriptionService.Subscribe(requestDto);
     }
 
     [HttpPost("{id}/cancel")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Cancel(Guid id)
     {
         return await _subscriptionService.CancelSubscription(id);
@@ -58,8 +58,8 @@ public class SellerSubscriptionController : BaseController
 
     [HttpGet("usage")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin,
-        AuthorizationServiceEnums.UserRoleEnums.SellerUser)]
+        UserRoleEnums.SellerAdmin,
+        UserRoleEnums.SellerUser)]
     public async Task<ServiceObjectResult<SubscriptionUsageDto>> GetUsage(
         [FromQuery] Guid restaurantId)
     {
@@ -68,7 +68,7 @@ public class SellerSubscriptionController : BaseController
 
     [HttpGet("upgrade/preview")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+        UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<UpgradePreviewDto>> GetUpgradePreview(
         [FromQuery] Guid restaurantId, [FromQuery] Guid planId)
     {
@@ -77,7 +77,7 @@ public class SellerSubscriptionController : BaseController
 
     [HttpPost("upgrade")]
     [AuthorizeAPIRequest(true, false,
-        AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+        UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> Upgrade(
         [FromBody] UpgradeRequestDto request)
     {
@@ -85,7 +85,7 @@ public class SellerSubscriptionController : BaseController
     }
 
     [HttpPut("auto-renew")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.SellerAdmin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> ToggleAutoRenew([FromQuery] Guid restaurantId, [FromQuery] bool enabled)
     {
         return await _subscriptionService.ToggleAutoRenewAsync(restaurantId, enabled);

@@ -48,7 +48,7 @@ public class CourierCompanyManager : ICourierCompanyService
                 ContactPerson = requestDto.ContactPerson,
                 CompanyTypeId = requestDto.CompanyTypeId,
                 IdentityNumber = requestDto.IdentityNumber,
-                StatusId = (short)AuthorizationServiceEnums.CourierCompanyStatusEnums.Pending,
+                StatusId = (short)CourierCompanyStatusEnums.Pending,
                 CommissionRate = 0
             };
 
@@ -263,7 +263,7 @@ public class CourierCompanyManager : ICourierCompanyService
             }
 
             memberCourier.CourierCompanyId = adminCourier.CourierCompanyId;
-            memberCourier.CourierTypeId = (short)AuthorizationServiceEnums.CourierTypeEnums.CompanyMember;
+            memberCourier.CourierTypeId = (short)CourierTypeEnums.CompanyMember;
             _unitOfWork.CourierRepository.Update(memberCourier);
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
@@ -304,7 +304,7 @@ public class CourierCompanyManager : ICourierCompanyService
             }
 
             memberCourier.CourierCompanyId = null;
-            memberCourier.CourierTypeId = (short)AuthorizationServiceEnums.CourierTypeEnums.Individual;
+            memberCourier.CourierTypeId = (short)CourierTypeEnums.Individual;
             _unitOfWork.CourierRepository.Update(memberCourier);
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
@@ -435,7 +435,7 @@ public class CourierCompanyManager : ICourierCompanyService
                 return result;
             }
 
-            company.StatusId = (short)AuthorizationServiceEnums.CourierCompanyStatusEnums.Active;
+            company.StatusId = (short)CourierCompanyStatusEnums.Active;
             _unitOfWork.CourierCompanyRepository.Update(company);
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
@@ -461,7 +461,7 @@ public class CourierCompanyManager : ICourierCompanyService
                 return result;
             }
 
-            company.StatusId = (short)AuthorizationServiceEnums.CourierCompanyStatusEnums.Suspended;
+            company.StatusId = (short)CourierCompanyStatusEnums.Suspended;
             _unitOfWork.CourierCompanyRepository.Update(company);
             await _unitOfWork.CompleteAsync();
             result.SetData(true);

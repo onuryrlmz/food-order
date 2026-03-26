@@ -19,7 +19,7 @@ public class CustomerReviewController : BaseController
     }
 
     [HttpPost]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.User)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.User)]
     public async Task<ServiceObjectResult<ReviewDto>> Create([FromBody] CreateReviewRequestDto requestDto)
     {
         return await _reviewService.CreateReview(requestDto);
@@ -36,7 +36,7 @@ public class CustomerReviewController : BaseController
     }
 
     [HttpDelete("{reviewId}")]
-    [AuthorizeAPIRequest(true, false, AuthorizationServiceEnums.UserRoleEnums.Admin)]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
     public async Task<ServiceObjectResult<bool>> Delete(Guid reviewId)
     {
         return await _reviewService.DeleteReview(reviewId);

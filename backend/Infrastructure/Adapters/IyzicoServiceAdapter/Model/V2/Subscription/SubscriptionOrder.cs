@@ -14,13 +14,3 @@ public class SubscriptionOrder
     [JsonProperty(PropertyName = "paymentAttempts")]
     public List<PaymentAttemptDto> OrderPaymentAttempts { get; set; }
 }
-
-public class PaymentAttemptDto
-{
-    public string ConversationId { get; set; }
-    public string CreatedDate { get; set; }
-    public string PaymentId { get; set; }
-    public string PaymentStatus { get; set; }
-    public string ErrorCode { get; set; }
-    public string ErrorMessage { get; set; }
-}

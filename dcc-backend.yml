@@ -1,0 +1,52 @@
+version: '3.9'
+
+services:
+  yrlmz-food-order-api:
+    build:
+      context: .
+      dockerfile: ./backend/WebAPI/Dockerfile
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - TZ=Europe/Istanbul
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__FoodOrderApp=${DB_CONNECTION_STRING}
+      - Redis__Host=${REDIS_HOST:-food-order-redis}
+      - Redis__Port=${REDIS_PORT:-6379}
+      - Redis__Password=${REDIS_PASSWORD:-}
+      - Redis__Ssl=false
+      - TokenOptions__SecurityKey=0t0KbC82e^b@nPq@RNBGlP^Z4na6EnXfTWBR3kC2EQrdhK%x!xoCfrmyt57&YSgb
+      - AwsS3__Domain=https://cdn.yrlmzteknoloji.com
+      - AwsS3__Endpoint=https://436b6310157e9062a83ae62114a43bc3.r2.cloudflarestorage.com/food-order
+      - AwsS3__BucketName=food-order
+      - AwsS3__AccessKey=1125e62c8c7d5a5d77e6513aeaa32466
+      - AwsS3__SecretKey=58ce51514a352d20194381ce65092d005d5d9ab3cd77131f3c2c1ffda6c47da5
+      - AwsS3__Token=cfut_we1Tg7EYNCdHmwG4lRzc0zxP6T9mjCzLkNV6WDrba0514e87
+      - MailSettings__Server=${SMTP_SERVER:-smtp.mandrillapp.com}
+      - MailSettings__Port=${SMTP_PORT:-587}
+      - MailSettings__UserName=${SMTP_USER}
+      - MailSettings__Password=${SMTP_PASSWORD}
+      - MailSettings__SenderEmail=${SMTP_FROM}
+      - AiSupport__ApiKey=${AI_SUPPORT_API_KEY:-}
+      - AiSupport__Model=${AI_SUPPORT_MODEL:-claude-sonnet-4-20250514}
+      - WebAPIConfiguration__AllowedOrigins__0=https://${ADMIN_DOMAIN}
+      - WebAPIConfiguration__AllowedOrigins__1=https://${SELLER_DOMAIN}
+      - WebAPIConfiguration__AllowedOrigins__2=https://${APP_DOMAIN:-app.esnaftan.com}
+    networks:
+      - proxy-net
+    deploy:
+      replicas: 1
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.yrlmz-food-order-api-http.rule=Host(`food-order-api.yrlmzteknoloji.com`)"
+      - "traefik.http.routers.yrlmz-food-order-api-http.entrypoints=web-http"
+      - "traefik.http.routers.yrlmz-food-order-api-https.rule=Host(`food-order-api.yrlmzteknoloji.com`)"
+      - "traefik.http.routers.yrlmz-food-order-api-https.entrypoints=web-https"
+      - "traefik.http.routers.yrlmz-food-order-api-https.tls=true"
+
+networks:
+  proxy-net:
+    external: true

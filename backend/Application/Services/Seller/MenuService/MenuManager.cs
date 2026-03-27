@@ -200,13 +200,11 @@ public class MenuManager : IMenuService
 
             await _menuRepository.AddAsync(menu);
             response.SetData(menu.Id);
-#if !DEBUG
-            this.CreateMenuInformationJsonFile(client, new MenuRequest()
+            _ = CreateMenuInformationJsonFile(new GetMenuRequestDto
             {
                 RestaurantId = request.RestaurantId,
                 MenuId = menu.Id
             });
-#endif
         }
         catch (Exception e)
         {

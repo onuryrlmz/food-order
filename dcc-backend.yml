@@ -2,9 +2,10 @@ version: '3.9'
 
 services:
   yrlmz-food-order-api:
-    build:
-      context: ./backend
-      dockerfile: WebAPI/Dockerfile
+    image: ghcr.io/onuryrlmz/food-order-api:latest
+    # build:
+    #   context: ./backend
+    #   dockerfile: WebAPI/Dockerfile
     logging:
       options:
         max-size: "10m"

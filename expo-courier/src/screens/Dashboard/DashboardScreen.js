@@ -65,8 +65,18 @@ const DashboardScreen = () => {
   );
 
   useEffect(() => {
-    if (user?.availabilityStatus === 1 || user?.availabilityStatus === 2) {
-      setIsOnline(true);
+    const syncOnlineStatus = async () => {
+      if (user?.availabilityStatus === 1 || user?.availabilityStatus === 2) {
+        setIsOnline(true);
+        // Backend çevrimiçi diyor — konum takibini de başlat
+        await startTracking();
+      } else if (user?.availabilityStatus === 0) {
+        setIsOnline(false);
+        stopTracking();
+      }
+    };
+    if (user) {
+      syncOnlineStatus();
     }
   }, [user]);
 

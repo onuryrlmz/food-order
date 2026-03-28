@@ -54,15 +54,6 @@ export const LocationProvider = ({children}) => {
     });
   }, []);
 
-  const sendLocation = useCallback(async () => {
-    try {
-      const coords = await getCurrentPosition();
-      await courierService.updateLocation(coords.latitude, coords.longitude);
-    } catch (error) {
-      // Silent fail for background location updates
-    }
-  }, [getCurrentPosition]);
-
   const stopTracking = useCallback(() => {
     if (watchIdRef.current !== null) {
       Geolocation.clearWatch(watchIdRef.current);
@@ -74,6 +65,31 @@ export const LocationProvider = ({children}) => {
     }
     setIsTracking(false);
   }, []);
+
+  // Konum gönderiminde backend'den çevrimiçi durumunu kontrol et
+  const sendLocationWithCheck = useCallback(async (stopTrackingFn) => {
+    try {
+      const coords = await getCurrentPosition();
+
+      // Backend'den profil al — çevrimiçi mi kontrol et
+      try {
+        const profileRes = await courierService.getProfile();
+        const status = profileRes.data?.data?.availabilityStatus;
+
+        if (status === 0) {
+          // Backend çevrimdışı diyor — takibi durdur
+          stopTrackingFn();
+          return;
+        }
+      } catch (profileErr) {
+        // Profil alınamazsa yine de konum gönder
+      }
+
+      await courierService.updateLocation(coords.latitude, coords.longitude);
+    } catch (error) {
+      // Konum alınamazsa sessizce geç
+    }
+  }, [getCurrentPosition]);
 
   const startTracking = useCallback(async () => {
     if (isTracking) {
@@ -90,7 +106,8 @@ export const LocationProvider = ({children}) => {
     }
 
     try {
-      await sendLocation();
+      const coords = await getCurrentPosition();
+      await courierService.updateLocation(coords.latitude, coords.longitude);
     } catch (e) {
       Alert.alert('Konum Hatası', 'Konumunuz alınamadı. GPS açık olduğundan emin olun.');
       return false;
@@ -107,10 +124,11 @@ export const LocationProvider = ({children}) => {
       {enableHighAccuracy: true, distanceFilter: 50, interval: 10000, fastestInterval: 5000},
     );
 
-    intervalRef.current = setInterval(sendLocation, LOCATION_INTERVAL);
+    // Her 30 saniyede konum gönder + backend'den çevrimiçi durumunu kontrol et
+    intervalRef.current = setInterval(() => sendLocationWithCheck(stopTracking), LOCATION_INTERVAL);
     setIsTracking(true);
     return true;
-  }, [isTracking, sendLocation]);
+  }, [isTracking, getCurrentPosition, sendLocationWithCheck, stopTracking]);
 
   return (
     <LocationContext.Provider

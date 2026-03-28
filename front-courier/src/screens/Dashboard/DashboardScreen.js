@@ -66,10 +66,16 @@ const DashboardScreen = () => {
   );
 
   useEffect(() => {
-    if (user?.availabilityStatus === 1 || user?.availabilityStatus === 2) {
-      setIsOnline(true);
+    if (!user) return;
+
+    const isBackendOnline = user.availabilityStatus === 1 || user.availabilityStatus === 2;
+    setIsOnline(isBackendOnline);
+
+    // Backend çevrimiçi diyor ama konum takibi başlamamışsa başlat
+    if (isBackendOnline) {
+      startTracking().catch(() => {});
     }
-  }, [user]);
+  }, [user?.availabilityStatus]);
 
   const handleToggleOnline = async () => {
     setToggling(true);

@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Alert } from 'react-native';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { Alert, AppState } from 'react-native';
 import * as Location from 'expo-location';
+import Constants from 'expo-constants';
 import { courierService } from '../api/courierService';
 import {
   startBackgroundLocation,
@@ -10,12 +11,19 @@ import {
 
 const LocationContext = createContext(null);
 
+const isExpoGo = Constants.appOwnership === 'expo';
+const LOCATION_INTERVAL = 30000; // 30 saniye
+
 export const LocationProvider = ({ children }) => {
   const [currentPosition, setCurrentPosition] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
+  const intervalRef = useRef(null);
+  const watchRef = useRef(null);
 
   // Uygulama açıldığında arka plan görevin çalışıp çalışmadığını kontrol et
   useEffect(() => {
+    if (isExpoGo) return;
+
     const checkExistingTracking = async () => {
       try {
         const hasStarted = await Location.hasStartedLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
@@ -54,10 +62,58 @@ export const LocationProvider = ({ children }) => {
     return coords;
   }, []);
 
+  // Expo Go'da foreground interval ile konum gönder
+  const startForegroundTracking = useCallback(async () => {
+    // İlk konumu gönder
+    const sendLocation = async () => {
+      try {
+        const coords = await getCurrentPosition();
+        if (coords) {
+          await courierService.updateLocation(coords.latitude, coords.longitude);
+        }
+      } catch (e) {
+        // Sessizce geç
+      }
+    };
+
+    await sendLocation();
+
+    // Periyodik konum gönderimi
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(sendLocation, LOCATION_INTERVAL);
+
+    // Konum değişikliklerini izle (UI güncellemesi için)
+    if (watchRef.current) watchRef.current.remove();
+    watchRef.current = await Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.High,
+        distanceInterval: 50,
+        timeInterval: 10000,
+      },
+      (location) => {
+        setCurrentPosition({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+      },
+    );
+  }, [getCurrentPosition]);
+
+  const stopForegroundTracking = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    if (watchRef.current) {
+      watchRef.current.remove();
+      watchRef.current = null;
+    }
+  }, []);
+
   const startTracking = useCallback(async () => {
     if (isTracking) return true;
 
-    // Konum izni ve ilk konum al
+    // Konum izni al
     try {
       const coords = await getCurrentPosition();
       if (!coords) {
@@ -73,39 +129,43 @@ export const LocationProvider = ({ children }) => {
       return false;
     }
 
-    // Arka plan konum takibini başlat
-    const started = await startBackgroundLocation();
-    if (!started) {
-      Alert.alert(
-        'Arka Plan Konum İzni',
-        'Uygulama kapalıyken bile konum takibi için "Her zaman izin ver" seçeneğini seçmeniz gerekmektedir.',
-      );
-      return false;
+    if (isExpoGo) {
+      // Expo Go: sadece foreground tracking
+      await startForegroundTracking();
+    } else {
+      // Development/Production build: arka plan tracking
+      const started = await startBackgroundLocation();
+      if (!started) {
+        // Fallback: foreground tracking
+        await startForegroundTracking();
+      } else {
+        // Foreground konum izleme (UI güncellemesi için)
+        if (watchRef.current) watchRef.current.remove();
+        watchRef.current = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.High,
+            distanceInterval: 50,
+            timeInterval: 10000,
+          },
+          (location) => {
+            setCurrentPosition({
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            });
+          },
+        );
+      }
     }
-
-    // Ön plan konum güncellemeleri (UI için)
-    await Location.watchPositionAsync(
-      {
-        accuracy: Location.Accuracy.High,
-        distanceInterval: 50,
-        timeInterval: 10000,
-      },
-      (location) => {
-        setCurrentPosition({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        });
-      },
-    );
 
     setIsTracking(true);
     return true;
-  }, [isTracking, getCurrentPosition]);
+  }, [isTracking, getCurrentPosition, startForegroundTracking]);
 
   const stopTracking = useCallback(async () => {
+    stopForegroundTracking();
     await stopBackgroundLocation();
     setIsTracking(false);
-  }, []);
+  }, [stopForegroundTracking]);
 
   return (
     <LocationContext.Provider value={{ currentPosition, isTracking, startTracking, stopTracking, getCurrentPosition }}>

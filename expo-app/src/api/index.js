@@ -1,0 +1,16 @@
+export { default as apiClient } from './client';
+export { authService } from './authService';
+export { addressService } from './addressService';
+export { basketService } from './basketService';
+export { cardService } from './cardService';
+export { couponService } from './couponService';
+export { cuisineService } from './cuisineService';
+export { favoriteService } from './favoriteService';
+export { notificationService } from './notificationService';
+export { orderService } from './orderService';
+export { restaurantService } from './restaurantService';
+export { reviewService } from './reviewService';
+export { scheduledOrderService } from './scheduledOrderService';
+export { searchService } from './searchService';
+export { supportService } from './supportService';
+export { tipService } from './tipService';

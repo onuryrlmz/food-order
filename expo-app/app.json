@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "FoodOrderApp",
+    "slug": "food-order-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "foodorderapp",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#F2F2F7"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.yrlmz.foodorderapp",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Yakininızdaki restoranları göstermek için konumunuza ihtiyacımız var."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F2F2F7"
+      },
+      "package": "com.yrlmz.foodorderapp",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-notifications",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Yakınınızdaki restoranları göstermek için konumunuza ihtiyacımız var."
+        }
+      ]
+    ]
+  }
+}

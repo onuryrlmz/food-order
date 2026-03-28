@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "FoodOrder Courier",
+    "slug": "food-order-courier",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "foodordercourier",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#F2F2F7"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.yrlmz.foodordercourier",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Teslimat yapabilmek için konumunuza ihtiyacımız var.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Uygulama kapalıyken bile teslimat takibi için konum izni gereklidir.",
+        "NSLocationAlwaysUsageDescription": "Arka planda konum takibi için izin gereklidir.",
+        "UIBackgroundModes": ["location", "fetch"]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F2F2F7"
+      },
+      "package": "com.yrlmz.foodordercourier",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-notifications",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Teslimat yapabilmek için konumunuza ihtiyacımız var.",
+          "locationAlwaysAndWhenInUsePermission": "Uygulama kapalıyken bile teslimat takibi için konum izni gereklidir.",
+          "locationAlwaysPermission": "Arka planda konum takibi için izin gereklidir.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      [
+        "expo-task-manager"
+      ]
+    ]
+  }
+}

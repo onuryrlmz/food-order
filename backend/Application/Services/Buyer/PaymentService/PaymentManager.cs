@@ -1,6 +1,8 @@
+using Application.Services.Seller.CommissionService;
 using Base.Enums;
 using Domain.Entities.Buyer;
 using Domain.Entities.Common;
+using Domain.Entities.Seller;
 using Domain.Service;
 using Application.Services.Common.NotificationService;
 using Infrastructure.Adapters.IyzicoServiceAdapter;
@@ -18,19 +20,22 @@ public class PaymentManager : IPaymentService
     private readonly BaseDbContext _context;
     private readonly INotificationService _notificationService;
     private readonly IRealtimeNotifier _realtimeNotifier;
+    private readonly ICommissionService _commissionService;
 
     public PaymentManager(
         IUnitOfWork unitOfWork,
         IIyzicoServiceAdapter iyzicoAdapter,
         BaseDbContext context,
         INotificationService notificationService,
-        IRealtimeNotifier realtimeNotifier)
+        IRealtimeNotifier realtimeNotifier,
+        ICommissionService commissionService)
     {
         _unitOfWork = unitOfWork;
         _iyzicoAdapter = iyzicoAdapter;
         _context = context;
         _notificationService = notificationService;
         _realtimeNotifier = realtimeNotifier;
+        _commissionService = commissionService;
     }
 
     public async Task<Payment> CreatePendingPayment(Guid orderId, Guid userId, Guid sellerId, decimal amount, int paymentOptionId, string? providerConversationId, string? cardAlias = null)
@@ -93,16 +98,33 @@ public class PaymentManager : IPaymentService
                         payment.ProviderPaymentId = paymentId;
                         payment.CompletedAt = DateTime.UtcNow;
 
-                        // Commission calculation
-                        var subscription = await _context.Set<Domain.Entities.Seller.Subscription>()
-                            .Include(s => s.SubscriptionPlan)
-                            .FirstOrDefaultAsync(s => s.RestaurantId == order.RestaurantId
-                                                      && s.StatusId == (short)SubscriptionStatusEnums.Active);
-                        var commissionRate = subscription?.SubscriptionPlan?.CommissionRate ?? 0.10m;
-                        payment.CommissionAmount = payment.Amount * commissionRate;
-                        payment.SellerPayoutAmount = payment.Amount - payment.CommissionAmount;
+                        // Resolve commission for this restaurant
+                        var (rate, fixedFee, sourceType, sourceId) = await _commissionService.ResolveCommission(order.RestaurantId);
+                        var commissionAmount = Math.Round(payment.Amount * rate, 2);
+                        var netAmount = payment.Amount - commissionAmount - fixedFee;
+
+                        payment.CommissionAmount = commissionAmount;
+                        payment.SellerPayoutAmount = netAmount;
 
                         _unitOfWork.PaymentRepository.Update(payment);
+
+                        // Create settlement item
+                        var settlementItem = new SettlementItem
+                        {
+                            Id = Guid.NewGuid(),
+                            OrderId = order.Id,
+                            SellerId = order.SellerId,
+                            RestaurantId = order.RestaurantId,
+                            OrderAmount = payment.Amount,
+                            CommissionRate = rate,
+                            CommissionAmount = commissionAmount,
+                            FixedFee = fixedFee,
+                            NetAmount = netAmount,
+                            CommissionSourceType = sourceType,
+                            CommissionSourceId = sourceId,
+                            PeriodDate = DateTime.UtcNow.Date
+                        };
+                        await _unitOfWork.SettlementItemRepository.AddAsync(settlementItem);
                     }
 
                     order.PaymentStatusId = (short)PaymentStatusEnums.Completed;

@@ -39,9 +39,6 @@ public sealed class BaseDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
-    // Seller - Subscription
-    public DbSet<SubscriptionUsage> SubscriptionUsages { get; set; }
-
     // Courier
     public DbSet<CourierCompany> CourierCompanies { get; set; }
     public DbSet<Courier> Couriers { get; set; }
@@ -65,6 +62,15 @@ public sealed class BaseDbContext : DbContext
     public DbSet<SupportTicket> SupportTickets { get; set; }
     public DbSet<SupportMessage> SupportMessages { get; set; }
     public DbSet<SupportAction> SupportActions { get; set; }
+
+    // Commission & Settlement
+    public DbSet<PlatformCommissionSchedule> PlatformCommissionSchedules { get; set; }
+    public DbSet<RestaurantCommission> RestaurantCommissions { get; set; }
+    public DbSet<SettlementItem> SettlementItems { get; set; }
+    public DbSet<SettlementPeriod> SettlementPeriods { get; set; }
+
+    // Buyer - Payment Log
+    public DbSet<PaymentLog> PaymentLogs { get; set; }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())
     {

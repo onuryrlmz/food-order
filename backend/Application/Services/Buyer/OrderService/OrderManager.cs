@@ -2,7 +2,6 @@ using Application.Services.Buyer.BasketService;
 using Application.Services.Buyer.PaymentService;
 using Application.Services.Common.TokenService;
 using Application.Services.Courier.DeliveryAssignmentService;
-using Application.Services.Seller.SubscriptionService;
 using Application.Utils;
 using Base.Enums;
 using Domain.Dto.Admin.Order;
@@ -32,13 +31,11 @@ public class OrderManager : IOrderService
     private readonly ITokenAccessor _tokenAccessor;
     private readonly IRestaurantRepository _restaurantRepository;
     private readonly IMenuRepository _menuRepository;
-    private readonly ISubscriptionRepository _subscriptionRepository;
     private readonly IIyzicoServiceAdapter _iyzicoAdapter;
     private readonly IUserRepository _userRepository;
     private readonly IPaymentService _paymentService;
     private readonly BaseDbContext _context;
     private readonly string _callbackBaseUrl;
-    private readonly ISubscriptionService _subscriptionService;
     private readonly INotificationService _notificationService;
     private readonly IRealtimeNotifier _realtimeNotifier;
     private readonly IBasketService _basketService;
@@ -49,13 +46,11 @@ public class OrderManager : IOrderService
         ITokenAccessor tokenAccessor,
         IRestaurantRepository restaurantRepository,
         IMenuRepository menuRepository,
-        ISubscriptionRepository subscriptionRepository,
         IIyzicoServiceAdapter iyzicoAdapter,
         IUserRepository userRepository,
         IPaymentService paymentService,
         BaseDbContext context,
         IConfiguration configuration,
-        ISubscriptionService subscriptionService,
         INotificationService notificationService,
         IRealtimeNotifier realtimeNotifier,
         IBasketService basketService,
@@ -65,13 +60,11 @@ public class OrderManager : IOrderService
         _tokenAccessor = tokenAccessor;
         _restaurantRepository = restaurantRepository;
         _menuRepository = menuRepository;
-        _subscriptionRepository = subscriptionRepository;
         _iyzicoAdapter = iyzicoAdapter;
         _userRepository = userRepository;
         _paymentService = paymentService;
         _context = context;
         _callbackBaseUrl = configuration["SiteSettings:ServiceUrl"] ?? "http://localhost:7276";
-        _subscriptionService = subscriptionService;
         _notificationService = notificationService;
         _realtimeNotifier = realtimeNotifier;
         _basketService = basketService;
@@ -112,26 +105,6 @@ public class OrderManager : IOrderService
             if (!restaurant.IsOpen)
             {
                 result.Fail("Bu restoran şu an kapalı.");
-                return result;
-            }
-
-            // Aktif abonelik kontrolü
-            var hasActiveSubscription = await _subscriptionRepository.AnyAsync(x =>
-                x.RestaurantId == requestDto.RestaurantId &&
-                x.StatusId == (short)SubscriptionStatusEnums.Active &&
-                x.EndDate >= DateTime.UtcNow);
-
-            if (!hasActiveSubscription)
-            {
-                result.Fail("Bu restoran şu an siparişe kapalı.");
-                return result;
-            }
-
-            // Subscription order limit check
-            var usageResult = await _subscriptionService.IncrementOrderCountAsync(requestDto.RestaurantId);
-            if (usageResult.HasFailed)
-            {
-                result.Fail(usageResult.Messages.First().Description);
                 return result;
             }
 

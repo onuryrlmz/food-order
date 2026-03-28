@@ -163,15 +163,12 @@ app.MapHub<CourierHub>("/hubs/courier");
 app.UseHangfireDashboard("/hangfire");
 
 // Register recurring jobs
-RecurringJob.AddOrUpdate<ISubscriptionJobService>("check-expired", s => s.CheckExpiredSubscriptions(), Cron.Hourly);
-RecurringJob.AddOrUpdate<ISubscriptionJobService>("expiry-reminder", s => s.SendExpiryReminders(), Cron.Daily);
-RecurringJob.AddOrUpdate<ISubscriptionJobService>("auto-renew", s => s.AutoRenewSubscriptions(), Cron.Daily);
-RecurringJob.AddOrUpdate<ISubscriptionJobService>("usage-warnings", s => s.CheckUsageWarnings(), Cron.Hourly);
 RecurringJob.AddOrUpdate<ICleanupJobService>("cleanup-reset-tokens", s => s.CleanupExpiredResetTokens(), Cron.Daily);
 RecurringJob.AddOrUpdate<ICleanupJobService>("cleanup-refresh-tokens", s => s.CleanupExpiredRefreshTokens(), Cron.Weekly);
 RecurringJob.AddOrUpdate<IDeliveryTimeoutJobService>("check-delivery-timeouts", s => s.CheckDeliveryTimeouts(), "*/15 * * * *");
 RecurringJob.AddOrUpdate<ICourierJobService>("check-expired-assignments", s => s.CheckExpiredAssignments(), "*/1 * * * *");
 RecurringJob.AddOrUpdate<ICourierJobService>("auto-offline-couriers", s => s.AutoOfflineInactiveCouriers(), "*/5 * * * *");
 RecurringJob.AddOrUpdate<IScheduledOrderJobService>("process-scheduled-orders", s => s.ProcessDueScheduledOrders(), "*/5 * * * *");
+RecurringJob.AddOrUpdate<ISettlementJobService>("generate-daily-settlements", s => s.GenerateDailySettlements(), "5 0 * * *");
 
 app.Run();

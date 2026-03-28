@@ -76,15 +76,6 @@ public class FakeData
     private static readonly Guid Category2Id = new("aabb2222-2222-2222-2222-222222222222");
     private static readonly Guid Category3Id = new("aabb3333-3333-3333-3333-333333333333");
 
-    // Subscription Plans
-    private static readonly Guid PlanBasicId = new("ab011111-1111-1111-1111-111111111111");
-    private static readonly Guid PlanProId = new("ab022222-2222-2222-2222-222222222222");
-    private static readonly Guid PlanPremiumId = new("ab033333-3333-3333-3333-333333333333");
-
-    // Subscriptions
-    private static readonly Guid Subscription1Id = new("ac011111-1111-1111-1111-111111111111");
-    private static readonly Guid Subscription2Id = new("ac022222-2222-2222-2222-222222222222");
-
     // Addresses
     private static readonly Guid SellerAddress1Id = new("ad011111-1111-1111-1111-111111111111");
     private static readonly Guid SellerAddress2Id = new("ad022222-2222-2222-2222-222222222222");
@@ -94,6 +85,10 @@ public class FakeData
     // Courier
     private static readonly Guid CourierCompanyId = new("ae011111-1111-1111-1111-111111111111");
     private static readonly Guid CourierId = new("af011111-1111-1111-1111-111111111111");
+
+    // Commission
+    private static readonly Guid PlatformCommission1Id = new("ab111111-1111-1111-1111-111111111111");
+    private static readonly Guid RestaurantCommission1Id = new("ab221111-1111-1111-1111-111111111111");
 
     // Location constants (Bursa Nilüfer)
     private static readonly Guid CityBursaId = new("5d0c385c-810d-4dd6-9462-259183584992");
@@ -110,8 +105,6 @@ public class FakeData
         modelBuilder.Entity<Seller>(SeedSellers);
         modelBuilder.Entity<Restaurant>(SeedRestaurants);
         modelBuilder.Entity<Address>(SeedAddresses);
-        modelBuilder.Entity<SubscriptionPlan>(SeedSubscriptionPlans);
-        modelBuilder.Entity<Subscription>(SeedSubscriptions);
         modelBuilder.Entity<Product>(SeedProducts);
         modelBuilder.Entity<Menu>(SeedMenus);
         modelBuilder.Entity<MenuOption>(SeedMenuOptions);
@@ -122,6 +115,8 @@ public class FakeData
         modelBuilder.Entity<CategoryDetail>(SeedCategoryDetails);
         modelBuilder.Entity<CourierCompany>(SeedCourierCompany);
         modelBuilder.Entity<Courier>(SeedCourier);
+        modelBuilder.Entity<Domain.Entities.Common.PlatformCommissionSchedule>(SeedPlatformCommission);
+        modelBuilder.Entity<RestaurantCommission>(SeedRestaurantCommission);
     }
 
     private void SeedCuisines(EntityTypeBuilder<Cuisine> builder)
@@ -251,7 +246,8 @@ public class FakeData
                 Description = "Taş fırında İtalyan pizzalar",
                 Latitude = 40.2273m, Longitude = 28.8891m,
                 IsActive = true, IsOpen = true, Rating = 4.5m, RatingCount = 120,
-                HasOwnCouriers = false
+                HasOwnCouriers = false,
+                ApprovedAt = SeedDate, ApprovedByUserId = AdminUserId
             },
             new Restaurant
             {
@@ -262,7 +258,8 @@ public class FakeData
                 Description = "Lezzetli pizzalar, hızlı teslimat",
                 Latitude = 40.1885m, Longitude = 29.0610m,
                 IsActive = true, IsOpen = true, Rating = 4.2m, RatingCount = 85,
-                HasOwnCouriers = false
+                HasOwnCouriers = false,
+                ApprovedAt = SeedDate, ApprovedByUserId = AdminUserId
             },
             new Restaurant
             {
@@ -273,7 +270,8 @@ public class FakeData
                 Description = "Geleneksel Türk kebapları, mangal lezzetleri",
                 Latitude = 40.1950m, Longitude = 29.0200m,
                 IsActive = true, IsOpen = true, Rating = 4.7m, RatingCount = 230,
-                HasOwnCouriers = true
+                HasOwnCouriers = true,
+                ApprovedAt = SeedDate, ApprovedByUserId = AdminUserId
             }
         );
     }
@@ -323,61 +321,6 @@ public class FakeData
                 AddressLine1 = "Özlüce Mah. İş Merkezi No:22 K:3",
                 Latitude = "40.2300", Longitude = "28.9100",
                 IsDefault = true, InvoiceType = (short)InvoiceTypeEnums.Personal
-            }
-        );
-    }
-
-    private void SeedSubscriptionPlans(EntityTypeBuilder<SubscriptionPlan> builder)
-    {
-        builder.HasData(
-            new SubscriptionPlan
-            {
-                Id = PlanBasicId, CreatedDate = SeedDate,
-                Name = "Başlangıç", Description = "Küçük işletmeler için",
-                PlanType = (short)SubscriptionPlanTypeEnums.Basic,
-                MonthlyPrice = 499m, MaxRestaurants = 1, IsActive = true,
-                MaxOrdersPerMonth = 500, OverageAction = (short)OverageActionEnums.Block,
-                CommissionRate = 0.05m
-            },
-            new SubscriptionPlan
-            {
-                Id = PlanProId, CreatedDate = SeedDate,
-                Name = "Profesyonel", Description = "Büyüyen işletmeler için",
-                PlanType = (short)SubscriptionPlanTypeEnums.Pro,
-                MonthlyPrice = 999m, MaxRestaurants = 3, IsActive = true,
-                MaxOrdersPerMonth = 2000, OverageAction = (short)OverageActionEnums.AutoUpgrade,
-                CommissionRate = 0.03m
-            },
-            new SubscriptionPlan
-            {
-                Id = PlanPremiumId, CreatedDate = SeedDate,
-                Name = "Premium", Description = "Sınırsız kullanım",
-                PlanType = (short)SubscriptionPlanTypeEnums.Premium,
-                MonthlyPrice = 1999m, MaxRestaurants = 10, IsActive = true,
-                MaxOrdersPerMonth = int.MaxValue, OverageAction = (short)OverageActionEnums.Block,
-                CommissionRate = 0.01m
-            }
-        );
-    }
-
-    private void SeedSubscriptions(EntityTypeBuilder<Subscription> builder)
-    {
-        builder.HasData(
-            new Subscription
-            {
-                Id = Subscription1Id, CreatedDate = SeedDate,
-                SellerId = Seller1Id, RestaurantId = Restaurant1Id, SubscriptionPlanId = PlanProId,
-                StatusId = (short)SubscriptionStatusEnums.Active,
-                StartDate = SeedDate, EndDate = SeedDate.AddMonths(12),
-                PaidAmount = 999m, AutoRenew = true
-            },
-            new Subscription
-            {
-                Id = Subscription2Id, CreatedDate = SeedDate,
-                SellerId = Seller2Id, RestaurantId = Restaurant3Id, SubscriptionPlanId = PlanBasicId,
-                StatusId = (short)SubscriptionStatusEnums.Active,
-                StartDate = SeedDate, EndDate = SeedDate.AddMonths(6),
-                PaidAmount = 499m, AutoRenew = true
             }
         );
     }
@@ -505,6 +448,35 @@ public class FakeData
                 Rating = 4.8m, RatingCount = 50, TotalDeliveries = 200,
                 CurrentLatitude = 40.2273m, CurrentLongitude = 28.8891m,
                 LastLocationUpdate = SeedDate
+            }
+        );
+    }
+
+    private void SeedPlatformCommission(EntityTypeBuilder<Domain.Entities.Common.PlatformCommissionSchedule> builder)
+    {
+        builder.HasData(
+            new Domain.Entities.Common.PlatformCommissionSchedule
+            {
+                Id = PlatformCommission1Id, CreatedDate = SeedDate,
+                CommissionRate = 0.10m, FixedFee = 5.00m,
+                EffectiveFrom = SeedDate,
+                SetByUserId = AdminUserId,
+                Notes = "Varsayılan platform komisyonu"
+            }
+        );
+    }
+
+    private void SeedRestaurantCommission(EntityTypeBuilder<RestaurantCommission> builder)
+    {
+        builder.HasData(
+            new RestaurantCommission
+            {
+                Id = RestaurantCommission1Id, CreatedDate = SeedDate,
+                RestaurantId = Restaurant3Id,
+                CommissionRate = 0.08m, FixedFee = 3.00m,
+                EffectiveFrom = SeedDate,
+                SetByUserId = AdminUserId,
+                Reason = "Özel anlaşma"
             }
         );
     }

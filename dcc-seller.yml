@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   yrlmz-food-order-seller:
+    container_name: yrlmz-food-order-seller
     image: ghcr.io/onuryrlmz/food-order-seller:latest
     logging:
       options:

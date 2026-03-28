@@ -34,8 +34,6 @@ public class RestaurantConfiguration : IEntityTypeConfiguration<Restaurant>
         builder.Property(b => b.UpdatedDate).HasColumnName("UpdatedDate");
         builder.Property(b => b.DeletedDate).HasColumnName("DeletedDate");
 
-        builder.HasMany(r => r.Subscriptions).WithOne(s => s.Restaurant).HasForeignKey(s => s.RestaurantId);
-
         builder.HasQueryFilter(b => !b.DeletedDate.HasValue);
     }
 }

@@ -144,4 +144,39 @@ export const approveAction = (actionId) =>
 export const rejectAction = (actionId) =>
   api.post(`/v1/admin/support/action/${actionId}/reject`).then(r => r.data);
 
+// Commission
+export const getPlatformSchedules = () =>
+  api.get('/v1/admin/commission/settings').then(r => r.data);
+
+export const getActivePlatformSchedule = () =>
+  api.get('/v1/admin/commission/settings/active').then(r => r.data);
+
+export const createPlatformSchedule = (data) =>
+  api.post('/v1/admin/commission/settings', data).then(r => r.data);
+
+export const getRestaurantCommission = (restaurantId) =>
+  api.get(`/v1/admin/commission/restaurant/${restaurantId}`).then(r => r.data);
+
+export const getRestaurantCommissionHistory = (restaurantId) =>
+  api.get(`/v1/admin/commission/restaurant/${restaurantId}/history`).then(r => r.data);
+
+export const setRestaurantCommission = (restaurantId, data) =>
+  api.put(`/v1/admin/commission/restaurant/${restaurantId}`, data).then(r => r.data);
+
+// Settlement
+export const getSettlementPeriods = (page = 1, statusId = '') =>
+  api.get(`/v1/admin/settlement/periods?page=${page}&pageSize=20${statusId ? `&statusId=${statusId}` : ''}`).then(r => r.data);
+
+export const getSettlementPeriodDetail = (periodId) =>
+  api.get(`/v1/admin/settlement/period/${periodId}`).then(r => r.data);
+
+export const approveSettlement = (periodId) =>
+  api.post(`/v1/admin/settlement/period/${periodId}/approve`).then(r => r.data);
+
+export const paySettlement = (periodId, data) =>
+  api.post(`/v1/admin/settlement/period/${periodId}/pay`, data).then(r => r.data);
+
+export const cancelSettlement = (periodId, reason) =>
+  api.post(`/v1/admin/settlement/period/${periodId}/cancel?reason=${encodeURIComponent(reason || '')}`).then(r => r.data);
+
 export default api;

@@ -48,8 +48,6 @@ public static class PersistenceServiceRegistration
         services.AddScoped<IMenuOptionValueRepository, MenuOptionValueRepository>();
         services.AddScoped<IMenuOptionValueOptionRepository, MenuOptionValueOptionRepository>();
         services.AddScoped<IMenuOptionValueOptionValueRepository, MenuOptionValueOptionValueRepository>();
-        services.AddScoped<ISubscriptionPlanRepository, SubscriptionPlanRepository>();
-        services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         services.AddScoped<IOptionTemplateRepository, OptionTemplateRepository>();
         services.AddScoped<IOptionTemplateValueRepository, OptionTemplateValueRepository>();
         services.AddScoped<IOptionTemplateValueOptionRepository, OptionTemplateValueOptionRepository>();
@@ -78,7 +76,13 @@ public static class PersistenceServiceRegistration
         services.AddScoped<ISupportMessageRepository, SupportMessageRepository>();
         services.AddScoped<ISupportActionRepository, SupportActionRepository>();
 
-        services.AddScoped<ISubscriptionUsageRepository, SubscriptionUsageRepository>();
+
+        //Commission & Settlement
+        services.AddScoped<IPlatformCommissionScheduleRepository, PlatformCommissionScheduleRepository>();
+        services.AddScoped<IRestaurantCommissionRepository, RestaurantCommissionRepository>();
+        services.AddScoped<ISettlementItemRepository, SettlementItemRepository>();
+        services.AddScoped<ISettlementPeriodRepository, SettlementPeriodRepository>();
+        services.AddScoped<IPaymentLogRepository, PaymentLogRepository>();
 
         //Courier
         services.AddScoped<ICourierCompanyRepository, CourierCompanyRepository>();

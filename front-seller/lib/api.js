@@ -64,25 +64,12 @@ api.interceptors.response.use(
   }
 );
 
-// Subscription Usage
-export const getSubscriptionUsage = (restaurantId) =>
-  api.get(`/v1/subscription/usage?restaurantId=${restaurantId}`).then(r => r.data);
-
-export const getUpgradePreview = (restaurantId, planId) =>
-  api.get(`/v1/subscription/upgrade/preview?restaurantId=${restaurantId}&planId=${planId}`).then(r => r.data);
-
-export const upgradeSubscription = (data) =>
-  api.post('/v1/subscription/upgrade', data).then(r => r.data);
-
 // Finance
 export const getSellerFinanceSummary = () =>
   api.get('/v1/seller/finance/summary').then(r => r.data);
 
 export const getSellerPayments = (page = 1) =>
   api.get(`/v1/seller/finance/payments?page=${page}`).then(r => r.data);
-
-export const toggleAutoRenew = (restaurantId, enabled) =>
-  api.put('/v1/subscription/auto-renew', { restaurantId, enabled }).then(r => r.data);
 
 // Password Reset
 export const forgotPassword = (emailOrPhone) =>
@@ -131,5 +118,16 @@ export const uploadProductImage = (productId, file) => {
 
 export const deleteProductImage = (imageId) =>
   api.delete(`/v1/seller/product/image/${imageId}`).then(r => r.data);
+
+// Commission
+export const getMyCommissions = () =>
+  api.get('/v1/seller/commission/my').then(r => r.data);
+
+// Settlement
+export const getMySettlementPeriods = (page = 1) =>
+  api.get(`/v1/seller/commission/settlement/periods?page=${page}&pageSize=20`).then(r => r.data);
+
+export const getMySettlementPeriodDetail = (periodId) =>
+  api.get(`/v1/seller/commission/settlement/period/${periodId}`).then(r => r.data);
 
 export default api;

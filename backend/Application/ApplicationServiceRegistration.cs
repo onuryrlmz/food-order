@@ -26,7 +26,6 @@ using Application.Services.Seller.CdnWorkerService;
 using Application.Services.Seller.CouponService;
 using Application.Services.Seller.ImageUploadService;
 using Application.Services.Seller.OptionTemplateService;
-using Application.Services.Seller.SubscriptionService;
 using Application.Services.Buyer.CardService;
 using Application.Services.Buyer.CouponService;
 using Application.Services.Buyer.PaymentService;
@@ -38,6 +37,7 @@ using Application.Services.Buyer.AiSupportService;
 using Application.Services.Buyer.ScheduledOrderService;
 using Application.Services.Buyer.FavoriteService;
 using Application.Services.Buyer.ReviewService;
+using Application.Services.Seller.CommissionService;
 using Application.Services.Analytics;
 using Application.Services.Common.BackgroundJobs;
 using Application.Services.Courier.CourierService;
@@ -135,8 +135,8 @@ public static class ApplicationServiceRegistration
         services.AddScoped<IScheduledOrderService, ScheduledOrderManager>();
         services.AddScoped<IAiSupportService, AiSupportManager>();
 
-        //Subscription
-        services.AddScoped<ISubscriptionService, SubscriptionManager>();
+        //Commission & Settlement
+        services.AddScoped<ICommissionService, CommissionManager>();
 
         //Coupon
         services.AddScoped<ICouponService, CouponManager>();
@@ -153,11 +153,11 @@ public static class ApplicationServiceRegistration
         services.AddHostedService<RestaurantCdnWorker>();
 
         //Background Jobs (Hangfire)
-        services.AddScoped<ISubscriptionJobService, SubscriptionJobService>();
         services.AddScoped<ICleanupJobService, CleanupJobService>();
         services.AddScoped<IDeliveryTimeoutJobService, DeliveryTimeoutJobService>();
         services.AddScoped<ICourierJobService, CourierJobService>();
         services.AddScoped<IScheduledOrderJobService, ScheduledOrderJobService>();
+        services.AddScoped<ISettlementJobService, SettlementJobService>();
 
         //Courier
         services.AddScoped<ICourierService, CourierManager>();

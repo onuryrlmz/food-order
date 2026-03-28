@@ -4,9 +4,7 @@ import useSWR from 'swr';
 import SellerLayout from '@/components/layout/SellerLayout';
 import Badge from '@/components/ui/Badge';
 import fetcher from '@/lib/fetcher';
-import { getSubscriptionUsage } from '@/lib/api';
 import Link from 'next/link';
-import { useState, useEffect }  from 'react';
 
 const ORDER_STATUS = {
   1: { label: 'Beklemede', color: 'yellow' },
@@ -20,32 +18,11 @@ const ORDER_STATUS = {
 
 export default function DashboardPage() {
   const { data: restaurantsData } = useSWR('/v1/seller/restaurant/list', fetcher);
-  const { data: subscriptionsData } = useSWR('/v1/seller/subscription/my', fetcher);
 
   const restaurants = restaurantsData?.data || [];
-  const subscriptions = subscriptionsData?.data || [];
-
-  const [usageData, setUsageData] = useState({});
-
-  // Fetch usage for each restaurant that has an active subscription
-  useEffect(() => {
-    if (restaurants.length === 0) return;
-    restaurants.forEach(async (r) => {
-      try {
-        const res = await getSubscriptionUsage(r.id);
-        if (!res.hasFailed && res.data) {
-          setUsageData(prev => ({ ...prev, [r.id]: res.data }));
-        }
-      } catch {
-        // Usage data not available
-      }
-    });
-  }, [restaurants]);
 
   const activeRestaurants = restaurants.filter(r => r.isActive).length;
   const openRestaurants = restaurants.filter(r => r.isOpen).length;
-  const activeSubscriptions = subscriptions.filter(s => s.statusId === 1).length;
-  const expiringSoon = subscriptions.filter(s => s.statusId === 1 && s.daysRemaining <= 7).length;
 
   return (
     <SellerLayout title="Dashboard">
@@ -55,8 +32,6 @@ export default function DashboardPage() {
           {[
             { label: 'Toplam Restoran', value: restaurants.length, sub: `${activeRestaurants} aktif`, color: 'bg-blue-500', href: '/restaurants' },
             { label: 'Şu An Açık', value: openRestaurants, sub: 'restoran', color: 'bg-green-500', href: '/restaurants' },
-            { label: 'Aktif Abonelik', value: activeSubscriptions, sub: `${expiringSoon} süresi dolmak üzere`, color: 'bg-emerald-500', href: '/subscription' },
-            { label: 'Toplam Abonelik', value: subscriptions.length, sub: 'tüm zamanlar', color: 'bg-purple-500', href: '/subscription' },
           ].map((s) => (
             <Link key={s.label} href={s.href} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className={`w-10 h-10 ${s.color} rounded-lg mb-3`} />
@@ -66,63 +41,6 @@ export default function DashboardPage() {
             </Link>
           ))}
         </div>
-
-        {/* Subscription Usage Widget */}
-        {Object.keys(usageData).length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-gray-800">Aylık Sipariş Kullanımı</h2>
-            </div>
-            <div className="space-y-4">
-              {restaurants.filter(r => usageData[r.id]).map(r => {
-                const usage = usageData[r.id];
-                const used = usage.currentMonthOrders || 0;
-                const limit = usage.maxOrdersPerMonth || 0;
-                const pct = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
-                const isWarning = pct >= 80 && pct < 100;
-                const isDanger = pct >= 100;
-                const barColor = isDanger ? 'bg-red-500' : isWarning ? 'bg-yellow-500' : 'bg-emerald-500';
-                const daysRemaining = usage.daysRemaining ?? '—';
-
-                return (
-                  <div key={r.id} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-gray-700">{r.name}</p>
-                      <p className="text-xs text-gray-400">{daysRemaining} gün kaldı</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 bg-gray-100 rounded-full h-3">
-                        <div
-                          className={`h-3 rounded-full transition-all ${barColor}`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                      <span className={`text-sm font-semibold ${isDanger ? 'text-red-600' : isWarning ? 'text-yellow-600' : 'text-gray-700'}`}>
-                        {used}/{limit === 0 ? '∞' : limit}
-                      </span>
-                    </div>
-                    {isDanger && (
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-red-600 font-medium">Sipariş limitine ulaştınız!</p>
-                        <Link href="/subscription" className="text-xs text-emerald-600 font-medium hover:underline">
-                          Paket Yükselt →
-                        </Link>
-                      </div>
-                    )}
-                    {isWarning && !isDanger && (
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-yellow-600 font-medium">Limite yaklaşıyorsunuz</p>
-                        <Link href="/subscription" className="text-xs text-emerald-600 font-medium hover:underline">
-                          Paket Yükselt →
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Restoranlar */}
@@ -148,37 +66,6 @@ export default function DashboardPage() {
                       <Badge label={r.isOpen ? 'Açık' : 'Kapalı'} color={r.isOpen ? 'blue' : 'gray'} />
                     </div>
                   </Link>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Abonelikler */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-gray-800">Abonelikler</h2>
-              <Link href="/subscription" className="text-xs text-emerald-600 hover:underline">Tümünü gör →</Link>
-            </div>
-            {subscriptions.length === 0 ? (
-              <div className="text-center py-6">
-                <p className="text-sm text-gray-400 mb-3">Aktif abonelik yok</p>
-                <Link href="/subscription" className="text-sm text-emerald-600 font-medium hover:underline">
-                  Plan satın al →
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {subscriptions.slice(0, 5).map(s => (
-                  <div key={s.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">{s.restaurantName}</p>
-                      <p className="text-xs text-gray-400">{s.planName} · {s.daysRemaining} gün kaldı</p>
-                    </div>
-                    <Badge
-                      label={s.statusId === 1 ? 'Aktif' : s.statusId === 2 ? 'Süresi Doldu' : 'İptal'}
-                      color={s.statusId === 1 ? (s.daysRemaining <= 7 ? 'yellow' : 'green') : 'red'}
-                    />
-                  </div>
                 ))}
               </div>
             )}

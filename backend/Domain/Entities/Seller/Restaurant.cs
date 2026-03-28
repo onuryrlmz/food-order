@@ -31,6 +31,7 @@ public class Restaurant : Entity<Guid>
     public short? DefaultAssignmentStrategyId { get; set; }
     public bool HasOwnCouriers { get; set; } = false;
 
-    // Navigation
-    public virtual ICollection<Subscription> Subscriptions { get; set; }
+    // Approval
+    public DateTime? ApprovedAt { get; set; }
+    public Guid? ApprovedByUserId { get; set; }
 }

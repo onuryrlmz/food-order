@@ -89,38 +89,4 @@ public class AdminFinanceController : BaseController
         return result;
     }
 
-    [HttpPut("settings/commission-rate")]
-    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
-    public async Task<ServiceObjectResult<bool>> UpdateCommissionRate([FromBody] UpdateCommissionRateRequest request)
-    {
-        var result = new ServiceObjectResult<bool>();
-        try
-        {
-            if (request.Rate < 0 || request.Rate > 1)
-            {
-                result.Fail("Komisyon oranı 0 ile 1 arasında olmalıdır.");
-                return result;
-            }
-
-            var plans = await _context.Set<Domain.Entities.Seller.SubscriptionPlan>()
-                .Where(p => p.IsActive)
-                .ToListAsync();
-
-            foreach (var plan in plans) plan.CommissionRate = request.Rate;
-
-            await _context.SaveChangesAsync();
-            result.SetData(true);
-        }
-        catch (Exception e)
-        {
-            result.Fail(e);
-        }
-
-        return result;
-    }
-}
-
-public class UpdateCommissionRateRequest
-{
-    public decimal Rate { get; set; }
 }

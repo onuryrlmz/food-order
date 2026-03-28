@@ -25,8 +25,6 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     public IMenuOptionValueRepository MenuOptionValueRepository { get; set; }
     public IMenuOptionValueOptionRepository MenuOptionValueOptionRepository { get; set; }
     public IMenuOptionValueOptionValueRepository MenuOptionValueOptionValueRepository { get; set; }
-    public ISubscriptionPlanRepository SubscriptionPlanRepository { get; set; }
-    public ISubscriptionRepository SubscriptionRepository { get; set; }
     public IBasketRepository BasketRepository { get; }
     public IBasketItemRepository BasketItemRepository { get; }
     public IBasketItemValueRepository BasketItemValueRepository { get; }
@@ -41,9 +39,6 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     public IOptionTemplateValueOptionValueRepository OptionTemplateValueOptionValueRepository { get; }
     public IRestaurantCdnUpdateQueueRepository RestaurantCdnUpdateQueueRepository { get; }
     public IRestaurantWorkingHourRepository RestaurantWorkingHourRepository { get; }
-
-    // Subscription Usage
-    public ISubscriptionUsageRepository SubscriptionUsageRepository { get; }
 
     // Buyer - Reviews & Favorites
     public IReviewRepository ReviewRepository { get; }
@@ -76,6 +71,15 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     public ISupportMessageRepository SupportMessageRepository { get; }
     public ISupportActionRepository SupportActionRepository { get; }
 
+    // Commission & Settlement
+    public IPlatformCommissionScheduleRepository PlatformCommissionScheduleRepository { get; }
+    public IRestaurantCommissionRepository RestaurantCommissionRepository { get; }
+    public ISettlementItemRepository SettlementItemRepository { get; }
+    public ISettlementPeriodRepository SettlementPeriodRepository { get; }
+
+    // Buyer - Payment Log
+    public IPaymentLogRepository PaymentLogRepository { get; }
+
     public UnitOfWork(BaseDbContext context,
         ICuisineRepository cuisineRepository,
         ISellerRepository sellerRepository,
@@ -88,8 +92,6 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         IMenuOptionValueRepository menuOptionValueRepository,
         IMenuOptionValueOptionRepository menuOptionValueOptionRepository,
         IMenuOptionValueOptionValueRepository menuOptionValueOptionValueRepository,
-        ISubscriptionPlanRepository subscriptionPlanRepository,
-        ISubscriptionRepository subscriptionRepository,
         IBasketRepository basketRepository,
         IBasketItemRepository basketItemRepository,
         IBasketItemValueRepository basketItemValueRepository,
@@ -104,7 +106,6 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         IOptionTemplateValueOptionValueRepository optionTemplateValueOptionValueRepository,
         IRestaurantCdnUpdateQueueRepository restaurantCdnUpdateQueueRepository,
         IRestaurantWorkingHourRepository restaurantWorkingHourRepository,
-        ISubscriptionUsageRepository subscriptionUsageRepository,
         IReviewRepository reviewRepository,
         IFavoriteRestaurantRepository favoriteRestaurantRepository,
         IRefreshTokenRepository refreshTokenRepository,
@@ -121,7 +122,12 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         IScheduledOrderRepository scheduledOrderRepository,
         ISupportTicketRepository supportTicketRepository,
         ISupportMessageRepository supportMessageRepository,
-        ISupportActionRepository supportActionRepository)
+        ISupportActionRepository supportActionRepository,
+        IPlatformCommissionScheduleRepository platformCommissionScheduleRepository,
+        IRestaurantCommissionRepository restaurantCommissionRepository,
+        ISettlementItemRepository settlementItemRepository,
+        ISettlementPeriodRepository settlementPeriodRepository,
+        IPaymentLogRepository paymentLogRepository)
     {
         _context = context;
         CuisineRepository = cuisineRepository;
@@ -135,8 +141,6 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         MenuOptionValueRepository = menuOptionValueRepository;
         MenuOptionValueOptionRepository = menuOptionValueOptionRepository;
         MenuOptionValueOptionValueRepository = menuOptionValueOptionValueRepository;
-        SubscriptionPlanRepository = subscriptionPlanRepository;
-        SubscriptionRepository = subscriptionRepository;
         BasketRepository = basketRepository;
         BasketItemRepository = basketItemRepository;
         BasketItemValueRepository = basketItemValueRepository;
@@ -151,7 +155,6 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         OptionTemplateValueOptionValueRepository = optionTemplateValueOptionValueRepository;
         RestaurantCdnUpdateQueueRepository = restaurantCdnUpdateQueueRepository;
         RestaurantWorkingHourRepository = restaurantWorkingHourRepository;
-        SubscriptionUsageRepository = subscriptionUsageRepository;
         ReviewRepository = reviewRepository;
         FavoriteRestaurantRepository = favoriteRestaurantRepository;
         RefreshTokenRepository = refreshTokenRepository;
@@ -169,6 +172,11 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         SupportTicketRepository = supportTicketRepository;
         SupportMessageRepository = supportMessageRepository;
         SupportActionRepository = supportActionRepository;
+        PlatformCommissionScheduleRepository = platformCommissionScheduleRepository;
+        RestaurantCommissionRepository = restaurantCommissionRepository;
+        SettlementItemRepository = settlementItemRepository;
+        SettlementPeriodRepository = settlementPeriodRepository;
+        PaymentLogRepository = paymentLogRepository;
     }
 
     public async Task BeginTransactionAsync()

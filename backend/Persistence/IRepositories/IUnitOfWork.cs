@@ -18,8 +18,6 @@ public interface IUnitOfWork : IDisposable
     IMenuOptionValueRepository MenuOptionValueRepository { get; set; }
     IMenuOptionValueOptionRepository MenuOptionValueOptionRepository { get; set; }
     IMenuOptionValueOptionValueRepository MenuOptionValueOptionValueRepository { get; set; }
-    ISubscriptionPlanRepository SubscriptionPlanRepository { get; set; }
-    ISubscriptionRepository SubscriptionRepository { get; set; }
     IBasketRepository BasketRepository { get; }
     IBasketItemRepository BasketItemRepository { get; }
     IBasketItemValueRepository BasketItemValueRepository { get; }
@@ -34,9 +32,6 @@ public interface IUnitOfWork : IDisposable
     IOptionTemplateValueOptionValueRepository OptionTemplateValueOptionValueRepository { get; }
     IRestaurantCdnUpdateQueueRepository RestaurantCdnUpdateQueueRepository { get; }
     IRestaurantWorkingHourRepository RestaurantWorkingHourRepository { get; }
-
-    // Subscription Usage
-    ISubscriptionUsageRepository SubscriptionUsageRepository { get; }
 
     // Buyer - Reviews & Favorites
     IReviewRepository ReviewRepository { get; }
@@ -68,6 +63,15 @@ public interface IUnitOfWork : IDisposable
     ISupportTicketRepository SupportTicketRepository { get; }
     ISupportMessageRepository SupportMessageRepository { get; }
     ISupportActionRepository SupportActionRepository { get; }
+
+    // Commission & Settlement
+    IPlatformCommissionScheduleRepository PlatformCommissionScheduleRepository { get; }
+    IRestaurantCommissionRepository RestaurantCommissionRepository { get; }
+    ISettlementItemRepository SettlementItemRepository { get; }
+    ISettlementPeriodRepository SettlementPeriodRepository { get; }
+
+    // Buyer - Payment Log
+    IPaymentLogRepository PaymentLogRepository { get; }
 
     Task<int> CompleteAsync();
     Task BeginTransactionAsync();

@@ -113,7 +113,7 @@ export default function RestaurantsPage() {
 
                 {!r.isActive && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 mb-3">
-                    <p className="text-xs text-yellow-700">Restoran aktif değil. Aktif abonelik gerekli.</p>
+                    <p className="text-xs text-yellow-700">Restoran aktif değil.</p>
                   </div>
                 )}
 

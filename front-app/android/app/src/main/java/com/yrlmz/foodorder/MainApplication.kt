@@ -1,4 +1,4 @@
-package com.foodordercourier
+package com.yrlmz.foodorder
 
 import android.app.Application
 import com.facebook.react.PackageList

@@ -742,6 +742,218 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         return result;
     }
 
+    public async Task<ServiceCollectionResult> GetMyAgreements()
+    {
+        var result = new ServiceCollectionResult();
+        try
+        {
+            var token = _tokenAccessor.GetToken();
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
+            var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
+
+            var agreements = await _context.Set<Domain.Entities.Courier.RestaurantCourierAgreement>()
+                .Include(a => a.Restaurant)
+                .Include(a => a.CourierCompany)
+                .Where(a => (a.CourierId == courier.Id || (courier.CourierCompanyId != null && a.CourierCompanyId == courier.CourierCompanyId))
+                    && a.DeletedDate == null)
+                .OrderByDescending(a => a.CreatedDate)
+                .Select(a => new AgreementResponseDto
+                {
+                    Id = a.Id,
+                    RestaurantId = a.RestaurantId,
+                    RestaurantName = a.Restaurant != null ? a.Restaurant.Name : null,
+                    CourierCompanyId = a.CourierCompanyId,
+                    CourierCompanyName = a.CourierCompany != null ? a.CourierCompany.Name : null,
+                    CourierId = a.CourierId,
+                    StatusId = a.StatusId,
+                    AssignmentStrategyId = a.AssignmentStrategyId,
+                    AgreedDeliveryFee = a.AgreedDeliveryFee,
+                    PerKmFee = a.PerKmFee,
+                    Priority = a.Priority,
+                    IsDefault = a.IsDefault,
+                    EffectiveFrom = a.EffectiveFrom,
+                    EffectiveUntil = a.EffectiveUntil,
+                    CreatedDate = a.CreatedDate
+                })
+                .ToListAsync();
+
+            result.RawData = agreements;
+            result.TotalDataCount = agreements.Count;
+        }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
+        return result;
+    }
+
+    public async Task<ServiceObjectResult<bool>> AcceptAgreement(Guid agreementId)
+    {
+        var result = new ServiceObjectResult<bool>();
+        try
+        {
+            var token = _tokenAccessor.GetToken();
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
+            var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
+
+            var agreement = await _unitOfWork.RestaurantCourierAgreementRepository.GetAsync(
+                x => x.Id == agreementId && x.DeletedDate == null, enableTracking: true);
+            if (agreement == null)
+            {
+                result.Fail("Anlaşma bulunamadı.");
+                return result;
+            }
+
+            if (agreement.CourierId != courier.Id && agreement.CourierCompanyId != courier.CourierCompanyId)
+            {
+                result.Fail("Bu anlaşma size ait değil.");
+                return result;
+            }
+
+            if (agreement.StatusId != (short)CourierAgreementStatusEnums.PendingApproval)
+            {
+                result.Fail("Yalnızca onay bekleyen anlaşmalar kabul edilebilir.");
+                return result;
+            }
+
+            agreement.StatusId = (short)CourierAgreementStatusEnums.Active;
+            _unitOfWork.RestaurantCourierAgreementRepository.Update(agreement);
+            await _unitOfWork.CompleteAsync();
+            result.SetData(true);
+        }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
+        return result;
+    }
+
+    public async Task<ServiceObjectResult<bool>> RejectAgreementByC(Guid agreementId)
+    {
+        var result = new ServiceObjectResult<bool>();
+        try
+        {
+            var token = _tokenAccessor.GetToken();
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
+            var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
+
+            var agreement = await _unitOfWork.RestaurantCourierAgreementRepository.GetAsync(
+                x => x.Id == agreementId && x.DeletedDate == null, enableTracking: true);
+            if (agreement == null)
+            {
+                result.Fail("Anlaşma bulunamadı.");
+                return result;
+            }
+
+            if (agreement.CourierId != courier.Id && agreement.CourierCompanyId != courier.CourierCompanyId)
+            {
+                result.Fail("Bu anlaşma size ait değil.");
+                return result;
+            }
+
+            if (agreement.StatusId != (short)CourierAgreementStatusEnums.PendingApproval)
+            {
+                result.Fail("Yalnızca onay bekleyen anlaşmalar reddedilebilir.");
+                return result;
+            }
+
+            agreement.StatusId = (short)CourierAgreementStatusEnums.Terminated;
+            _unitOfWork.RestaurantCourierAgreementRepository.Update(agreement);
+            await _unitOfWork.CompleteAsync();
+            result.SetData(true);
+        }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
+        return result;
+    }
+
+    public async Task<ServiceObjectResult<bool>> TerminateAgreementByC(Guid agreementId)
+    {
+        var result = new ServiceObjectResult<bool>();
+        try
+        {
+            var token = _tokenAccessor.GetToken();
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
+            var courier = await _unitOfWork.CourierRepository.GetAsync(x => x.UserId == token.UserId);
+            if (courier == null)
+            {
+                result.Fail("Kurye profili bulunamadı.");
+                return result;
+            }
+
+            var agreement = await _unitOfWork.RestaurantCourierAgreementRepository.GetAsync(
+                x => x.Id == agreementId && x.DeletedDate == null, enableTracking: true);
+            if (agreement == null)
+            {
+                result.Fail("Anlaşma bulunamadı.");
+                return result;
+            }
+
+            if (agreement.CourierId != courier.Id && agreement.CourierCompanyId != courier.CourierCompanyId)
+            {
+                result.Fail("Bu anlaşma size ait değil.");
+                return result;
+            }
+
+            if (agreement.StatusId != (short)CourierAgreementStatusEnums.Active)
+            {
+                result.Fail("Yalnızca aktif anlaşmalar sonlandırılabilir.");
+                return result;
+            }
+
+            agreement.StatusId = (short)CourierAgreementStatusEnums.Terminated;
+            _unitOfWork.RestaurantCourierAgreementRepository.Update(agreement);
+            await _unitOfWork.CompleteAsync();
+            result.SetData(true);
+        }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
+        return result;
+    }
+
     public async Task<ServiceCollectionResult> GetAgreements(Guid restaurantId)
     {
         var result = new ServiceCollectionResult();
@@ -820,6 +1032,92 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 RestaurantId = agreement.RestaurantId,
                 CourierCompanyId = agreement.CourierCompanyId,
                 CourierId = agreement.CourierId,
+                StatusId = agreement.StatusId,
+                AssignmentStrategyId = agreement.AssignmentStrategyId,
+                AgreedDeliveryFee = agreement.AgreedDeliveryFee,
+                PerKmFee = agreement.PerKmFee,
+                Priority = agreement.Priority,
+                IsDefault = agreement.IsDefault,
+                EffectiveFrom = agreement.EffectiveFrom,
+                EffectiveUntil = agreement.EffectiveUntil,
+                CreatedDate = agreement.CreatedDate
+            });
+        }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
+        return result;
+    }
+
+    public async Task<ServiceObjectResult<AgreementResponseDto>> CreateAgreementByEmail(Guid restaurantId, CreateCourierAgreementByEmailDto requestDto)
+    {
+        var result = new ServiceObjectResult<AgreementResponseDto>();
+        try
+        {
+            var token = _tokenAccessor.GetToken();
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
+            // Look up user by email with Courier role
+            var courierUser = await _context.Set<Domain.Entities.Common.User>()
+                .FirstOrDefaultAsync(u => u.Email == requestDto.CourierEmail
+                                          && u.UserRoleId == (short)UserRoleEnums.Courier);
+
+            if (courierUser == null)
+            {
+                result.Fail("Bu e-posta adresi ile kayıtlı kurye bulunamadı.");
+                return result;
+            }
+
+            // Find the Courier entity by UserId
+            var courier = await _unitOfWork.CourierRepository.GetAsync(c => c.UserId == courierUser.Id);
+            if (courier == null)
+            {
+                result.Fail("Bu e-posta adresi ile kayıtlı kurye bulunamadı.");
+                return result;
+            }
+
+            // Check for existing active/pending agreement between this restaurant and courier
+            var existingAgreement = await _unitOfWork.RestaurantCourierAgreementRepository.GetAsync(
+                a => a.RestaurantId == restaurantId
+                     && a.CourierId == courier.Id
+                     && (a.StatusId == (short)CourierAgreementStatusEnums.PendingApproval
+                         || a.StatusId == (short)CourierAgreementStatusEnums.Active));
+
+            if (existingAgreement != null)
+            {
+                result.Fail("Bu kurye ile zaten aktif veya onay bekleyen bir anlaşma mevcut.");
+                return result;
+            }
+
+            var agreement = new Domain.Entities.Courier.RestaurantCourierAgreement
+            {
+                Id = Guid.NewGuid(),
+                RestaurantId = restaurantId,
+                CourierId = courier.Id,
+                StatusId = (short)CourierAgreementStatusEnums.PendingApproval,
+                AssignmentStrategyId = 1, // Manuel by default
+                AgreedDeliveryFee = requestDto.AgreedDeliveryFee,
+                PerKmFee = requestDto.PerKmFee,
+                Priority = 1,
+                IsDefault = false,
+                EffectiveFrom = DateTime.UtcNow
+            };
+
+            await _unitOfWork.RestaurantCourierAgreementRepository.AddAsync(agreement);
+            await _unitOfWork.CompleteAsync();
+
+            result.SetData(new AgreementResponseDto
+            {
+                Id = agreement.Id,
+                RestaurantId = agreement.RestaurantId,
+                CourierId = agreement.CourierId,
+                CourierName = $"{courierUser.FirstName} {courierUser.LastName}",
                 StatusId = agreement.StatusId,
                 AssignmentStrategyId = agreement.AssignmentStrategyId,
                 AgreedDeliveryFee = agreement.AgreedDeliveryFee,

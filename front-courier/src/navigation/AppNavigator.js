@@ -1,8 +1,9 @@
 import React from 'react';
-import {View, Text, StyleSheet, ActivityIndicator} from 'react-native';
+import {View, Text, StyleSheet, ActivityIndicator, Platform} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import {useAuth} from '../context/AuthContext';
@@ -17,9 +18,11 @@ import DashboardScreen from '../screens/Dashboard/DashboardScreen';
 import DeliveryHistoryScreen from '../screens/Delivery/DeliveryHistoryScreen';
 import EarningsScreen from '../screens/Earnings/EarningsScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
+import AgreementsScreen from '../screens/Agreements/AgreementsScreen';
 
 const AuthStackNav = createNativeStackNavigator();
 const SetupStackNav = createNativeStackNavigator();
+const ProfileStackNav = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 // Auth screens: Login & Register (no courier profile, no token)
@@ -39,14 +42,28 @@ const CourierSetupStack = () => (
   </SetupStackNav.Navigator>
 );
 
+// Profile stack: Profile + sub-screens
+const ProfileStack = () => (
+  <ProfileStackNav.Navigator screenOptions={{headerShown: false}}>
+    <ProfileStackNav.Screen name="ProfileMain" component={ProfileScreen} />
+    <ProfileStackNav.Screen name="Agreements" component={AgreementsScreen} />
+  </ProfileStackNav.Navigator>
+);
+
 // Main tabs: authenticated with courier profile
-const MainTabs = () => (
+const MainTabs = () => {
+  const insets = useSafeAreaInsets();
+  return (
   <Tab.Navigator
     screenOptions={({route}) => ({
       headerShown: false,
       tabBarActiveTintColor: Colors.primary,
       tabBarInactiveTintColor: Colors.textTertiary,
-      tabBarStyle: styles.tabBar,
+      tabBarStyle: {
+        ...styles.tabBar,
+        paddingBottom: Math.max(insets.bottom, 8),
+        height: 56 + Math.max(insets.bottom, 8),
+      },
       tabBarLabelStyle: styles.tabBarLabel,
       tabBarIcon: ({focused, color}) => {
         let iconName;
@@ -79,11 +96,12 @@ const MainTabs = () => (
     />
     <Tab.Screen
       name="ProfileTab"
-      component={ProfileScreen}
+      component={ProfileStack}
       options={{tabBarLabel: 'Profilim'}}
     />
   </Tab.Navigator>
-);
+  );
+};
 
 const SplashView = () => (
   <View style={styles.splashContainer}>
@@ -115,17 +133,15 @@ const AppNavigator = () => {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: Colors.surface,
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
+    borderTopColor: '#F0F0F0',
     paddingTop: 8,
-    paddingBottom: 8,
-    height: 64,
+    elevation: 8,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: -2},
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 10,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   tabBarLabel: {
     fontSize: 11,

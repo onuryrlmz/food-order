@@ -11,18 +11,19 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
+import {useNavigation} from '@react-navigation/native';
 import {useAuth} from '../../context/AuthContext';
 import {courierService} from '../../api/courierService';
 
 const ProfileScreen = () => {
+  const navigation = useNavigation();
   const {user, logout, refreshProfile} = useAuth();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: user?.fullName || '',
-    phone: user?.phone || '',
     vehicleType: user?.vehicleType || '',
     vehiclePlate: user?.vehiclePlate || '',
+    iban: user?.iban || '',
   });
 
   const handleSave = async () => {
@@ -57,6 +58,16 @@ const ProfileScreen = () => {
       ],
     );
   };
+
+  const renderReadOnlyField = (label, value, icon) => (
+    <View style={styles.fieldContainer}>
+      <View style={styles.fieldLabelRow}>
+        <Icon name={icon} size={18} color={Colors.textSecondary} />
+        <Text style={styles.fieldLabel}>{label}</Text>
+      </View>
+      <Text style={styles.fieldValue}>{value || '-'}</Text>
+    </View>
+  );
 
   const renderField = (label, value, key, icon) => {
     if (editing) {
@@ -108,21 +119,27 @@ const ProfileScreen = () => {
           <View style={styles.avatar}>
             <Icon name="account" size={48} color={Colors.primary} />
           </View>
-          <Text style={styles.avatarName}>{user?.fullName || 'Kurye'}</Text>
-          <Text style={styles.avatarEmail}>{user?.email || '-'}</Text>
+          <Text style={styles.avatarName}>{user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : 'Kurye'}</Text>
+          <Text style={styles.avatarEmail}>{user?.phone || '-'}</Text>
         </View>
 
         {/* Profile Fields */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Kişisel Bilgiler</Text>
-          {renderField('Ad Soyad', user?.fullName, 'fullName', 'account-outline')}
-          {renderField('Telefon', user?.phone, 'phone', 'phone-outline')}
+          {renderReadOnlyField('Ad', user?.firstName, 'account-outline')}
+          {renderReadOnlyField('Soyad', user?.lastName, 'account-outline')}
+          {renderReadOnlyField('Telefon', user?.phone, 'phone-outline')}
         </View>
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Araç Bilgileri</Text>
           {renderField('Araç Tipi', user?.vehicleType, 'vehicleType', 'motorbike')}
           {renderField('Plaka', user?.vehiclePlate, 'vehiclePlate', 'card-text-outline')}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Ödeme Bilgileri</Text>
+          {renderField('IBAN', user?.iban, 'iban', 'bank-outline')}
         </View>
 
         {editing && (
@@ -137,6 +154,17 @@ const ProfileScreen = () => {
             )}
           </TouchableOpacity>
         )}
+
+        {/* Menu Items */}
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('Agreements')}>
+          <View style={styles.menuItemLeft}>
+            <Icon name="handshake-outline" size={20} color={Colors.primary} />
+            <Text style={styles.menuItemText}>Anlasmalarim</Text>
+          </View>
+          <Icon name="chevron-right" size={20} color={Colors.textTertiary} />
+        </TouchableOpacity>
 
         {/* Logout */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -258,6 +286,30 @@ const styles = StyleSheet.create({
     color: Colors.textInverse,
     fontSize: Fonts.sizes.lg,
     fontWeight: Fonts.weights.semibold,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.base,
+    marginBottom: Spacing.base,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  menuItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuItemText: {
+    fontSize: Fonts.sizes.base,
+    fontWeight: Fonts.weights.semibold,
+    color: Colors.text,
+    marginLeft: Spacing.md,
   },
   logoutButton: {
     flexDirection: 'row',

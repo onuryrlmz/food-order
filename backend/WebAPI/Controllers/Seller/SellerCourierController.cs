@@ -37,6 +37,14 @@ public class SellerCourierController : BaseController
         return await _deliveryAssignmentService.CreateAgreement(restaurantId, requestDto);
     }
 
+    [HttpPost("restaurant/{restaurantId}/agreements/by-email")]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
+    public async Task<ServiceObjectResult<AgreementResponseDto>> CreateAgreementByEmail(Guid restaurantId, [FromBody] CreateCourierAgreementByEmailDto requestDto)
+    {
+        requestDto.RestaurantId = restaurantId;
+        return await _deliveryAssignmentService.CreateAgreementByEmail(restaurantId, requestDto);
+    }
+
     [HttpPut("agreements/{agreementId}")]
     [AuthorizeAPIRequest(true, false, UserRoleEnums.SellerAdmin)]
     public async Task<ServiceObjectResult<bool>> UpdateAgreement(Guid agreementId, [FromBody] CreateAgreementRequestDto requestDto)

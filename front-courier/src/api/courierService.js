@@ -29,9 +29,19 @@ export const courierService = {
   markDelivered: assignmentId =>
     apiClient.post(`${PREFIX}/assignment/${assignmentId}/delivered`),
 
+  // Agreements
+  getMyAgreements: () =>
+    apiClient.get(`${PREFIX}/agreements`),
+  acceptAgreement: (agreementId) =>
+    apiClient.post(`${PREFIX}/agreements/${agreementId}/accept`),
+  rejectAgreement: (agreementId) =>
+    apiClient.post(`${PREFIX}/agreements/${agreementId}/reject`),
+  terminateAgreement: (agreementId) =>
+    apiClient.post(`${PREFIX}/agreements/${agreementId}/terminate`),
+
   // Earnings
-  getEarnings: (page = 1, pageSize = 20) =>
-    apiClient.get(`${PREFIX}/earnings`, {params: {page, pageSize}}),
+  getEarnings: (page = 1, pageSize = 20, from = null, to = null) =>
+    apiClient.get(`${PREFIX}/earnings`, {params: {page, pageSize, from, to}}),
   getEarningSummary: () => apiClient.get(`${PREFIX}/earnings/summary`),
 };
 

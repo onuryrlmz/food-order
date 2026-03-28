@@ -25,22 +25,20 @@ const TABS = [
   { key: 'deliveries', label: 'Aktif Teslimatlar' },
 ];
 
-const EMPTY_AGREEMENT = {
-  courierCompanyId: '',
-  strategyId: 1,
-  feePerDelivery: '',
-  priority: 1,
+const EMPTY_INVITE = {
+  courierEmail: '',
+  agreedDeliveryFee: '',
+  perKmFee: '',
 };
 
 export default function CouriersPage() {
   const toast = useToast();
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [activeTab, setActiveTab] = useState('agreements');
-  const [agreementModal, setAgreementModal] = useState(null); // null=closed, object=form data
+  const [inviteModal, setInviteModal] = useState(null); // null=closed, object=form data
   const [settingsModal, setSettingsModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [courierInfoModal, setCourierInfoModal] = useState(false);
 
   // Settings form state
   const [settingsForm, setSettingsForm] = useState({ defaultAssignmentStrategy: 1, hasOwnCouriers: false });
@@ -71,28 +69,26 @@ export default function CouriersPage() {
 
   const isLoading = activeTab === 'agreements' ? agreementsLoading : activeTab === 'couriers' ? couriersLoading : deliveriesLoading;
 
-  // Agreement CRUD
-  const handleSaveAgreement = async () => {
-    if (!agreementModal) return;
+  // Invite courier by email
+  const handleInviteCourier = async () => {
+    if (!inviteModal || !inviteModal.courierEmail) {
+      toast('Kurye e-posta adresi gereklidir', 'error');
+      return;
+    }
     setSaving(true);
     try {
       const payload = {
-        ...agreementModal,
-        strategyId: Number(agreementModal.strategyId),
-        feePerDelivery: Number(agreementModal.feePerDelivery),
-        priority: Number(agreementModal.priority),
+        restaurantId: selectedRestaurant,
+        courierEmail: inviteModal.courierEmail.trim(),
+        agreedDeliveryFee: inviteModal.agreedDeliveryFee ? Number(inviteModal.agreedDeliveryFee) : null,
+        perKmFee: inviteModal.perKmFee ? Number(inviteModal.perKmFee) : null,
       };
-      if (agreementModal.id) {
-        await api.put(`/v1/seller/courier/agreements/${agreementModal.id}`, payload);
-        toast('Anlaşma güncellendi', 'success');
-      } else {
-        await api.post(`/v1/seller/courier/restaurant/${selectedRestaurant}/agreements`, payload);
-        toast('Anlaşma oluşturuldu', 'success');
-      }
+      await api.post(`/v1/seller/courier/restaurant/${selectedRestaurant}/agreements/by-email`, payload);
+      toast('Kurye davet edildi! Kuryenin kabul etmesi bekleniyor.', 'success');
       mutateAgreements();
-      setAgreementModal(null);
+      setInviteModal(null);
     } catch (err) {
-      toast(err.response?.data?.messages?.[0]?.description || 'Hata oluştu', 'error');
+      toast(err.response?.data?.messages?.[0]?.description || err.message || 'Hata oluştu', 'error');
     } finally {
       setSaving(false);
     }
@@ -190,13 +186,8 @@ export default function CouriersPage() {
               </div>
               <div className="flex gap-2">
                 {activeTab === 'agreements' && (
-                  <Button size="sm" onClick={() => setAgreementModal({ ...EMPTY_AGREEMENT })}>
-                    + Yeni Anlaşma
-                  </Button>
-                )}
-                {activeTab === 'couriers' && (
-                  <Button size="sm" onClick={() => setCourierInfoModal(true)}>
-                    + Kendi Kuryeni Ekle
+                  <Button size="sm" onClick={() => setInviteModal({ ...EMPTY_INVITE })}>
+                    + Kurye Ekle
                   </Button>
                 )}
                 <Button size="sm" variant="outline" onClick={() => setSettingsModal(true)}>
@@ -217,6 +208,7 @@ export default function CouriersPage() {
                   agreements.length === 0 ? (
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-10 text-center">
                       <p className="text-gray-400 text-sm">Henüz kurye anlaşması yok</p>
+                      <p className="text-gray-300 text-xs mt-2">Yukarıdaki &quot;+ Kurye Ekle&quot; butonuyla kurye davet edebilirsiniz.</p>
                     </div>
                   ) : (
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
@@ -227,7 +219,7 @@ export default function CouriersPage() {
                               <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Firma / Kurye</th>
                               <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Strateji</th>
                               <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Ücret</th>
-                              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Öncelik</th>
+                              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Km Başı</th>
                               <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Durum</th>
                               <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">İşlem</th>
                             </tr>
@@ -238,27 +230,18 @@ export default function CouriersPage() {
                                 <td className="px-4 py-3">
                                   <p className="font-medium text-gray-800">{ag.courierCompanyName || ag.courierName || '-'}</p>
                                 </td>
-                                <td className="px-4 py-3 text-gray-600">{ASSIGNMENT_STRATEGY[ag.strategyId] || '-'}</td>
-                                <td className="px-4 py-3 font-medium text-emerald-600">₺{Number(ag.feePerDelivery || 0).toFixed(2)}</td>
-                                <td className="px-4 py-3 text-gray-600">{ag.priority}</td>
+                                <td className="px-4 py-3 text-gray-600">{ASSIGNMENT_STRATEGY[ag.strategyId] || ag.assignmentStrategyId ? ASSIGNMENT_STRATEGY[ag.assignmentStrategyId] : '-'}</td>
+                                <td className="px-4 py-3 font-medium text-emerald-600">
+                                  {ag.agreedDeliveryFee != null ? `₺${Number(ag.agreedDeliveryFee).toFixed(2)}` : '-'}
+                                </td>
+                                <td className="px-4 py-3 text-gray-600">
+                                  {ag.perKmFee != null ? `₺${Number(ag.perKmFee).toFixed(2)}` : '-'}
+                                </td>
                                 <td className="px-4 py-3">
                                   <Badge label={AGREEMENT_STATUS[ag.statusId] || '?'} color={AGREEMENT_STATUS_COLOR[ag.statusId] || 'gray'} />
                                 </td>
                                 <td className="px-4 py-3">
                                   <div className="flex gap-1">
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => setAgreementModal({
-                                        id: ag.id,
-                                        courierCompanyId: ag.courierCompanyId || '',
-                                        strategyId: ag.strategyId || 1,
-                                        feePerDelivery: ag.feePerDelivery || '',
-                                        priority: ag.priority || 1,
-                                      })}
-                                    >
-                                      Düzenle
-                                    </Button>
                                     {ag.statusId !== 4 && (
                                       <Button size="sm" variant="ghost" onClick={() => setDeleteConfirm(ag)}>
                                         Sonlandır
@@ -278,40 +261,9 @@ export default function CouriersPage() {
                 {/* Couriers Tab */}
                 {activeTab === 'couriers' && (
                   <>
-                    {/* HasOwnCouriers status note */}
-                    {settingsForm.hasOwnCouriers ? (
-                      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-start gap-3">
-                        <svg className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div>
-                          <p className="text-sm font-medium text-emerald-800">Kendi kuryelerimiz var - Aktif</p>
-                          <p className="text-xs text-emerald-600 mt-0.5">Restoran kuryeleri bu listede gorunur. Kuryeleriniz courier uygulamasindan kayit olarak sisteme dahil olabilir.</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-                        <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div>
-                          <p className="text-sm font-medium text-amber-800">Kendi kurye ozelliginiz aktif degil</p>
-                          <p className="text-xs text-amber-600 mt-0.5">
-                            Kendi kuryelerinizi ekleyebilmek icin{' '}
-                            <button
-                              onClick={() => setSettingsModal(true)}
-                              className="underline font-medium hover:text-amber-800 transition-colors"
-                            >
-                              Teslimat Ayarlari
-                            </button>
-                            {' '}sayfasindan &quot;Kendi kuryelerimiz var&quot; secenegini aktif edin.
-                          </p>
-                        </div>
-                      </div>
-                    )}
                     {couriers.length === 0 ? (
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-10 text-center">
-                      <p className="text-gray-400 text-sm">Uygun kurye bulunamadi</p>
+                      <p className="text-gray-400 text-sm">Uygun kurye bulunamadı</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -407,47 +359,40 @@ export default function CouriersPage() {
         )}
       </div>
 
-      {/* Create/Edit Agreement Modal */}
-      <Modal isOpen={!!agreementModal} onClose={() => setAgreementModal(null)} title={agreementModal?.id ? 'Anlaşmayı Düzenle' : 'Yeni Anlaşma'} size="md">
-        {agreementModal && (
+      {/* Invite Courier Modal */}
+      <Modal isOpen={!!inviteModal} onClose={() => setInviteModal(null)} title="Kurye Ekle" size="md">
+        {inviteModal && (
           <div className="space-y-4">
-            <Input
-              label="Kurye Firma ID"
-              placeholder="Kurye firma ID'sini girin"
-              value={agreementModal.courierCompanyId}
-              onChange={e => setAgreementModal(prev => ({ ...prev, courierCompanyId: e.target.value }))}
-            />
-            <div className="w-full">
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Atama Stratejisi</label>
-              <select
-                value={agreementModal.strategyId}
-                onChange={e => setAgreementModal(prev => ({ ...prev, strategyId: Number(e.target.value) }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
-              >
-                {Object.entries(ASSIGNMENT_STRATEGY).map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
-                ))}
-              </select>
+            <div className="bg-blue-50 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                Kuryenizin e-posta adresini girin. Kurye uygulamadan kayıt olmuş olmalıdır. Davet gönderildikten sonra kuryenin kabul etmesi gerekir.
+              </p>
             </div>
             <Input
-              label="Teslimat Başı Ücret (₺)"
-              type="number"
-              placeholder="0.00"
-              value={agreementModal.feePerDelivery}
-              onChange={e => setAgreementModal(prev => ({ ...prev, feePerDelivery: e.target.value }))}
+              label="Kurye E-posta Adresi"
+              type="email"
+              placeholder="kurye@ornek.com"
+              value={inviteModal.courierEmail}
+              onChange={e => setInviteModal(prev => ({ ...prev, courierEmail: e.target.value }))}
             />
             <Input
-              label="Öncelik"
+              label="Teslimat Başı Ücret (₺) (Opsiyonel)"
               type="number"
-              placeholder="1"
-              min="1"
-              value={agreementModal.priority}
-              onChange={e => setAgreementModal(prev => ({ ...prev, priority: e.target.value }))}
+              placeholder="0.00"
+              value={inviteModal.agreedDeliveryFee}
+              onChange={e => setInviteModal(prev => ({ ...prev, agreedDeliveryFee: e.target.value }))}
+            />
+            <Input
+              label="Km Başı Ücret (₺) (Opsiyonel)"
+              type="number"
+              placeholder="0.00"
+              value={inviteModal.perKmFee}
+              onChange={e => setInviteModal(prev => ({ ...prev, perKmFee: e.target.value }))}
             />
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="secondary" onClick={() => setAgreementModal(null)}>Vazgeç</Button>
-              <Button loading={saving} onClick={handleSaveAgreement}>
-                {agreementModal.id ? 'Güncelle' : 'Oluştur'}
+              <Button variant="secondary" onClick={() => setInviteModal(null)}>Vazgeç</Button>
+              <Button loading={saving} onClick={handleInviteCourier}>
+                Davet Gönder
               </Button>
             </div>
           </div>
@@ -462,66 +407,12 @@ export default function CouriersPage() {
             <p className="text-xs text-red-500">Bu işlem geri alınamaz.</p>
           </div>
           <div className="bg-gray-50 rounded-lg p-3 text-sm">
-            <p className="text-gray-500 text-xs mb-1">Firma</p>
+            <p className="text-gray-500 text-xs mb-1">Firma / Kurye</p>
             <p className="font-medium">{deleteConfirm?.courierCompanyName || deleteConfirm?.courierName || '-'}</p>
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setDeleteConfirm(null)}>Vazgeç</Button>
             <Button variant="danger" loading={saving} onClick={() => handleDeleteAgreement(deleteConfirm.id)}>Sonlandır</Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Add Own Courier Info Modal */}
-      <Modal isOpen={courierInfoModal} onClose={() => setCourierInfoModal(false)} title="Kendi Kuryeni Ekle" size="md">
-        <div className="space-y-4">
-          <div className="bg-blue-50 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-blue-800 mb-2">Kurye ekleme nasil calisir?</h4>
-            <ul className="space-y-3 text-sm text-blue-700">
-              <li className="flex items-start gap-2">
-                <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</span>
-                <span>Kuryeniz, <strong>courier uygulamasindan</strong> kayit olmalidir.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</span>
-                <span>Kayit sirasinda kurye tipi olarak <strong>&quot;Restoran Kuryesi&quot;</strong> secilmelidir.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</span>
-                <span>Kurye, kayit sirasinda restoraninizin ID&apos;sini girmelidir.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">4</span>
-                <span>Kayit tamamlandiktan sonra kurye bu listede otomatik olarak gorunecektir.</span>
-              </li>
-            </ul>
-          </div>
-
-          {!settingsForm.hasOwnCouriers && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <p className="text-sm text-amber-800 font-medium">Onemli: &quot;Kendi kuryelerimiz var&quot; ayari aktif degil</p>
-              <p className="text-xs text-amber-600 mt-1">
-                Kendi kuryelerinizi kullanabilmek icin once{' '}
-                <button
-                  onClick={() => { setCourierInfoModal(false); setSettingsModal(true); }}
-                  className="underline font-medium hover:text-amber-800 transition-colors"
-                >
-                  Teslimat Ayarlari
-                </button>
-                {' '}sayfasindan bu secenegi aktif etmeniz gerekir.
-              </p>
-            </div>
-          )}
-
-          {selectedRestaurant && (
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-500 mb-1">Restoran ID (kuryenizle paylasin)</p>
-              <p className="font-mono text-sm text-gray-800 select-all">{selectedRestaurant}</p>
-            </div>
-          )}
-
-          <div className="flex justify-end pt-2">
-            <Button variant="secondary" onClick={() => setCourierInfoModal(false)}>Kapat</Button>
           </div>
         </div>
       </Modal>
@@ -555,7 +446,7 @@ export default function CouriersPage() {
               </label>
             </div>
             <p className="text-xs text-gray-500 mt-2 ml-8">
-              Bu ayari aktif ederseniz, kendi kurye kadronuzu kullanabilirsiniz. Kuryeleriniz courier uygulamasindan &quot;Restoran Kuryesi&quot; olarak kayit olacak ve siparislere oncelikli olarak atanacaktir.
+              Bu ayarı aktif ederseniz, kendi kurye kadronuzu kullanabilirsiniz.
             </p>
           </div>
           <div className="flex justify-end gap-2 pt-2">

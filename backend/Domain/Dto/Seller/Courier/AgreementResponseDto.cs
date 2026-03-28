@@ -4,6 +4,7 @@ public class AgreementResponseDto
 {
     public Guid Id { get; set; }
     public Guid RestaurantId { get; set; }
+    public string? RestaurantName { get; set; }
     public Guid? CourierCompanyId { get; set; }
     public string? CourierCompanyName { get; set; }
     public Guid? CourierId { get; set; }

@@ -111,6 +111,34 @@ public class CourierController : BaseController
         return await _deliveryAssignmentService.MarkDelivered(assignmentId);
     }
 
+    [HttpGet("agreements")]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Courier)]
+    public async Task<ServiceCollectionResult> GetMyAgreements()
+    {
+        return await _deliveryAssignmentService.GetMyAgreements();
+    }
+
+    [HttpPost("agreements/{agreementId}/accept")]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Courier)]
+    public async Task<ServiceObjectResult<bool>> AcceptAgreement(Guid agreementId)
+    {
+        return await _deliveryAssignmentService.AcceptAgreement(agreementId);
+    }
+
+    [HttpPost("agreements/{agreementId}/reject")]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Courier)]
+    public async Task<ServiceObjectResult<bool>> RejectAgreement(Guid agreementId)
+    {
+        return await _deliveryAssignmentService.RejectAgreementByC(agreementId);
+    }
+
+    [HttpPost("agreements/{agreementId}/terminate")]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Courier)]
+    public async Task<ServiceObjectResult<bool>> TerminateAgreementByCourier(Guid agreementId)
+    {
+        return await _deliveryAssignmentService.TerminateAgreementByC(agreementId);
+    }
+
     [HttpGet("earnings")]
     [AuthorizeAPIRequest(true, false, UserRoleEnums.Courier)]
     public async Task<ServiceCollectionResult> GetEarnings([FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)

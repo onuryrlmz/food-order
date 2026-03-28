@@ -7,6 +7,7 @@ import {
   RefreshControl,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -86,7 +87,7 @@ const DashboardScreen = () => {
       }
       await refreshProfile();
     } catch (error) {
-      // Silent fail
+      Alert.alert('Hata', error?.message || 'Bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setToggling(false);
     }

@@ -1,5 +1,6 @@
 import React, {createContext, useContext, useState, useRef, useCallback} from 'react';
 import {Platform, PermissionsAndroid, Alert} from 'react-native';
+import Geolocation from 'react-native-geolocation-service';
 import {courierService} from '../api/courierService';
 
 const LocationContext = createContext(null);
@@ -18,24 +19,24 @@ export const LocationProvider = ({children}) => {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
-            title: 'Konum Izni',
-            message: 'Teslimat yapabilmek icin konum izni gereklidir.',
-            buttonPositive: 'Izin Ver',
+            title: 'Konum İzni',
+            message: 'Teslimat yapabilmek için konum izni gereklidir.',
+            buttonPositive: 'İzin Ver',
             buttonNegative: 'Reddet',
           },
         );
         return granted === PermissionsAndroid.RESULTS.GRANTED;
       } catch (err) {
+        console.log('Permission error:', err);
         return false;
       }
     }
-    // iOS handles permission via Info.plist prompt automatically
     return true;
   };
 
   const getCurrentPosition = useCallback(() => {
     return new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(
+      Geolocation.getCurrentPosition(
         position => {
           const coords = {
             latitude: position.coords.latitude,
@@ -44,7 +45,10 @@ export const LocationProvider = ({children}) => {
           setCurrentPosition(coords);
           resolve(coords);
         },
-        error => reject(error),
+        error => {
+          console.log('Location error:', error.code, error.message);
+          reject(error);
+        },
         {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
       );
     });
@@ -61,7 +65,7 @@ export const LocationProvider = ({children}) => {
 
   const stopTracking = useCallback(() => {
     if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
+      Geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
     if (intervalRef.current) {
@@ -72,7 +76,6 @@ export const LocationProvider = ({children}) => {
   }, []);
 
   const startTracking = useCallback(async () => {
-    // Prevent double tracking
     if (isTracking) {
       return true;
     }
@@ -80,17 +83,20 @@ export const LocationProvider = ({children}) => {
     const hasPermission = await requestPermission();
     if (!hasPermission) {
       Alert.alert(
-        'Konum Izni Gerekli',
-        'Cevrimici olabilmek icin konum izni vermeniz gerekmektedir.',
+        'Konum İzni Gerekli',
+        'Çevrimiçi olabilmek için konum izni vermeniz gerekmektedir. Lütfen ayarlardan konum iznini açın.',
       );
       return false;
     }
 
-    // Get initial position and send to server
-    await sendLocation();
+    try {
+      await sendLocation();
+    } catch (e) {
+      Alert.alert('Konum Hatası', 'Konumunuz alınamadı. GPS açık olduğundan emin olun.');
+      return false;
+    }
 
-    // Watch position changes locally
-    watchIdRef.current = navigator.geolocation.watchPosition(
+    watchIdRef.current = Geolocation.watchPosition(
       position => {
         setCurrentPosition({
           latitude: position.coords.latitude,
@@ -98,10 +104,9 @@ export const LocationProvider = ({children}) => {
         });
       },
       () => {},
-      {enableHighAccuracy: true, distanceFilter: 50},
+      {enableHighAccuracy: true, distanceFilter: 50, interval: 10000, fastestInterval: 5000},
     );
 
-    // Send location to server periodically
     intervalRef.current = setInterval(sendLocation, LOCATION_INTERVAL);
     setIsTracking(true);
     return true;

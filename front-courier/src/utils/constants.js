@@ -1,11 +1,4 @@
-import {Platform} from 'react-native';
-
-const API_HOST = Platform.select({
-  android: '10.0.2.2',
-  ios: 'localhost',
-});
-
-export const API_BASE_URL = `http://${API_HOST}:3762/v1`;
+export const API_BASE_URL = 'https://food-order-api.yrlmzteknoloji.com/v1';
 
 export const DELIVERY_STATUS = {
   1: {label: 'Bekliyor', color: '#FF9500', icon: 'clock-outline'},

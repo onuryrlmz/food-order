@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from 'react';
+import React, {useState, useCallback, useMemo} from 'react';
 import {
   View,
   Text,
@@ -6,13 +6,25 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
+  ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {courierService} from '../../api/courierService';
 
+const MONTHS = [
+  'Ocak', 'Subat', 'Mart', 'Nisan', 'Mayis', 'Haziran',
+  'Temmuz', 'Agustos', 'Eylul', 'Ekim', 'Kasim', 'Aralik',
+];
+
+const YEARS = [2025, 2026];
+
 const EarningsScreen = () => {
+  const now = new Date();
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
   const [earnings, setEarnings] = useState([]);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,9 +33,18 @@ const EarningsScreen = () => {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const fetchData = async (pageNum = 1, isRefresh = false) => {
+  const {fromDate, toDate} = useMemo(() => {
+    const from = new Date(selectedYear, selectedMonth, 1);
+    const to = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59);
+    return {
+      fromDate: from.toISOString(),
+      toDate: to.toISOString(),
+    };
+  }, [selectedYear, selectedMonth]);
+
+  const fetchData = async (pageNum = 1, isRefresh = false, from = fromDate, to = toDate) => {
     try {
-      const requests = [courierService.getEarnings(pageNum, 20)];
+      const requests = [courierService.getEarnings(pageNum, 20, from, to)];
       if (pageNum === 1) {
         requests.push(courierService.getEarningSummary());
       }
@@ -56,19 +77,20 @@ const EarningsScreen = () => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchData(1, true);
-    }, []),
+      setLoading(true);
+      fetchData(1, true, fromDate, toDate);
+    }, [fromDate, toDate]),
   );
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchData(1, true);
+    fetchData(1, true, fromDate, toDate);
   };
 
   const onEndReached = () => {
     if (!loadingMore && hasMore) {
       setLoadingMore(true);
-      fetchData(page + 1);
+      fetchData(page + 1, false, fromDate, toDate);
     }
   };
 
@@ -163,11 +185,61 @@ const EarningsScreen = () => {
     );
   }
 
+  const renderDateFilter = () => (
+    <View style={styles.filterContainer}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterRow}>
+        {YEARS.map(year => (
+          <TouchableOpacity
+            key={year}
+            style={[
+              styles.filterChip,
+              selectedYear === year && styles.filterChipActive,
+            ]}
+            onPress={() => setSelectedYear(year)}>
+            <Text
+              style={[
+                styles.filterChipText,
+                selectedYear === year && styles.filterChipTextActive,
+              ]}>
+              {year}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterRow}>
+        {MONTHS.map((month, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[
+              styles.filterChip,
+              selectedMonth === index && styles.filterChipActive,
+            ]}
+            onPress={() => setSelectedMonth(index)}>
+            <Text
+              style={[
+                styles.filterChipText,
+                selectedMonth === index && styles.filterChipTextActive,
+              ]}>
+              {month}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Kazançlarım</Text>
+        <Text style={styles.headerTitle}>Kazanclarim</Text>
       </View>
+      {renderDateFilter()}
       <FlatList
         data={earnings}
         renderItem={renderItem}
@@ -209,6 +281,36 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sizes.xl,
     fontWeight: Fonts.weights.bold,
     color: Colors.text,
+  },
+  filterContainer: {
+    backgroundColor: Colors.surface,
+    paddingBottom: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  filterChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.background,
+  },
+  filterChipActive: {
+    backgroundColor: Colors.primary,
+  },
+  filterChipText: {
+    fontSize: Fonts.sizes.sm,
+    color: Colors.textSecondary,
+    fontWeight: Fonts.weights.medium,
+  },
+  filterChipTextActive: {
+    color: Colors.textInverse,
+    fontWeight: Fonts.weights.semibold,
   },
   listContent: {
     padding: Spacing.base,

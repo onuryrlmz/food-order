@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Alert } from 'react-native';
 import * as Location from 'expo-location';
 import { courierService } from '../api/courierService';
 import {
   startBackgroundLocation,
   stopBackgroundLocation,
+  BACKGROUND_LOCATION_TASK,
 } from '../utils/backgroundLocation';
 
 const LocationContext = createContext(null);
@@ -12,6 +13,29 @@ const LocationContext = createContext(null);
 export const LocationProvider = ({ children }) => {
   const [currentPosition, setCurrentPosition] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
+
+  // Uygulama açıldığında arka plan konum takibinin zaten çalışıp çalışmadığını kontrol et
+  useEffect(() => {
+    const checkExistingTracking = async () => {
+      try {
+        const hasStarted = await Location.hasStartedLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
+        if (hasStarted) {
+          setIsTracking(true);
+          // Mevcut konumu da al
+          const location = await Location.getLastKnownPositionAsync();
+          if (location) {
+            setCurrentPosition({
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            });
+          }
+        }
+      } catch (e) {
+        // Task henüz tanımlanmamış olabilir, sessizce geç
+      }
+    };
+    checkExistingTracking();
+  }, []);
 
   const getCurrentPosition = useCallback(async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();

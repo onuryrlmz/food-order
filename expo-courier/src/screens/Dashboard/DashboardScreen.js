@@ -19,7 +19,7 @@ import {courierService} from '../../api/courierService';
 
 const DashboardScreen = () => {
   const {user, refreshProfile} = useAuth();
-  const {startTracking, stopTracking, isTracking} = useLocation();
+  const {startTracking, stopTracking} = useLocation();
 
   const [isOnline, setIsOnline] = useState(false);
   const [activeDelivery, setActiveDelivery] = useState(null);
@@ -70,12 +70,6 @@ const DashboardScreen = () => {
     }
   }, [user]);
 
-  // Arka plan konum takibi zaten çalışıyorsa (uygulama restart sonrası), online olarak göster
-  useEffect(() => {
-    if (isTracking && !isOnline) {
-      setIsOnline(true);
-    }
-  }, [isTracking]);
 
   const handleToggleOnline = async () => {
     setToggling(true);

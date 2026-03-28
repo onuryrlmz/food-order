@@ -13,29 +13,43 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
     return;
   }
 
-  if (data) {
-    const { locations } = data;
-    const location = locations[0];
-    if (!location) return;
+  if (!data) return;
 
-    try {
-      const token = await SecureStore.getItemAsync('auth_token');
-      if (!token) return;
+  const { locations } = data;
+  const location = locations[0];
+  if (!location) return;
 
-      await axios.put(
-        `${API_BASE_URL}/courier/location`,
-        {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          timeout: 10000,
-        }
-      );
-    } catch (e) {
-      // Silent fail for background updates
+  try {
+    const token = await SecureStore.getItemAsync('auth_token');
+    if (!token) return;
+
+    const headers = { Authorization: `Bearer ${token}` };
+
+    // Önce backend'den kurye profili al — çevrimiçi mi kontrol et
+    const profileRes = await axios.get(`${API_BASE_URL}/courier/profile`, {
+      headers,
+      timeout: 10000,
+    });
+
+    const availabilityStatus = profileRes.data?.data?.availabilityStatus;
+
+    // Çevrimdışı (0) ise konum gönderme, takibi durdur
+    if (availabilityStatus === 0) {
+      await Location.stopLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
+      return;
     }
+
+    // Çevrimiçi (1) veya teslimat'ta (2) — konum gönder
+    await axios.put(
+      `${API_BASE_URL}/courier/location`,
+      {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      },
+      { headers, timeout: 10000 }
+    );
+  } catch (e) {
+    // Ağ hatası durumunda sessizce geç — bir sonraki güncelleme tekrar dener
   }
 });
 
@@ -78,8 +92,12 @@ export const startBackgroundLocation = async () => {
 };
 
 export const stopBackgroundLocation = async () => {
-  const hasStarted = await Location.hasStartedLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
-  if (hasStarted) {
-    await Location.stopLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
+  try {
+    const hasStarted = await Location.hasStartedLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
+    if (hasStarted) {
+      await Location.stopLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
+    }
+  } catch (e) {
+    // Sessizce geç
   }
 };

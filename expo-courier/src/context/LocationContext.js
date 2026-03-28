@@ -14,14 +14,13 @@ export const LocationProvider = ({ children }) => {
   const [currentPosition, setCurrentPosition] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
 
-  // Uygulama açıldığında arka plan konum takibinin zaten çalışıp çalışmadığını kontrol et
+  // Uygulama açıldığında arka plan görevin çalışıp çalışmadığını kontrol et
   useEffect(() => {
     const checkExistingTracking = async () => {
       try {
         const hasStarted = await Location.hasStartedLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
         if (hasStarted) {
           setIsTracking(true);
-          // Mevcut konumu da al
           const location = await Location.getLastKnownPositionAsync();
           if (location) {
             setCurrentPosition({
@@ -31,7 +30,7 @@ export const LocationProvider = ({ children }) => {
           }
         }
       } catch (e) {
-        // Task henüz tanımlanmamış olabilir, sessizce geç
+        // Task henüz tanımlanmamış olabilir
       }
     };
     checkExistingTracking();
@@ -58,30 +57,33 @@ export const LocationProvider = ({ children }) => {
   const startTracking = useCallback(async () => {
     if (isTracking) return true;
 
+    // Konum izni ve ilk konum al
     try {
       const coords = await getCurrentPosition();
       if (!coords) {
         Alert.alert(
-          'Konum Izni Gerekli',
-          'Cevrimici olabilmek icin konum izni vermeniz gerekmektedir.',
+          'Konum İzni Gerekli',
+          'Çevrimiçi olabilmek için konum izni vermeniz gerekmektedir.',
         );
         return false;
       }
       await courierService.updateLocation(coords.latitude, coords.longitude);
     } catch (e) {
-      Alert.alert('Konum Hatasi', 'Konumunuz alinamadi. GPS acik oldugundan emin olun.');
+      Alert.alert('Konum Hatası', 'Konumunuz alınamadı. GPS açık olduğundan emin olun.');
       return false;
     }
 
+    // Arka plan konum takibini başlat
     const started = await startBackgroundLocation();
     if (!started) {
       Alert.alert(
-        'Arka Plan Konum Izni',
-        'Uygulama kapaliyken bile konum takibi icin "Her zaman izin ver" secenegini secmeniz gerekmektedir.',
+        'Arka Plan Konum İzni',
+        'Uygulama kapalıyken bile konum takibi için "Her zaman izin ver" seçeneğini seçmeniz gerekmektedir.',
       );
       return false;
     }
 
+    // Ön plan konum güncellemeleri (UI için)
     await Location.watchPositionAsync(
       {
         accuracy: Location.Accuracy.High,

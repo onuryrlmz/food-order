@@ -1,0 +1,59 @@
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=Admin123
+      - MYSQL_DATABASE=FoodOrderApp
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pAdmin123"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: WebAPI/Dockerfile
+    ports:
+      - "3762:8080"
+    environment:
+      - TZ=Europe/Istanbul
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__FoodOrderApp=Server=mysql;Database=FoodOrderApp;Uid=root;Pwd=Admin123;convert zero datetime=True;Min Pool Size=0;Max Pool Size=100;
+      - Redis__Host=redis
+      - Redis__Port=6379
+      - Redis__Password=
+      - Redis__Ssl=false
+      - TokenOptions__SecurityKey=0t0KbC82e^b@nPq@RNBGlP^Z4na6EnXfTWBR3kC2EQrdhK%x!xoCfrmyt57&YSgb
+      - AwsS3__Domain=https://cdn.yrlmzteknoloji.com
+      - AwsS3__Endpoint=https://436b6310157e9062a83ae62114a43bc3.r2.cloudflarestorage.com/food-order
+      - AwsS3__BucketName=food-order
+      - AwsS3__AccessKey=1125e62c8c7d5a5d77e6513aeaa32466
+      - AwsS3__SecretKey=58ce51514a352d20194381ce65092d005d5d9ab3cd77131f3c2c1ffda6c47da5
+      - WebAPIConfiguration__AllowedOrigins__0=http://localhost:3000
+      - WebAPIConfiguration__AllowedOrigins__1=http://localhost:3001
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mysql-data:

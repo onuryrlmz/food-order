@@ -1,18 +1,15 @@
-version: '3.9'
+version: "3.9"
 
 services:
   yrlmz-food-order-api:
     image: ghcr.io/onuryrlmz/food-order-api:latest
-    # build:
-    #   context: ./backend
-    #   dockerfile: WebAPI/Dockerfile
     logging:
       options:
         max-size: "10m"
         max-file: "3"
     environment:
       - TZ=Europe/Istanbul
-      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__FoodOrderApp=${DB_CONNECTION_STRING}
       - Redis__Host=${REDIS_HOST:-food-order-redis}
       - Redis__Port=${REDIS_PORT:-6379}
@@ -27,18 +24,17 @@ services:
       - AwsS3__Token=cfut_we1Tg7EYNCdHmwG4lRzc0zxP6T9mjCzLkNV6WDrba0514e87
       - MailSettings__Server=${SMTP_SERVER:-smtp.mandrillapp.com}
       - MailSettings__Port=${SMTP_PORT:-587}
-      - MailSettings__UserName=${SMTP_USER}
-      - MailSettings__Password=${SMTP_PASSWORD}
-      - MailSettings__SenderEmail=${SMTP_FROM}
+      - MailSettings__UserName=${SMTP_USER:-}
+      - MailSettings__Password=${SMTP_PASSWORD:-}
+      - MailSettings__SenderEmail=${SMTP_FROM:-}
       - AiSupport__ApiKey=${AI_SUPPORT_API_KEY:-}
       - AiSupport__Model=${AI_SUPPORT_MODEL:-claude-sonnet-4-20250514}
-      - WebAPIConfiguration__AllowedOrigins__0=https://${ADMIN_DOMAIN}
-      - WebAPIConfiguration__AllowedOrigins__1=https://${SELLER_DOMAIN}
-      - WebAPIConfiguration__AllowedOrigins__2=https://${APP_DOMAIN:-app.esnaftan.com}
+      - WebAPIConfiguration__AllowedOrigins__0=https://food-order-admin.yrlmzteknoloji.com
+      - WebAPIConfiguration__AllowedOrigins__1=https://food-order-seller.yrlmzteknoloji.com
+      - WebAPIConfiguration__AllowedOrigins__2=http://localhost:3000
+      - WebAPIConfiguration__AllowedOrigins__3=http://localhost:3001
     networks:
       - proxy-net
-    deploy:
-      replicas: 1
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
@@ -47,6 +43,7 @@ services:
       - "traefik.http.routers.yrlmz-food-order-api-https.rule=Host(`food-order-api.yrlmzteknoloji.com`)"
       - "traefik.http.routers.yrlmz-food-order-api-https.entrypoints=web-https"
       - "traefik.http.routers.yrlmz-food-order-api-https.tls=true"
+      - "traefik.http.services.yrlmz-food-order-api.loadbalancer.server.port=8080"
 
 networks:
   proxy-net:

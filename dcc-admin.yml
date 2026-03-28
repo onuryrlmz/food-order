@@ -1,0 +1,27 @@
+version: '3.9'
+
+services:
+  yrlmz-food-order-admin:
+    image: ghcr.io/onuryrlmz/food-order-admin:latest
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - TZ=Europe/Istanbul
+      - NEXT_PUBLIC_API_BASE_URL=https://food-order-api.yrlmzteknoloji.com
+    networks:
+      - proxy-net
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.yrlmz-food-order-admin-http.rule=Host(`food-order-admin.yrlmzteknoloji.com`)"
+      - "traefik.http.routers.yrlmz-food-order-admin-http.entrypoints=web-http"
+      - "traefik.http.routers.yrlmz-food-order-admin-https.rule=Host(`food-order-admin.yrlmzteknoloji.com`)"
+      - "traefik.http.routers.yrlmz-food-order-admin-https.entrypoints=web-https"
+      - "traefik.http.routers.yrlmz-food-order-admin-https.tls=true"
+      - "traefik.http.services.yrlmz-food-order-admin.loadbalancer.server.port=3000"
+
+networks:
+  proxy-net:
+    external: true

@@ -1,0 +1,27 @@
+version: '3.9'
+
+services:
+  yrlmz-food-order-seller:
+    image: ghcr.io/onuryrlmz/food-order-seller:latest
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - TZ=Europe/Istanbul
+      - NEXT_PUBLIC_API_BASE_URL=https://food-order-api.yrlmzteknoloji.com
+    networks:
+      - proxy-net
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.yrlmz-food-order-seller-http.rule=Host(`food-order-seller.yrlmzteknoloji.com`)"
+      - "traefik.http.routers.yrlmz-food-order-seller-http.entrypoints=web-http"
+      - "traefik.http.routers.yrlmz-food-order-seller-https.rule=Host(`food-order-seller.yrlmzteknoloji.com`)"
+      - "traefik.http.routers.yrlmz-food-order-seller-https.entrypoints=web-https"
+      - "traefik.http.routers.yrlmz-food-order-seller-https.tls=true"
+      - "traefik.http.services.yrlmz-food-order-seller.loadbalancer.server.port=3000"
+
+networks:
+  proxy-net:
+    external: true

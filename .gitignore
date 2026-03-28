@@ -44,7 +44,3 @@ package-lock.json
 # Sistem dosyaları
 .DS_Store
 Thumbs.db
-
-# Docker ve çevre değişkenleri
-.env
-docker-compose.override.yml

@@ -1,0 +1,41 @@
+version: '3.9'
+
+services:
+  yrlmz-food-order-mysql:
+    image: mysql:8.0
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - TZ=Europe/Istanbul
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-Admin123}
+      - MYSQL_DATABASE=FoodOrderApp
+    volumes:
+      - food-mysql-data:/var/lib/mysql
+    networks:
+      - proxy-net
+    restart: unless-stopped
+
+  yrlmz-food-order-redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - TZ=Europe/Istanbul
+    volumes:
+      - food-redis-data:/data
+    networks:
+      - proxy-net
+    restart: unless-stopped
+
+volumes:
+  food-mysql-data:
+  food-redis-data:
+
+networks:
+  proxy-net:
+    external: true

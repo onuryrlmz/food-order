@@ -37,6 +37,13 @@
 	<string>Teslimat sırasında konumunuzu takip etmek için konum erişimi gereklidir.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Teslimat sırasında arka planda konum takibi için izin gereklidir.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Uygulama kapalıyken bile teslimat konumunuzu takip edebilmemiz için izin gereklidir.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>fetch</string>
+	</array>
 	<key>UIAppFonts</key>
 	<array>
 		<string>MaterialCommunityIcons.ttf</string>

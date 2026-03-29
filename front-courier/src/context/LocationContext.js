@@ -1,137 +1,146 @@
-import React, {createContext, useContext, useState, useRef, useCallback} from 'react';
-import {Platform, PermissionsAndroid, Alert} from 'react-native';
-import Geolocation from 'react-native-geolocation-service';
+import React, {createContext, useContext, useState, useEffect, useCallback} from 'react';
+import {Platform, Alert} from 'react-native';
+import BackgroundGeolocation from '@mauron85/react-native-background-geolocation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {courierService} from '../api/courierService';
+import {API_BASE_URL} from '../utils/constants';
 
 const LocationContext = createContext(null);
-
-const LOCATION_INTERVAL = 30000; // 30 seconds
 
 export const LocationProvider = ({children}) => {
   const [currentPosition, setCurrentPosition] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
-  const intervalRef = useRef(null);
-  const watchIdRef = useRef(null);
 
-  const requestPermission = async () => {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: 'Konum İzni',
-            message: 'Teslimat yapabilmek için konum izni gereklidir.',
-            buttonPositive: 'İzin Ver',
-            buttonNegative: 'Reddet',
-          },
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      } catch (err) {
-        console.log('Permission error:', err);
-        return false;
-      }
-    } else {
+  // Arka plan konum servisini yapılandır (bir kez)
+  useEffect(() => {
+    BackgroundGeolocation.configure({
+      desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
+      stationaryRadius: 30,
+      distanceFilter: 50,
+      interval: 30000, // 30 saniye
+      fastestInterval: 15000,
+      activitiesInterval: 30000,
+      // Uygulama kapatılsa bile çalışmaya devam et
+      stopOnTerminate: false,
+      startOnBoot: false,
+      // Android foreground service bildirimi
+      notificationTitle: 'Konum takibi aktif',
+      notificationText: 'Teslimat için konumunuz takip ediliyor',
+      notificationIconColor: '#007AFF',
       // iOS
-      const status = await Geolocation.requestAuthorization('whenInUse');
-      return status === 'granted';
-    }
-  };
+      saveBatteryOnBackground: true,
+      // Konum URL'e otomatik POST yapmasın — biz manuel göndereceğiz
+      url: null,
+      syncUrl: null,
+    });
+
+    // Konum güncellemelerini dinle
+    BackgroundGeolocation.on('location', async (location) => {
+      setCurrentPosition({
+        latitude: location.latitude,
+        longitude: location.longitude,
+      });
+
+      // Backend'e konum gönder
+      try {
+        const token = await AsyncStorage.getItem('auth_token');
+        if (!token) return;
+
+        // Önce çevrimiçi mi kontrol et
+        const profileRes = await fetch(`${API_BASE_URL}/courier/profile`, {
+          headers: {Authorization: `Bearer ${token}`},
+        });
+        const profileData = await profileRes.json();
+        const status = profileData?.data?.availabilityStatusId;
+
+        if (status === 0) {
+          // Çevrimdışı — takibi durdur
+          BackgroundGeolocation.stop();
+          setIsTracking(false);
+          return;
+        }
+
+        // Konum gönder
+        await fetch(`${API_BASE_URL}/courier/location`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            latitude: location.latitude,
+            longitude: location.longitude,
+          }),
+        });
+      } catch (e) {
+        // Ağ hatası — bir sonraki güncelleme tekrar dener
+      }
+
+      // Arka planda olduğumuzu kütüphaneye bildir
+      BackgroundGeolocation.finish();
+    });
+
+    BackgroundGeolocation.on('error', (error) => {
+      console.log('Background location error:', error.message);
+    });
+
+    // Servis zaten çalışıyorsa (uygulama restart sonrası) state'i güncelle
+    BackgroundGeolocation.checkStatus(({isRunning}) => {
+      if (isRunning) {
+        setIsTracking(true);
+      }
+    });
+
+    return () => {
+      BackgroundGeolocation.removeAllListeners();
+    };
+  }, []);
 
   const getCurrentPosition = useCallback(() => {
     return new Promise((resolve, reject) => {
-      Geolocation.getCurrentPosition(
-        position => {
+      BackgroundGeolocation.getCurrentLocation(
+        (location) => {
           const coords = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
+            latitude: location.latitude,
+            longitude: location.longitude,
           };
           setCurrentPosition(coords);
           resolve(coords);
         },
-        error => {
-          console.log('Location error:', error.code, error.message);
+        (error) => {
           reject(error);
         },
-        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+        {
+          timeout: 15000,
+          maximumAge: 10000,
+          enableHighAccuracy: true,
+        },
       );
     });
   }, []);
 
-  const stopTracking = useCallback(() => {
-    if (watchIdRef.current !== null) {
-      Geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
-    }
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    setIsTracking(false);
-  }, []);
-
-  // Konum gönderiminde backend'den çevrimiçi durumunu kontrol et
-  const sendLocationWithCheck = useCallback(async (stopTrackingFn) => {
-    try {
-      const coords = await getCurrentPosition();
-
-      // Backend'den profil al — çevrimiçi mi kontrol et
-      try {
-        const profileRes = await courierService.getProfile();
-        const status = profileRes.data?.data?.availabilityStatusId;
-
-        if (status === 0) {
-          // Backend çevrimdışı diyor — takibi durdur
-          stopTrackingFn();
-          return;
-        }
-      } catch (profileErr) {
-        // Profil alınamazsa yine de konum gönder
-      }
-
-      await courierService.updateLocation(coords.latitude, coords.longitude);
-    } catch (error) {
-      // Konum alınamazsa sessizce geç
-    }
-  }, [getCurrentPosition]);
-
   const startTracking = useCallback(async () => {
-    if (isTracking) {
-      return true;
-    }
+    if (isTracking) return true;
 
-    const hasPermission = await requestPermission();
-    if (!hasPermission) {
-      Alert.alert(
-        'Konum İzni Gerekli',
-        'Çevrimiçi olabilmek için konum izni vermeniz gerekmektedir. Lütfen ayarlardan konum iznini açın.',
-      );
-      return false;
-    }
-
+    // İzin kontrolü — BackgroundGeolocation kendi izin yönetimini yapar
+    // ama ilk konumu almayı deneyelim
     try {
       const coords = await getCurrentPosition();
       await courierService.updateLocation(coords.latitude, coords.longitude);
     } catch (e) {
-      Alert.alert('Konum Hatası', 'Konumunuz alınamadı. GPS açık olduğundan emin olun.');
+      Alert.alert('Konum Hatası', 'Konumunuz alınamadı. GPS açık olduğundan ve konum izni verdiğinizden emin olun.');
       return false;
     }
 
-    watchIdRef.current = Geolocation.watchPosition(
-      position => {
-        setCurrentPosition({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-      },
-      () => {},
-      {enableHighAccuracy: true, distanceFilter: 50, interval: 10000, fastestInterval: 5000},
-    );
-
-    // Her 30 saniyede konum gönder + backend'den çevrimiçi durumunu kontrol et
-    intervalRef.current = setInterval(() => sendLocationWithCheck(stopTracking), LOCATION_INTERVAL);
+    BackgroundGeolocation.start();
     setIsTracking(true);
     return true;
-  }, [isTracking, getCurrentPosition, sendLocationWithCheck, stopTracking]);
+  }, [isTracking, getCurrentPosition]);
+
+  const stopTracking = useCallback(() => {
+    BackgroundGeolocation.stop();
+    setIsTracking(false);
+  }, []);
 
   return (
     <LocationContext.Provider

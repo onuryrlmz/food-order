@@ -1,4 +1,6 @@
-export const API_BASE_URL = 'https://food-order-api.yrlmzteknoloji.com/v1';
+import { API_BASE_URL as ENV_API_URL } from '@env';
+
+export const API_BASE_URL = ENV_API_URL || 'https://food-order-api.yrlmzteknoloji.com/v1';
 
 export const ORDER_STATUS = {
   1: {label: 'Ödeme Bekliyor', color: '#FF9500', icon: 'clock-outline'},

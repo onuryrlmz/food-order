@@ -31,7 +31,7 @@ const AgreementsScreen = ({navigation}) => {
     try {
       const result = await api.courier.courier.getAgreements();
       if (!result.hasFailed) {
-        const items = result.data || result.rawData || [];
+        const items = result.data || [];
         setAgreements(Array.isArray(items) ? items : []);
       }
     } catch (error) {

@@ -35,7 +35,7 @@ const AddressListScreen = ({navigation}) => {
     try {
       const result = await api.customer.address.getList();
       console.log('Address API response:', JSON.stringify(result));
-      const list = result?.rawData || result?.data || [];
+      const list = result?.data || [];
       const items = Array.isArray(list) ? list : [];
       setAddresses(items);
     } catch (e) {

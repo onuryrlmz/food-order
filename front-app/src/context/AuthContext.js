@@ -37,12 +37,6 @@ export const AuthProvider = ({children}) => {
     try {
       const result = await api.auth.login({email, password});
       if (!result.hasFailed) {
-        if (result.token) {
-          await AsyncStorage.setItem('auth_token', result.token);
-        }
-        if (result.refreshToken) {
-          await AsyncStorage.setItem('refresh_token', result.refreshToken);
-        }
         const profileResult = await api.auth.getProfile();
         if (!profileResult.hasFailed) {
           const userData = profileResult.data;

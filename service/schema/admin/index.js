@@ -32,7 +32,7 @@ export const AdminTicketIdSchema = z.object({ ticketId: z.string().uuid() });
 export const AdminActionIdSchema = z.object({ actionId: z.string().uuid() });
 
 // Commission
-export const RestaurantIdSchema = z.object({ restaurantId: z.string().uuid() });
+export const AdminRestaurantIdSchema = z.object({ restaurantId: z.string().uuid() });
 export const SetRestaurantCommissionSchema = z.object({
   restaurantId: z.string().uuid(),
   commissionRate: z.number().optional(),
@@ -40,8 +40,8 @@ export const SetRestaurantCommissionSchema = z.object({
 });
 
 // Settlement
-export const SettlementPeriodIdSchema = z.object({ periodId: z.string().uuid() });
-export const SettlementPeriodsQuerySchema = PaginationSchema.extend({
+export const AdminSettlementPeriodIdSchema = z.object({ periodId: z.string().uuid() });
+export const AdminSettlementPeriodsQuerySchema = PaginationSchema.extend({
   statusId: z.number().int().optional(),
 });
 export const PaySettlementSchema = z.object({
@@ -59,5 +59,9 @@ export const ApproveCourierSchema = z.object({ courierId: z.string().uuid() });
 // Platform Schedule
 export const CreatePlatformScheduleSchema = z.object({
   name: z.string().optional(),
-  tiers: z.array(z.any()),
+  tiers: z.array(z.object({
+    minAmount: z.number().min(0),
+    maxAmount: z.number().optional(),
+    rate: z.number().min(0).max(100),
+  })),
 });

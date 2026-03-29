@@ -104,7 +104,7 @@ export const LocationProvider = ({children}) => {
     } else {
       // iOS
       const status = await Geolocation.requestAuthorization('always');
-      return status === 'granted';
+      return status === 'always' || status === 'whenInUse';
     }
   };
 

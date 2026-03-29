@@ -9,7 +9,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
 import fetcher from '@/lib/fetcher';
-import api from '@/lib/api';
+import sellerApi from '@/lib/service';
 
 const AGREEMENT_STATUS = { 1: 'Onay Bekliyor', 2: 'Aktif', 3: 'Askıda', 4: 'Sonlandırıldı' };
 const AGREEMENT_STATUS_COLOR = { 1: 'yellow', 2: 'green', 3: 'orange', 4: 'red' };
@@ -77,13 +77,10 @@ export default function CouriersPage() {
     }
     setSaving(true);
     try {
-      const payload = {
+      await sellerApi.seller.courier.createAgreementByEmail({
         restaurantId: selectedRestaurant,
-        courierEmail: inviteModal.courierEmail.trim(),
-        agreedDeliveryFee: inviteModal.agreedDeliveryFee ? Number(inviteModal.agreedDeliveryFee) : null,
-        perKmFee: inviteModal.perKmFee ? Number(inviteModal.perKmFee) : null,
-      };
-      await api.post(`/v1/seller/courier/restaurant/${selectedRestaurant}/agreements/by-email`, payload);
+        email: inviteModal.courierEmail.trim(),
+      });
       toast('Kurye davet edildi! Kuryenin kabul etmesi bekleniyor.', 'success');
       mutateAgreements();
       setInviteModal(null);
@@ -97,7 +94,7 @@ export default function CouriersPage() {
   const handleDeleteAgreement = async (id) => {
     setSaving(true);
     try {
-      await api.delete(`/v1/seller/courier/agreements/${id}`);
+      await sellerApi.seller.courier.deleteAgreement({ id });
       toast('Anlaşma sonlandırıldı', 'success');
       mutateAgreements();
       setDeleteConfirm(null);
@@ -111,7 +108,7 @@ export default function CouriersPage() {
   // Manual assign
   const handleManualAssign = async (orderId, courierId) => {
     try {
-      await api.post(`/v1/seller/courier/restaurant/${selectedRestaurant}/assign/${orderId}?courierId=${courierId}`);
+      await sellerApi.seller.courier.assignCourier({ restaurantId: selectedRestaurant, orderId, courierId });
       toast('Kurye atandı', 'success');
       mutateDeliveries();
     } catch (err) {
@@ -123,7 +120,8 @@ export default function CouriersPage() {
   const handleSaveSettings = async () => {
     setSaving(true);
     try {
-      await api.put(`/v1/seller/courier/restaurant/${selectedRestaurant}/settings`, {
+      await sellerApi.seller.courier.updateSettings({
+        restaurantId: selectedRestaurant,
         defaultAssignmentStrategy: Number(settingsForm.defaultAssignmentStrategy),
         hasOwnCouriers: settingsForm.hasOwnCouriers,
       });

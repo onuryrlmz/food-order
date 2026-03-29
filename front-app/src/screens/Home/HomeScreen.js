@@ -44,7 +44,7 @@ const HomeScreen = ({navigation}) => {
     try {
       const result = await api.customer.order.getActive();
       if (result && !result.hasFailed) {
-        setActiveOrders(result.rawData || result.data || []);
+        setActiveOrders(result.data || []);
       }
     } catch (e) {
       console.log('Active orders error:', e);

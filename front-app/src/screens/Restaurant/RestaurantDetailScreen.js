@@ -124,7 +124,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
   const checkAddressAndAdd = async (menuItem, selectedOptions, totalPrice) => {
     try {
       const result = await api.customer.address.getList();
-      const list = result?.data || result?.rawData || [];
+      const list = result?.data || [];
       const addresses = Array.isArray(list) ? list : [];
       if (addresses.length === 0) {
         setPendingCartAction({ menuItem, selectedOptions, totalPrice });

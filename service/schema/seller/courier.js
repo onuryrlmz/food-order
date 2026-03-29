@@ -17,9 +17,11 @@ export const AssignCourierRequestSchema = z.object({
 
 export const UpdateCourierSettingsRequestSchema = z.object({
   restaurantId: z.string().uuid(),
+  defaultAssignmentStrategy: z.string().optional(),
+  hasOwnCouriers: z.boolean().optional(),
   autoAssign: z.boolean().optional(),
   maxDeliveryRadius: z.number().optional(),
-});
+}).passthrough();
 
 export const SellerRestaurantIdSchema = z.object({
   restaurantId: z.string().uuid(),

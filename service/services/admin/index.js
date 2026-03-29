@@ -5,8 +5,8 @@ import {
   OverdueOrdersQuerySchema,
   AdminReviewsQuerySchema, AdminReviewIdSchema,
   AdminTicketsQuerySchema, AdminTicketIdSchema, AdminActionIdSchema,
-  RestaurantIdSchema, SetRestaurantCommissionSchema,
-  SettlementPeriodIdSchema, SettlementPeriodsQuerySchema, PaySettlementSchema, CancelSettlementSchema,
+  AdminRestaurantIdSchema, SetRestaurantCommissionSchema,
+  AdminSettlementPeriodIdSchema, AdminSettlementPeriodsQuerySchema, PaySettlementSchema, CancelSettlementSchema,
   ApproveCourierSchema, CreatePlatformScheduleSchema,
 } from '../../schema/admin/index.js';
 
@@ -91,11 +91,11 @@ class AdminCommissionService extends BaseService {
     return this.post('/admin/commission/settings', parsed);
   }
   getRestaurantCommission(data) {
-    const { restaurantId } = RestaurantIdSchema.parse(data);
+    const { restaurantId } = AdminRestaurantIdSchema.parse(data);
     return this.get(`/admin/commission/restaurant/${restaurantId}`);
   }
   getRestaurantHistory(data) {
-    const { restaurantId } = RestaurantIdSchema.parse(data);
+    const { restaurantId } = AdminRestaurantIdSchema.parse(data);
     return this.get(`/admin/commission/restaurant/${restaurantId}/history`);
   }
   setRestaurantCommission(data) {
@@ -106,15 +106,15 @@ class AdminCommissionService extends BaseService {
 
 class AdminSettlementService extends BaseService {
   getPeriods(data) {
-    const parsed = SettlementPeriodsQuerySchema.parse(data || {});
+    const parsed = AdminSettlementPeriodsQuerySchema.parse(data || {});
     return this.get('/admin/settlement/periods', parsed);
   }
   getPeriodDetail(data) {
-    const { periodId } = SettlementPeriodIdSchema.parse(data);
+    const { periodId } = AdminSettlementPeriodIdSchema.parse(data);
     return this.get(`/admin/settlement/period/${periodId}`);
   }
   approve(data) {
-    const { periodId } = SettlementPeriodIdSchema.parse(data);
+    const { periodId } = AdminSettlementPeriodIdSchema.parse(data);
     return this.post(`/admin/settlement/period/${periodId}/approve`);
   }
   pay(data) {

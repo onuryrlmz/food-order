@@ -7,7 +7,15 @@ export const CreateScheduledOrderRequestSchema = z.object({
   scheduledDate: z.string(),
   scheduledTime: z.string(),
   paymentMethod: z.number().int(),
-  items: z.array(z.any()),
+  items: z.array(z.object({
+    menuId: z.string().uuid(),
+    quantity: z.number().int().min(1),
+    note: z.string().optional(),
+    values: z.array(z.object({
+      menuOptionId: z.string().uuid(),
+      menuOptionValueId: z.string().uuid(),
+    })).optional(),
+  })),
   repeatType: z.string().optional(),
 });
 

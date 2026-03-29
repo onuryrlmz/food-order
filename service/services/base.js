@@ -12,23 +12,30 @@ export default class BaseService {
     return res.data;
   }
 
-  async post(url, data) {
-    const res = await this.client.post(url, data);
+  async post(url, data, params) {
+    const res = await this.client.post(url, data, { params });
     return res.data;
   }
 
-  async put(url, data) {
-    const res = await this.client.put(url, data);
+  async postForm(url, formData) {
+    const res = await this.client.post(url, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return res.data;
   }
 
-  async patch(url, data) {
-    const res = await this.client.patch(url, data);
+  async put(url, data, params) {
+    const res = await this.client.put(url, data, { params });
     return res.data;
   }
 
-  async delete(url, data) {
-    const res = await this.client.delete(url, { data });
+  async patch(url, data, params) {
+    const res = await this.client.patch(url, data, { params });
+    return res.data;
+  }
+
+  async delete(url, data, params) {
+    const res = await this.client.delete(url, { data, params });
     return res.data;
   }
 }

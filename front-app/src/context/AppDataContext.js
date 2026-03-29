@@ -39,7 +39,7 @@ export const AppDataProvider = ({children}) => {
     try {
       // Cuisine listesi
       const cuisineResult = await api.cuisine.getList().catch(() => null);
-      const cuisineList = cuisineResult?.data || cuisineResult?.rawData || [];
+      const cuisineList = cuisineResult?.data || [];
       if (Array.isArray(cuisineList)) {
         setCuisines(cuisineList);
       }
@@ -47,7 +47,7 @@ export const AppDataProvider = ({children}) => {
       // Restoran listesi
       if (isAuthenticated) {
         const addressResult = await api.customer.address.getList().catch(() => null);
-        const addrList = addressResult?.data || addressResult?.rawData || [];
+        const addrList = addressResult?.data || [];
         const addresses = Array.isArray(addrList) ? addrList : [];
         const def = addresses.find(a => a.isDefault) || addresses[0];
         if (def) {
@@ -124,7 +124,7 @@ export const AppDataProvider = ({children}) => {
   const refreshAddress = async () => {
     try {
       const result = await api.customer.address.getList();
-      const list = result?.data || result?.rawData || [];
+      const list = result?.data || [];
       const addresses = Array.isArray(list) ? list : [];
       const def = addresses.find(a => a.isDefault) || addresses[0];
       if (def) {

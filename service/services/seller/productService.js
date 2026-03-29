@@ -21,9 +21,7 @@ export default class SellerProductService extends BaseService {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('productId', productId);
-    return this.client.post('/seller/product/image', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }).then(r => r.data);
+    return this.postForm('/seller/product/image', formData);
   }
 
   deleteImage(data) {

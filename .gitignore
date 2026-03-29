@@ -42,10 +42,8 @@ yarn.lock
 package-lock.json
 
 # Environment (secrets)
-.env
 .env.local
 .env.production
-!.env.example
 
 # Xcode local overrides
 .xcode.env.local

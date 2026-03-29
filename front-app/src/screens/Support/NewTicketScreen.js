@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {supportService, orderService} from '../../api';
+import api from '../../api';
 import {useToast} from '../../context/ToastContext';
 
 const TOPICS = [
@@ -47,9 +47,9 @@ const NewTicketScreen = ({navigation}) => {
   const loadRecentOrders = async () => {
     setLoadingOrders(true);
     try {
-      const res = await orderService.getHistory(1, 10);
-      if (res.data?.data) {
-        setRecentOrders(res.data.data);
+      const result = await api.customer.order.getHistory({page: 1, pageSize: 10});
+      if (result?.data) {
+        setRecentOrders(result.data);
       }
     } catch (e) {
       console.log('Recent orders error:', e);
@@ -83,14 +83,14 @@ const NewTicketScreen = ({navigation}) => {
         payload.orderId = selectedOrderId;
       }
 
-      const res = await supportService.createTicket(payload);
-      if (res.data && !res.data.hasFailed) {
+      const result = await api.customer.support.createTicket(payload);
+      if (result && !result.hasFailed) {
         showToast('Destek talebi oluşturuldu', 'success');
-        const ticketId = res.data.data?.id || res.data.data;
+        const ticketId = result.data?.id || result.data;
         navigation.replace('SupportChat', {ticketId});
       } else {
         showToast(
-          res.data?.messages?.[0]?.description || 'Talep oluşturulamadı',
+          result?.messages?.[0]?.description || 'Talep oluşturulamadı',
           'error',
         );
       }

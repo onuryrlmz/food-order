@@ -13,7 +13,7 @@ import {useNavigation, useRoute} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {DELIVERY_STATUS} from '../../utils/constants';
-import {courierService} from '../../api/courierService';
+import api from '../../api';
 
 const ActiveDeliveryScreen = () => {
   const navigation = useNavigation();
@@ -31,9 +31,9 @@ const ActiveDeliveryScreen = () => {
   const fetchActiveAssignment = async () => {
     setLoading(true);
     try {
-      const response = await courierService.getActiveAssignment();
-      if (!response.data.hasFailed && response.data.data) {
-        setAssignment(response.data.data);
+      const result = await api.courier.courier.getActiveAssignment();
+      if (!result.hasFailed && result.data) {
+        setAssignment(result.data);
       }
     } catch (error) {
       // Silent fail
@@ -45,11 +45,11 @@ const ActiveDeliveryScreen = () => {
   const handleAccept = async () => {
     setActionLoading('accept');
     try {
-      const response = await courierService.acceptAssignment(assignment.id);
-      if (!response.data.hasFailed) {
+      const result = await api.courier.courier.acceptAssignment({assignmentId: assignment.id});
+      if (!result.hasFailed) {
         setAssignment({...assignment, status: 3});
       } else {
-        Alert.alert('Hata', response.data.messages?.[0]?.description || 'İşlem başarısız');
+        Alert.alert('Hata', result.messages?.[0]?.description || 'İşlem başarısız');
       }
     } catch (error) {
       Alert.alert('Hata', 'Bağlantı hatası oluştu');
@@ -70,11 +70,11 @@ const ActiveDeliveryScreen = () => {
           onPress: async () => {
             setActionLoading('reject');
             try {
-              const response = await courierService.rejectAssignment(assignment.id);
-              if (!response.data.hasFailed) {
+              const result = await api.courier.courier.rejectAssignment({assignmentId: assignment.id});
+              if (!result.hasFailed) {
                 navigation.goBack();
               } else {
-                Alert.alert('Hata', response.data.messages?.[0]?.description || 'İşlem başarısız');
+                Alert.alert('Hata', result.messages?.[0]?.description || 'İşlem başarısız');
               }
             } catch (error) {
               Alert.alert('Hata', 'Bağlantı hatası oluştu');
@@ -90,11 +90,11 @@ const ActiveDeliveryScreen = () => {
   const handlePickedUp = async () => {
     setActionLoading('pickedUp');
     try {
-      const response = await courierService.markPickedUp(assignment.id);
-      if (!response.data.hasFailed) {
+      const result = await api.courier.courier.markPickedUp({assignmentId: assignment.id});
+      if (!result.hasFailed) {
         setAssignment({...assignment, status: 5});
       } else {
-        Alert.alert('Hata', response.data.messages?.[0]?.description || 'İşlem başarısız');
+        Alert.alert('Hata', result.messages?.[0]?.description || 'İşlem başarısız');
       }
     } catch (error) {
       Alert.alert('Hata', 'Bağlantı hatası oluştu');
@@ -114,13 +114,13 @@ const ActiveDeliveryScreen = () => {
           onPress: async () => {
             setActionLoading('delivered');
             try {
-              const response = await courierService.markDelivered(assignment.id);
-              if (!response.data.hasFailed) {
+              const result = await api.courier.courier.markDelivered({assignmentId: assignment.id});
+              if (!result.hasFailed) {
                 Alert.alert('Başarılı', 'Teslimat tamamlandı!', [
                   {text: 'Tamam', onPress: () => navigation.goBack()},
                 ]);
               } else {
-                Alert.alert('Hata', response.data.messages?.[0]?.description || 'İşlem başarısız');
+                Alert.alert('Hata', result.messages?.[0]?.description || 'İşlem başarısız');
               }
             } catch (error) {
               Alert.alert('Hata', 'Bağlantı hatası oluştu');

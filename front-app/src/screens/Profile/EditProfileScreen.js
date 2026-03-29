@@ -13,7 +13,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {useAuth} from '../../context/AuthContext';
-import {authService} from '../../api';
+import api from '../../api';
 import {useToast} from '../../context/ToastContext';
 
 const EditProfileScreen = ({navigation}) => {
@@ -32,17 +32,17 @@ const EditProfileScreen = ({navigation}) => {
 
     setLoading(true);
     try {
-      const res = await authService.updateProfile({
+      const result = await api.auth.updateProfile({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         phoneNumber: phoneNumber.trim(),
       });
-      if (!res.data.hasFailed) {
+      if (!result.hasFailed) {
         await refreshProfile();
         showToast('Profil bilgileriniz güncellendi', 'success');
         navigation.goBack();
       } else {
-        showToast(res.data.messages?.[0]?.description || 'Güncelleme başarısız', 'error');
+        showToast(result.messages?.[0]?.description || 'Güncelleme başarısız', 'error');
       }
     } catch (e) {
       showToast('Bir hata oluştu', 'error');

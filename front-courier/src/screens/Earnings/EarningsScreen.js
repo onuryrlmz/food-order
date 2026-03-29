@@ -12,7 +12,7 @@ import {
 import {useFocusEffect} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {courierService} from '../../api/courierService';
+import api from '../../api';
 
 const MONTHS = [
   'Ocak', 'Subat', 'Mart', 'Nisan', 'Mayis', 'Haziran',
@@ -44,16 +44,16 @@ const EarningsScreen = () => {
 
   const fetchData = async (pageNum = 1, isRefresh = false, from = fromDate, to = toDate) => {
     try {
-      const requests = [courierService.getEarnings(pageNum, 20, from, to)];
+      const requests = [api.courier.courier.getEarnings({page: pageNum, pageSize: 20, from, to})];
       if (pageNum === 1) {
-        requests.push(courierService.getEarningSummary());
+        requests.push(api.courier.courier.getEarningSummary());
       }
 
-      const responses = await Promise.all(requests);
+      const results = await Promise.all(requests);
 
-      const earningsRes = responses[0];
-      if (!earningsRes.data.hasFailed) {
-        const items = earningsRes.data.data?.items || earningsRes.data.data || [];
+      const earningsResult = results[0];
+      if (!earningsResult.hasFailed) {
+        const items = earningsResult.data?.items || earningsResult.data || [];
         if (isRefresh || pageNum === 1) {
           setEarnings(items);
         } else {
@@ -63,8 +63,8 @@ const EarningsScreen = () => {
         setPage(pageNum);
       }
 
-      if (responses[1] && !responses[1].data.hasFailed) {
-        setSummary(responses[1].data.data);
+      if (results[1] && !results[1].hasFailed) {
+        setSummary(results[1].data);
       }
     } catch (error) {
       // Silent fail

@@ -14,7 +14,7 @@ import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {useCart} from '../../context/CartContext';
 import {useAppData} from '../../context/AppDataContext';
 import EmptyState from '../../components/EmptyState';
-import {couponService} from '../../api/couponService';
+import api from '../../api';
 import {useToast} from '../../context/ToastContext';
 
 const CartScreen = ({navigation}) => {
@@ -74,28 +74,28 @@ const CartScreen = ({navigation}) => {
         unitPrice: item.unitPrice,
       }));
 
-      const res = await couponService.validateCoupon(
-        couponCode.trim().toUpperCase(),
-        cart.restaurantId,
-        cart.totalPrice,
+      const result = await api.customer.coupon.validate({
+        code: couponCode.trim().toUpperCase(),
+        restaurantId: cart.restaurantId,
+        orderAmount: cart.totalPrice,
         items,
-      );
+      });
 
-      if (res.data && !res.data.hasFailed) {
-        const result = res.data.data;
-        if (result.isValid) {
+      if (result && !result.hasFailed) {
+        const data = result.data;
+        if (data.isValid) {
           applyCoupon({
-            id: result.couponId,
-            code: result.couponCode,
-            name: result.couponName,
-            description: result.discountDescription,
-          }, result.discountAmount);
+            id: data.couponId,
+            code: data.couponCode,
+            name: data.couponName,
+            description: data.discountDescription,
+          }, data.discountAmount);
           setCouponCode('');
         } else {
-          setCouponError(result.errorMessage || 'Kupon geçersiz');
+          setCouponError(data.errorMessage || 'Kupon geçersiz');
         }
       } else {
-        setCouponError(res.data?.messages?.[0]?.description || 'Kupon doğrulanamadı');
+        setCouponError(result?.messages?.[0]?.description || 'Kupon doğrulanamadı');
       }
     } catch (err) {
       setCouponError('Kupon doğrulanırken bir hata oluştu');

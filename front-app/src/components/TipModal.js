@@ -3,7 +3,7 @@ import {View, Text, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator} 
 import Modal from 'react-native-modal';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../theme';
-import {tipService} from '../api';
+import api from '../api';
 import {useToast} from '../context/ToastContext';
 
 const TipModal = ({visible, onClose, orderId, onTipAdded}) => {
@@ -25,15 +25,15 @@ const TipModal = ({visible, onClose, orderId, onTipAdded}) => {
     setLoadingOptions(true);
     try {
       // Check existing tip
-      const tipRes = await tipService.getTipByOrder(orderId);
-      if (!tipRes.data.hasFailed && tipRes.data.data) {
-        setExistingTip(tipRes.data.data);
+      const tipResult = await api.customer.tip.getByOrder({orderId});
+      if (!tipResult.hasFailed && tipResult.data) {
+        setExistingTip(tipResult.data);
       }
 
       // Load options
-      const optRes = await tipService.getTipOptions(orderId);
-      if (!optRes.data.hasFailed) {
-        setOptions(optRes.data.data);
+      const optResult = await api.customer.tip.getOptions({orderId});
+      if (!optResult.hasFailed) {
+        setOptions(optResult.data);
       }
     } catch (e) {
       // ignore
@@ -53,13 +53,13 @@ const TipModal = ({visible, onClose, orderId, onTipAdded}) => {
         ? {orderId, presetPercentage: selectedPercentage}
         : {orderId, customAmount: parseFloat(customAmount)};
 
-      const res = await tipService.addTip(data);
-      if (!res.data.hasFailed) {
+      const result = await api.customer.tip.create(data);
+      if (!result.hasFailed) {
         showToast('Bahşiş eklendi!', 'success');
         onTipAdded?.();
         onClose();
       } else {
-        showToast(res.data.messages?.[0]?.description || 'Hata', 'error');
+        showToast(result.messages?.[0]?.description || 'Hata', 'error');
       }
     } catch (e) {
       showToast('Bağlantı hatası', 'error');

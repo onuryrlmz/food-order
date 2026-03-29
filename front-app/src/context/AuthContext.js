@@ -1,6 +1,6 @@
 import React, {createContext, useContext, useState, useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {authService} from '../api';
+import api from '../api';
 import {setOneSignalUserId, clearOneSignalUserId} from '../utils/onesignal';
 
 const AuthContext = createContext(null);
@@ -18,9 +18,9 @@ export const AuthProvider = ({children}) => {
     try {
       const token = await AsyncStorage.getItem('auth_token');
       if (token) {
-        const response = await authService.getProfile();
-        if (!response.data.hasFailed) {
-          setUser(response.data.data);
+        const result = await api.auth.getProfile();
+        if (!result.hasFailed) {
+          setUser(result.data);
           setIsAuthenticated(true);
         } else {
           await AsyncStorage.removeItem('auth_token');
@@ -35,17 +35,17 @@ export const AuthProvider = ({children}) => {
 
   const login = async (email, password) => {
     try {
-      const response = await authService.login(email, password);
-      if (!response.data.hasFailed) {
-        if (response.data.token) {
-          await AsyncStorage.setItem('auth_token', response.data.token);
+      const result = await api.auth.login({email, password});
+      if (!result.hasFailed) {
+        if (result.token) {
+          await AsyncStorage.setItem('auth_token', result.token);
         }
-        if (response.data.refreshToken) {
-          await AsyncStorage.setItem('refresh_token', response.data.refreshToken);
+        if (result.refreshToken) {
+          await AsyncStorage.setItem('refresh_token', result.refreshToken);
         }
-        const profileResponse = await authService.getProfile();
-        if (!profileResponse.data.hasFailed) {
-          const userData = profileResponse.data.data;
+        const profileResult = await api.auth.getProfile();
+        if (!profileResult.hasFailed) {
+          const userData = profileResult.data;
           setUser(userData);
           setIsAuthenticated(true);
           if (userData?.userId) {
@@ -55,7 +55,7 @@ export const AuthProvider = ({children}) => {
         }
       }
       const errorMsg =
-        response.data.messages?.[0]?.description || 'Giriş başarısız';
+        result.messages?.[0]?.description || 'Giriş başarısız';
       return {success: false, error: errorMsg};
     } catch (error) {
       return {success: false, error: 'Bağlantı hatası oluştu'};
@@ -64,12 +64,12 @@ export const AuthProvider = ({children}) => {
 
   const register = async (data) => {
     try {
-      const response = await authService.register(data);
-      if (!response.data.hasFailed) {
+      const result = await api.auth.register(data);
+      if (!result.hasFailed) {
         return {success: true};
       }
       const errorMsg =
-        response.data.messages?.[0]?.description || 'Kayıt başarısız';
+        result.messages?.[0]?.description || 'Kayıt başarısız';
       return {success: false, error: errorMsg};
     } catch (error) {
       return {success: false, error: 'Bağlantı hatası oluştu'};
@@ -79,7 +79,7 @@ export const AuthProvider = ({children}) => {
   const logout = async () => {
     try {
       const refreshToken = await AsyncStorage.getItem('refresh_token');
-      await authService.logout(refreshToken);
+      await api.auth.logout({refreshToken});
     } catch (e) {}
     clearOneSignalUserId();
     await AsyncStorage.multiRemove(['auth_token', 'refresh_token']);
@@ -89,9 +89,9 @@ export const AuthProvider = ({children}) => {
 
   const refreshProfile = async () => {
     try {
-      const response = await authService.getProfile();
-      if (!response.data.hasFailed) {
-        setUser(response.data.data);
+      const result = await api.auth.getProfile();
+      if (!result.hasFailed) {
+        setUser(result.data);
       }
     } catch (e) {}
   };

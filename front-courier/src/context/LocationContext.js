@@ -3,7 +3,7 @@ import {Platform, PermissionsAndroid, Alert, AppState} from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 import BackgroundFetch from 'react-native-background-fetch';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {courierService} from '../api/courierService';
+import api from '../api';
 import {API_BASE_URL} from '../utils/constants';
 
 const LocationContext = createContext(null);
@@ -144,8 +144,8 @@ export const LocationProvider = ({children}) => {
       const coords = await getCurrentPosition();
 
       try {
-        const profileRes = await courierService.getProfile();
-        const status = profileRes.data?.data?.availabilityStatusId;
+        const profileResult = await api.courier.courier.getProfile();
+        const status = profileResult?.data?.availabilityStatusId;
 
         if (status === 0) {
           stopTracking();
@@ -155,7 +155,7 @@ export const LocationProvider = ({children}) => {
         // Profil alınamazsa yine de konum gönder
       }
 
-      await courierService.updateLocation(coords.latitude, coords.longitude);
+      await api.courier.courier.updateLocation({latitude: coords.latitude, longitude: coords.longitude});
     } catch (error) {
       // Sessizce geç
     }
@@ -175,7 +175,7 @@ export const LocationProvider = ({children}) => {
 
     try {
       const coords = await getCurrentPosition();
-      await courierService.updateLocation(coords.latitude, coords.longitude);
+      await api.courier.courier.updateLocation({latitude: coords.latitude, longitude: coords.longitude});
     } catch (e) {
       Alert.alert('Konum Hatası', 'Konumunuz alınamadı. GPS açık olduğundan emin olun.');
       return false;

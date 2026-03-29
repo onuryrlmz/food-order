@@ -12,7 +12,7 @@ import {
 import {useFocusEffect} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {courierService} from '../../api/courierService';
+import api from '../../api';
 
 const STATUS_CONFIG = {
   1: {label: 'Onay Bekliyor', color: Colors.warning, icon: 'clock-outline'},
@@ -29,9 +29,9 @@ const AgreementsScreen = ({navigation}) => {
 
   const fetchAgreements = async () => {
     try {
-      const response = await courierService.getMyAgreements();
-      if (!response.data.hasFailed) {
-        const items = response.data.data || response.data.rawData || [];
+      const result = await api.courier.courier.getAgreements();
+      if (!result.hasFailed) {
+        const items = result.data || result.rawData || [];
         setAgreements(Array.isArray(items) ? items : []);
       }
     } catch (error) {
@@ -64,11 +64,11 @@ const AgreementsScreen = ({navigation}) => {
           onPress: async () => {
             setActionLoading(agreementId);
             try {
-              const response = await courierService.acceptAgreement(agreementId);
-              if (!response.data.hasFailed) {
+              const result = await api.courier.courier.acceptAgreement({agreementId});
+              if (!result.hasFailed) {
                 fetchAgreements();
               } else {
-                Alert.alert('Hata', response.data.messages?.[0]?.description || 'Islem basarisiz');
+                Alert.alert('Hata', result.messages?.[0]?.description || 'Islem basarisiz');
               }
             } catch (error) {
               Alert.alert('Hata', 'Baglanti hatasi olustu');
@@ -93,11 +93,11 @@ const AgreementsScreen = ({navigation}) => {
           onPress: async () => {
             setActionLoading(agreementId);
             try {
-              const response = await courierService.rejectAgreement(agreementId);
-              if (!response.data.hasFailed) {
+              const result = await api.courier.courier.rejectAgreement({agreementId});
+              if (!result.hasFailed) {
                 fetchAgreements();
               } else {
-                Alert.alert('Hata', response.data.messages?.[0]?.description || 'Islem basarisiz');
+                Alert.alert('Hata', result.messages?.[0]?.description || 'Islem basarisiz');
               }
             } catch (error) {
               Alert.alert('Hata', 'Baglanti hatasi olustu');
@@ -122,11 +122,11 @@ const AgreementsScreen = ({navigation}) => {
           onPress: async () => {
             setActionLoading(agreementId);
             try {
-              const response = await courierService.terminateAgreement(agreementId);
-              if (!response.data.hasFailed) {
+              const result = await api.courier.courier.terminateAgreement({agreementId});
+              if (!result.hasFailed) {
                 fetchAgreements();
               } else {
-                Alert.alert('Hata', response.data.messages?.[0]?.description || 'Islem basarisiz');
+                Alert.alert('Hata', result.messages?.[0]?.description || 'Islem basarisiz');
               }
             } catch (error) {
               Alert.alert('Hata', 'Baglanti hatasi olustu');

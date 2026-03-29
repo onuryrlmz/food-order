@@ -1,6 +1,6 @@
 import React, {createContext, useContext, useState, useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import apiClient from '../api/client';
+import api from '../api';
 
 const AuthContext = createContext(null);
 
@@ -21,9 +21,9 @@ export const AuthProvider = ({children}) => {
       }
 
       try {
-        const profileResponse = await apiClient.get('/courier/profile');
-        if (!profileResponse.data.hasFailed && profileResponse.data.data) {
-          setUser(profileResponse.data.data);
+        const result = await api.courier.courier.getProfile();
+        if (!result.hasFailed && result.data) {
+          setUser(result.data);
           setIsAuthenticated(true);
         } else {
           // Token valid but no courier profile yet (pending registration)
@@ -54,20 +54,20 @@ export const AuthProvider = ({children}) => {
 
   const login = async (email, password, {skipProfileFetch = false} = {}) => {
     try {
-      const response = await apiClient.post('/auth/login', {email, password});
+      const result = await api.auth.login({email, password});
 
-      if (response.data.hasFailed) {
+      if (result.hasFailed) {
         const errorMsg =
-          response.data.messages?.[0]?.description || 'Giris basarisiz';
+          result.messages?.[0]?.description || 'Giris basarisiz';
         return {success: false, error: errorMsg};
       }
 
-      // Store tokens
-      if (response.data.token) {
-        await AsyncStorage.setItem('auth_token', response.data.token);
+      // Store tokens (also handled by onTokenReceived in client)
+      if (result.token) {
+        await AsyncStorage.setItem('auth_token', result.token);
       }
-      if (response.data.refreshToken) {
-        await AsyncStorage.setItem('refresh_token', response.data.refreshToken);
+      if (result.refreshToken) {
+        await AsyncStorage.setItem('refresh_token', result.refreshToken);
       }
 
       setIsAuthenticated(true);
@@ -79,9 +79,9 @@ export const AuthProvider = ({children}) => {
       // Try to fetch courier profile
       let hasCourierProfile = false;
       try {
-        const profileResponse = await apiClient.get('/courier/profile');
-        if (!profileResponse.data.hasFailed && profileResponse.data.data) {
-          setUser(profileResponse.data.data);
+        const profileResult = await api.courier.courier.getProfile();
+        if (!profileResult.hasFailed && profileResult.data) {
+          setUser(profileResult.data);
           hasCourierProfile = true;
         }
       } catch (profileErr) {
@@ -99,7 +99,7 @@ export const AuthProvider = ({children}) => {
 
   const register = async (firstName, lastName, email, phoneNumber, password) => {
     try {
-      const response = await apiClient.post('/auth/register', {
+      const result = await api.auth.register({
         firstName,
         lastName,
         email,
@@ -107,9 +107,9 @@ export const AuthProvider = ({children}) => {
         password,
       });
 
-      if (response.data.hasFailed) {
+      if (result.hasFailed) {
         const errorMsg =
-          response.data.messages?.[0]?.description || 'Kayit basarisiz';
+          result.messages?.[0]?.description || 'Kayit basarisiz';
         return {success: false, error: errorMsg};
       }
 
@@ -138,7 +138,7 @@ export const AuthProvider = ({children}) => {
     try {
       const refreshToken = await AsyncStorage.getItem('refresh_token');
       if (refreshToken) {
-        await apiClient.post('/auth/logout', {refreshToken});
+        await api.auth.logout({refreshToken});
       }
     } catch (e) {
       // Logout API call failed — clear local state anyway
@@ -150,9 +150,9 @@ export const AuthProvider = ({children}) => {
 
   const refreshProfile = async () => {
     try {
-      const response = await apiClient.get('/courier/profile');
-      if (!response.data.hasFailed && response.data.data) {
-        setUser(response.data.data);
+      const result = await api.courier.courier.getProfile();
+      if (!result.hasFailed && result.data) {
+        setUser(result.data);
         return true;
       }
       return false;

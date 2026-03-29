@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {cardService} from '../../api/cardService';
+import api from '../../api';
 import {useToast} from '../../context/ToastContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import EmptyState from '../../components/EmptyState';
@@ -47,9 +47,9 @@ const SavedCardsScreen = ({navigation}) => {
 
   const loadCards = async () => {
     try {
-      const res = await cardService.getCards();
-      if (res.data && !res.data.hasFailed && res.data.data) {
-        setCards(res.data.data);
+      const result = await api.customer.card.getList();
+      if (result && !result.hasFailed && result.data) {
+        setCards(result.data);
       } else {
         setCards([]);
       }
@@ -75,12 +75,12 @@ const SavedCardsScreen = ({navigation}) => {
       confirmStyle: 'destructive',
       onConfirm: async () => {
         try {
-          const res = await cardService.deleteCard(cardToken);
-          if (res.data && !res.data.hasFailed) {
+          const result = await api.customer.card.remove({cardToken});
+          if (result && !result.hasFailed) {
             setCards(prev => prev.filter(c => c.cardToken !== cardToken));
             showToast('Kart silindi', 'success');
           } else {
-            showToast(res.data?.messages?.[0]?.description || 'Kart silinemedi', 'error');
+            showToast(result?.messages?.[0]?.description || 'Kart silinemedi', 'error');
           }
         } catch (e) {
           showToast('Kart silinemedi', 'error');
@@ -115,20 +115,20 @@ const SavedCardsScreen = ({navigation}) => {
 
     setSaving(true);
     try {
-      const res = await cardService.createCard({
+      const result = await api.customer.card.create({
         cardAlias: cardAlias.trim() || cardHolderName.trim(),
         cardNumber: cardNumber.replace(/\s/g, ''),
         expireYear: '20' + expireYear,
         expireMonth: expireMonth,
         cardHolderName: cardHolderName.trim(),
       });
-      if (res.data && !res.data.hasFailed) {
+      if (result && !result.hasFailed) {
         showToast('Kart kaydedildi', 'success');
         setCardForm({cardAlias: '', cardHolderName: '', cardNumber: '', expireMonth: '', expireYear: ''});
         setShowAddForm(false);
         await loadCards();
       } else {
-        showToast(res.data?.messages?.[0]?.description || 'Kart kaydedilemedi', 'error');
+        showToast(result?.messages?.[0]?.description || 'Kart kaydedilemedi', 'error');
       }
     } catch (e) {
       showToast('Kart kaydedilemedi', 'error');

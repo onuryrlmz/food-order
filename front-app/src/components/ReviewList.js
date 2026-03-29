@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, ActivityIndicator} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../theme';
-import {reviewService} from '../api';
+import api from '../api';
 
 const ReviewList = ({restaurantId}) => {
   const [reviews, setReviews] = useState([]);
@@ -16,9 +16,9 @@ const ReviewList = ({restaurantId}) => {
 
   const loadReviews = async (pageNum) => {
     try {
-      const res = await reviewService.getRestaurantReviews(restaurantId, pageNum, 5);
-      if (res.data && !res.data.hasFailed) {
-        const data = res.data.data || [];
+      const result = await api.customer.review.getByRestaurant({restaurantId, page: pageNum, pageSize: 5});
+      if (result && !result.hasFailed) {
+        const data = result.data || [];
         if (pageNum === 1) {
           setReviews(data);
         } else {

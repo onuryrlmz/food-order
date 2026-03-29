@@ -15,7 +15,7 @@ import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {AVAILABILITY_STATUS, DELIVERY_STATUS} from '../../utils/constants';
 import {useAuth} from '../../context/AuthContext';
 import {useLocation} from '../../context/LocationContext';
-import {courierService} from '../../api/courierService';
+import api from '../../api';
 
 const DashboardScreen = () => {
   const navigation = useNavigation();
@@ -37,21 +37,21 @@ const DashboardScreen = () => {
 
   const fetchData = async () => {
     try {
-      const [assignmentRes, earningRes] = await Promise.all([
-        courierService.getActiveAssignment(),
-        courierService.getEarningSummary(),
+      const [assignmentResult, earningResult] = await Promise.all([
+        api.courier.courier.getActiveAssignment(),
+        api.courier.courier.getEarningSummary(),
       ]);
 
-      if (!assignmentRes.data.hasFailed && assignmentRes.data.data) {
-        setActiveDelivery(assignmentRes.data.data);
+      if (!assignmentResult.hasFailed && assignmentResult.data) {
+        setActiveDelivery(assignmentResult.data);
       } else {
         setActiveDelivery(null);
       }
 
-      if (!earningRes.data.hasFailed && earningRes.data.data) {
+      if (!earningResult.hasFailed && earningResult.data) {
         setTodayStats({
-          deliveries: earningRes.data.data.todayDeliveries || 0,
-          earnings: earningRes.data.data.todayEarnings || 0,
+          deliveries: earningResult.data.todayDeliveries || 0,
+          earnings: earningResult.data.todayEarnings || 0,
         });
       }
     } catch (error) {
@@ -64,9 +64,9 @@ const DashboardScreen = () => {
     useCallback(() => {
       const syncStatus = async () => {
         try {
-          const profileRes = await courierService.getProfile();
-          if (!profileRes.data.hasFailed && profileRes.data.data) {
-            const status = profileRes.data.data.availabilityStatusId;
+          const profileResult = await api.courier.courier.getProfile();
+          if (!profileResult.hasFailed && profileResult.data) {
+            const status = profileResult.data.availabilityStatusId;
             const online = status === 1 || status === 2;
             setIsOnline(online);
             if (online) {
@@ -86,13 +86,13 @@ const DashboardScreen = () => {
     setToggling(true);
     try {
       if (isOnline) {
-        await courierService.goOffline();
+        await api.courier.courier.goOffline();
         stopTracking();
         setIsOnline(false);
       } else {
         const trackingStarted = await startTracking();
         if (trackingStarted) {
-          await courierService.goOnline();
+          await api.courier.courier.goOnline();
           setIsOnline(true);
         }
       }

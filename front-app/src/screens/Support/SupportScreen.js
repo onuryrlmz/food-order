@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {supportService} from '../../api';
+import api from '../../api';
 import {useAuth} from '../../context/AuthContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import EmptyState from '../../components/EmptyState';
@@ -49,9 +49,9 @@ const SupportScreen = ({navigation}) => {
 
   const loadTickets = async pageNum => {
     try {
-      const res = await supportService.getTickets(pageNum, 20);
-      if (res.data?.data) {
-        const data = res.data.data;
+      const result = await api.customer.support.getTickets({page: pageNum, pageSize: 20});
+      if (result?.data) {
+        const data = result.data;
         if (pageNum === 1) {
           setTickets(data);
         } else {

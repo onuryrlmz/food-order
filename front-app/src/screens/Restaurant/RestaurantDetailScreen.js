@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Colors, Fonts, Spacing, BorderRadius } from '../../theme';
-import { addressService } from '../../api';
+import api from '../../api';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useAppData } from '../../context/AppDataContext';
@@ -21,7 +21,6 @@ import MenuItemCard from '../../components/MenuItemCard';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import MenuOptionModal from '../../components/MenuOptionModal';
 import ReviewList from '../../components/ReviewList';
-import {favoriteService} from '../../api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const COVER_HEIGHT = 240;
@@ -124,8 +123,8 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
 
   const checkAddressAndAdd = async (menuItem, selectedOptions, totalPrice) => {
     try {
-      const res = await addressService.getList();
-      const list = res.data?.data || res.data?.rawData || [];
+      const result = await api.customer.address.getList();
+      const list = result?.data || result?.rawData || [];
       const addresses = Array.isArray(list) ? list : [];
       if (addresses.length === 0) {
         setPendingCartAction({ menuItem, selectedOptions, totalPrice });
@@ -163,10 +162,10 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
     if (!isAuthenticated) return;
     try {
       if (isFavorite) {
-        await favoriteService.removeFavorite(restaurantId);
+        await api.customer.favorite.remove({restaurantId});
         setIsFavorite(false);
       } else {
-        await favoriteService.addFavorite(restaurantId);
+        await api.customer.favorite.add({restaurantId});
         setIsFavorite(true);
       }
     } catch (e) {

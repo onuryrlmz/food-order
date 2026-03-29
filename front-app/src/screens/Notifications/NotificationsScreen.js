@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {notificationService} from '../../api';
+import api from '../../api';
 import {useAuth} from '../../context/AuthContext';
 import {useToast} from '../../context/ToastContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -49,9 +49,9 @@ const NotificationsScreen = ({navigation}) => {
 
   const loadNotifications = async pageNum => {
     try {
-      const res = await notificationService.getAll(pageNum, 20);
-      if (res.data?.data) {
-        const data = res.data.data;
+      const result = await api.customer.notification.getList({page: pageNum, pageSize: 20});
+      if (result?.data) {
+        const data = result.data;
         if (pageNum === 1) {
           setNotifications(data);
         } else {
@@ -59,8 +59,8 @@ const NotificationsScreen = ({navigation}) => {
         }
         setHasMore(data.length === 20);
         setPage(pageNum);
-        if (res.data.unreadCount !== undefined) {
-          setUnreadCount(res.data.unreadCount);
+        if (result.unreadCount !== undefined) {
+          setUnreadCount(result.unreadCount);
         }
       }
     } catch (e) {
@@ -84,8 +84,8 @@ const NotificationsScreen = ({navigation}) => {
 
   const handleMarkAllRead = async () => {
     try {
-      const res = await notificationService.markAllAsRead();
-      if (res.data && !res.data.hasFailed) {
+      const result = await api.customer.notification.markAllAsRead();
+      if (result && !result.hasFailed) {
         setNotifications(prev =>
           prev.map(n => ({...n, isRead: true})),
         );
@@ -100,7 +100,7 @@ const NotificationsScreen = ({navigation}) => {
   const handlePress = async item => {
     if (!item.isRead) {
       try {
-        await notificationService.markAsRead(item.id);
+        await api.customer.notification.markAsRead({notificationId: item.id});
         setNotifications(prev =>
           prev.map(n => (n.id === item.id ? {...n, isRead: true} : n)),
         );

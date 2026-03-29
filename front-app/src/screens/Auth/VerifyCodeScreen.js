@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {authService} from '../../api';
+import api from '../../api';
 import {useToast} from '../../context/ToastContext';
 
 const VerifyCodeScreen = ({navigation, route}) => {
@@ -28,11 +28,11 @@ const VerifyCodeScreen = ({navigation, route}) => {
     }
     setLoading(true);
     try {
-      const res = await authService.verifyResetCode(emailOrPhone, code);
-      if (!res.data.hasFailed) {
+      const result = await api.auth.verifyResetCode({emailOrPhone, code});
+      if (!result.hasFailed) {
         navigation.navigate('ResetPassword', {emailOrPhone, code});
       } else {
-        showToast(res.data.messages?.[0]?.description || 'Gecersiz kod', 'error');
+        showToast(result.messages?.[0]?.description || 'Gecersiz kod', 'error');
       }
     } catch (error) {
       showToast('Bir hata olustu. Tekrar deneyin.', 'error');
@@ -43,11 +43,11 @@ const VerifyCodeScreen = ({navigation, route}) => {
 
   const handleResend = async () => {
     try {
-      const res = await authService.forgotPassword(emailOrPhone);
-      if (!res.data.hasFailed) {
+      const result = await api.auth.forgotPassword({emailOrPhone});
+      if (!result.hasFailed) {
         showToast('Yeni kod gonderildi', 'success');
       } else {
-        showToast(res.data.messages?.[0]?.description || 'Kod gonderilemedi', 'error');
+        showToast(result.messages?.[0]?.description || 'Kod gonderilemedi', 'error');
       }
     } catch {
       showToast('Kod gonderilemedi', 'error');

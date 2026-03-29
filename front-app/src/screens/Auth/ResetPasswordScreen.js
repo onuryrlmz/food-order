@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {authService} from '../../api';
+import api from '../../api';
 import {useToast} from '../../context/ToastContext';
 
 const ResetPasswordScreen = ({navigation, route}) => {
@@ -34,12 +34,12 @@ const ResetPasswordScreen = ({navigation, route}) => {
     }
     setLoading(true);
     try {
-      const res = await authService.resetPassword(emailOrPhone, code, newPassword);
-      if (!res.data.hasFailed) {
+      const result = await api.auth.resetPassword({emailOrPhone, code, newPassword});
+      if (!result.hasFailed) {
         showToast('Sifreniz basariyla degistirildi', 'success');
         navigation.navigate('Login');
       } else {
-        showToast(res.data.messages?.[0]?.description || 'Sifre degistirilemedi', 'error');
+        showToast(result.messages?.[0]?.description || 'Sifre degistirilemedi', 'error');
       }
     } catch (error) {
       showToast('Bir hata olustu. Tekrar deneyin.', 'error');

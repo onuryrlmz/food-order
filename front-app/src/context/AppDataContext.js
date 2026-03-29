@@ -1,6 +1,6 @@
 import React, {createContext, useContext, useState, useEffect, useRef} from 'react';
 import Geolocation from 'react-native-geolocation-service';
-import {restaurantService, cuisineService, addressService} from '../api';
+import api from '../api';
 import {useAuth} from './AuthContext';
 
 const AppDataContext = createContext(null);
@@ -38,16 +38,16 @@ export const AppDataProvider = ({children}) => {
   const loadAppData = async () => {
     try {
       // Cuisine listesi
-      const cuisineRes = await cuisineService.getList().catch(() => null);
-      const cuisineList = cuisineRes?.data?.data || cuisineRes?.data?.rawData || [];
+      const cuisineResult = await api.cuisine.getList().catch(() => null);
+      const cuisineList = cuisineResult?.data || cuisineResult?.rawData || [];
       if (Array.isArray(cuisineList)) {
         setCuisines(cuisineList);
       }
 
       // Restoran listesi
       if (isAuthenticated) {
-        const addressRes = await addressService.getList().catch(() => null);
-        const addrList = addressRes?.data?.data || addressRes?.data?.rawData || [];
+        const addressResult = await api.customer.address.getList().catch(() => null);
+        const addrList = addressResult?.data || addressResult?.rawData || [];
         const addresses = Array.isArray(addrList) ? addrList : [];
         const def = addresses.find(a => a.isDefault) || addresses[0];
         if (def) {
@@ -68,9 +68,9 @@ export const AppDataProvider = ({children}) => {
 
   const loadRestaurantsByAddress = async (addressId) => {
     try {
-      const res = await restaurantService.getRestaurants(addressId);
-      if (res.data?.data) {
-        setRestaurants(res.data.data);
+      const result = await api.customer.restaurant.getByAddress({addressId});
+      if (result?.data) {
+        setRestaurants(result.data);
       }
     } catch (e) {}
   };
@@ -78,9 +78,9 @@ export const AppDataProvider = ({children}) => {
   const loadRestaurantsByDeviceLocation = async () => {
     try {
       const coords = await getDeviceLocation();
-      const res = await restaurantService.getRestaurantsByLocation(coords.latitude, coords.longitude);
-      if (res.data?.data) {
-        setRestaurants(res.data.data);
+      const result = await api.customer.restaurant.getByLocation({latitude: coords.latitude, longitude: coords.longitude});
+      if (result?.data) {
+        setRestaurants(result.data);
       }
     } catch (e) {}
   };
@@ -108,9 +108,9 @@ export const AppDataProvider = ({children}) => {
 
     // CDN JSON'u yükle
     try {
-      const res = await restaurantService.getRestaurantInfo(restaurantId);
-      if (res.data && !res.data.hasFailed) {
-        const cdnUrl = res.data.data;
+      const result = await api.customer.restaurant.getInfo({id: restaurantId});
+      if (result && !result.hasFailed) {
+        const cdnUrl = result.data;
         if (typeof cdnUrl === 'string' && cdnUrl.startsWith('http')) {
           const jsonRes = await fetch(cdnUrl + "?id=" + new Date().getTime());
           const parsed = await jsonRes.json();
@@ -123,8 +123,8 @@ export const AppDataProvider = ({children}) => {
 
   const refreshAddress = async () => {
     try {
-      const res = await addressService.getList();
-      const list = res.data?.data || res.data?.rawData || [];
+      const result = await api.customer.address.getList();
+      const list = result?.data || result?.rawData || [];
       const addresses = Array.isArray(list) ? list : [];
       const def = addresses.find(a => a.isDefault) || addresses[0];
       if (def) {

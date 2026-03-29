@@ -14,7 +14,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {useAuth} from '../../context/AuthContext';
-import {courierService} from '../../api/courierService';
+import api from '../../api';
 
 const COURIER_TYPES = [
   {value: 2, label: 'Bireysel Kurye'},
@@ -71,10 +71,10 @@ const CourierRegisterScreen = () => {
         data.restaurantId = restaurantId.trim();
       }
 
-      const response = await courierService.register(data);
-      if (response.data.hasFailed) {
+      const result = await api.courier.courier.register(data);
+      if (result.hasFailed) {
         const errorMsg =
-          response.data.messages?.[0]?.description || 'Başvuru gönderilemedi';
+          result.messages?.[0]?.description || 'Başvuru gönderilemedi';
         setError(errorMsg);
         Alert.alert('Hata', errorMsg);
       } else {

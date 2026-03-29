@@ -15,9 +15,7 @@ import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {useCart} from '../../context/CartContext';
 import {useAuth} from '../../context/AuthContext';
 import {useToast} from '../../context/ToastContext';
-import {orderService} from '../../api';
-import {couponService} from '../../api/couponService';
-import {cardService} from '../../api/cardService';
+import api from '../../api';
 import {PAYMENT_OPTIONS} from '../../utils/constants';
 
 const CheckoutScreen = ({navigation}) => {
@@ -54,9 +52,9 @@ const CheckoutScreen = ({navigation}) => {
   const loadSavedCards = async () => {
     setCardsLoading(true);
     try {
-      const res = await cardService.getCards();
-      if (res.data && !res.data.hasFailed && res.data.data) {
-        const cards = res.data.data;
+      const res = await api.customer.card.getList();
+      if (res && !res.hasFailed && res.data) {
+        const cards = res.data;
         setSavedCards(cards);
         if (cards.length > 0) {
           setSelectedCardToken(cards[0].cardToken);
@@ -76,8 +74,8 @@ const CheckoutScreen = ({navigation}) => {
 
   const handleDeleteCard = async (cardToken) => {
     try {
-      const res = await cardService.deleteCard(cardToken);
-      if (res.data && !res.data.hasFailed) {
+      const res = await api.customer.card.remove({cardToken});
+      if (res && !res.hasFailed) {
         const updated = savedCards.filter(c => c.cardToken !== cardToken);
         setSavedCards(updated);
         if (selectedCardToken === cardToken) {
@@ -90,7 +88,7 @@ const CheckoutScreen = ({navigation}) => {
         }
         showToast('Kart silindi', 'success');
       } else {
-        showToast(res.data?.messages?.[0]?.description || 'Kart silinemedi', 'error');
+        showToast(res?.messages?.[0]?.description || 'Kart silinemedi', 'error');
       }
     } catch (e) {
       showToast('Kart silinirken hata olu\u015ftu', 'error');
@@ -103,19 +101,19 @@ const CheckoutScreen = ({navigation}) => {
       return;
     }
     try {
-      const res = await cardService.createCard({
+      const res = await api.customer.card.create({
         cardAlias: cardInfo.cardHolderName.trim(),
         cardNumber: cardInfo.cardNumber.replace(/\s/g, ''),
         expireYear: '20' + cardInfo.expireYear,
         expireMonth: cardInfo.expireMonth,
         cardHolderName: cardInfo.cardHolderName.trim(),
       });
-      if (res.data && !res.data.hasFailed) {
+      if (res && !res.hasFailed) {
         showToast('Kart kaydedildi', 'success');
         await loadSavedCards();
         setCardInfo({cardHolderName: '', cardNumber: '', expireMonth: '', expireYear: '', cvc: ''});
       } else {
-        showToast(res.data?.messages?.[0]?.description || 'Kart kaydedilemedi', 'error');
+        showToast(res?.messages?.[0]?.description || 'Kart kaydedilemedi', 'error');
       }
     } catch (e) {
       showToast('Kart kaydedilirken hata olu\u015ftu', 'error');
@@ -166,14 +164,14 @@ const CheckoutScreen = ({navigation}) => {
         quantity: item.quantity,
         unitPrice: item.unitPrice,
       }));
-      const res = await couponService.validateCoupon(
-        couponCode.trim().toUpperCase(),
-        cart.restaurantId,
-        cart.totalPrice,
+      const res = await api.customer.coupon.validate({
+        code: couponCode.trim().toUpperCase(),
+        restaurantId: cart.restaurantId,
+        orderAmount: cart.totalPrice,
         items,
-      );
-      if (res.data && !res.data.hasFailed) {
-        const result = res.data.data;
+      });
+      if (res && !res.hasFailed) {
+        const result = res.data;
         if (result.isValid) {
           applyCoupon({
             id: result.couponId,
@@ -186,7 +184,7 @@ const CheckoutScreen = ({navigation}) => {
           setCouponError(result.errorMessage || 'Kupon geçersiz');
         }
       } else {
-        setCouponError(res.data?.messages?.[0]?.description || 'Kupon doğrulanamadı');
+        setCouponError(res?.messages?.[0]?.description || 'Kupon doğrulanamadı');
       }
     } catch (err) {
       setCouponError('Kupon doğrulanırken bir hata oluştu');
@@ -265,9 +263,9 @@ const CheckoutScreen = ({navigation}) => {
         }
       }
 
-      const res = await orderService.placeOrder(orderData);
-      if (!res.data.hasFailed) {
-        const result = res.data.data;
+      const res = await api.customer.order.place(orderData);
+      if (!res.hasFailed) {
+        const result = res.data;
 
         if (result.requiresPayment && result.requiresThreeDs && result.threeDsHtmlContent) {
           // 3DS doğrulama gerekiyor — WebView'a yönlendir
@@ -292,7 +290,7 @@ const CheckoutScreen = ({navigation}) => {
           });
         }
       } else {
-        const errorMsg = res.data.messages?.[0]?.description || 'Sipariş oluşturulamadı';
+        const errorMsg = res.messages?.[0]?.description || 'Sipariş oluşturulamadı';
         showToast(errorMsg, 'error');
       }
     } catch (e) {

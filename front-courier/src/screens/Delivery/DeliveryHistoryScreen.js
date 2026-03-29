@@ -12,7 +12,7 @@ import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {DELIVERY_STATUS} from '../../utils/constants';
-import {courierService} from '../../api/courierService';
+import api from '../../api';
 
 const DeliveryHistoryScreen = () => {
   const navigation = useNavigation();
@@ -25,9 +25,9 @@ const DeliveryHistoryScreen = () => {
 
   const fetchDeliveries = async (pageNum = 1, isRefresh = false) => {
     try {
-      const response = await courierService.getAssignmentHistory(pageNum, 20);
-      if (!response.data.hasFailed) {
-        const items = response.data.data?.items || response.data.data || [];
+      const result = await api.courier.courier.getAssignmentHistory({page: pageNum, pageSize: 20});
+      if (!result.hasFailed) {
+        const items = result.data?.items || result.data || [];
         if (isRefresh || pageNum === 1) {
           setDeliveries(items);
         } else {

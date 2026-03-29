@@ -13,7 +13,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {supportService} from '../../api';
+import api from '../../api';
 import {useToast} from '../../context/ToastContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
@@ -45,9 +45,9 @@ const SupportChatScreen = ({navigation, route}) => {
 
   const loadTicketDetail = async () => {
     try {
-      const res = await supportService.getTicketDetail(ticketId);
-      if (res.data?.data) {
-        const data = res.data.data;
+      const result = await api.customer.support.getTicket({ticketId});
+      if (result?.data) {
+        const data = result.data;
         setTicket(data);
         setMessages(data.messages || []);
         if (data.rating) {
@@ -79,9 +79,9 @@ const SupportChatScreen = ({navigation, route}) => {
     setSending(true);
 
     try {
-      const res = await supportService.sendMessage(ticketId, text);
-      if (res.data && !res.data.hasFailed) {
-        const responseData = res.data.data;
+      const res = await api.customer.support.sendMessage({ticketId, message: text});
+      if (res && !res.hasFailed) {
+        const responseData = res.data;
         setMessages(prev => {
           const updated = prev.map(m =>
             m.id === tempMessage.id
@@ -114,8 +114,8 @@ const SupportChatScreen = ({navigation, route}) => {
   const handleRate = async starValue => {
     setRating(starValue);
     try {
-      const res = await supportService.rateTicket(ticketId, starValue);
-      if (res.data && !res.data.hasFailed) {
+      const res = await api.customer.support.rateTicket({ticketId, rating: starValue});
+      if (res && !res.hasFailed) {
         setHasRated(true);
         showToast('Değerlendirmeniz kaydedildi', 'success');
       } else {

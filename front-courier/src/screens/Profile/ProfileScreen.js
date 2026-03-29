@@ -13,7 +13,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {useNavigation} from '@react-navigation/native';
 import {useAuth} from '../../context/AuthContext';
-import {courierService} from '../../api/courierService';
+import api from '../../api';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
@@ -29,13 +29,13 @@ const ProfileScreen = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const response = await courierService.updateProfile(formData);
-      if (!response.data.hasFailed) {
+      const result = await api.courier.courier.updateProfile(formData);
+      if (!result.hasFailed) {
         await refreshProfile();
         setEditing(false);
         Alert.alert('Başarılı', 'Profil güncellendi');
       } else {
-        Alert.alert('Hata', response.data.messages?.[0]?.description || 'Güncelleme başarısız');
+        Alert.alert('Hata', result.messages?.[0]?.description || 'Güncelleme başarısız');
       }
     } catch (error) {
       Alert.alert('Hata', 'Bağlantı hatası oluştu');

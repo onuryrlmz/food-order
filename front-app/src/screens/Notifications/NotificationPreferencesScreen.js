@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {notificationService} from '../../api';
+import api from '../../api';
 import {useToast} from '../../context/ToastContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
@@ -55,9 +55,9 @@ const NotificationPreferencesScreen = ({navigation}) => {
 
   const loadPreferences = async () => {
     try {
-      const res = await notificationService.getPreferences();
-      if (res.data?.data) {
-        setPreferences(res.data.data);
+      const result = await api.customer.notification.getPreferences();
+      if (result?.data) {
+        setPreferences(result.data);
       }
     } catch (e) {
       console.log('Notification preferences error:', e);
@@ -71,8 +71,8 @@ const NotificationPreferencesScreen = ({navigation}) => {
     setPreferences(p => ({...p, [typeId]: value}));
 
     try {
-      const res = await notificationService.updatePreference(typeId, value);
-      if (res.data?.hasFailed) {
+      const result = await api.customer.notification.updatePreferences({[typeId]: value});
+      if (result?.hasFailed) {
         setPreferences(prev);
         showToast('Tercih güncellenemedi', 'error');
       }

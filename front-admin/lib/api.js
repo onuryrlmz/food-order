@@ -1,95 +1,9 @@
-import axios from 'axios';
+import api, { client } from './service';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3762';
+// Default export: raw axios client (backward-compatible with existing page imports)
+export default client;
 
-const api = axios.create({
-  baseURL: BASE_URL,
-  headers: { 'Content-Type': 'application/json' },
-  withCredentials: true,
-});
-
-let isRefreshing = false;
-let failedQueue = [];
-
-const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
-    if (error) prom.reject(error);
-    else prom.resolve(token);
-  });
-  failedQueue = [];
-};
-
-api.interceptors.response.use(
-  (res) => {
-    // Backend returns HTTP 200 with hasFailed=true for business logic errors
-    const body = res.data;
-    if (body && body.hasFailed === true) {
-      const msg = body.messages?.[0]?.description || 'Bir hata oluştu';
-      const error = new Error(msg);
-      error.response = res;
-      error.isBusinessError = true;
-      return Promise.reject(error);
-    }
-    return res;
-  },
-  async (err) => {
-    const originalRequest = err.config;
-
-    if (err.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then(() => api(originalRequest));
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        await api.post('/v1/auth/refresh');
-        processQueue(null);
-        return api(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('logged_in');
-          window.location.href = '/login';
-        }
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
-    }
-
-    return Promise.reject(err);
-  }
-);
-
-// iyzico
-export const retryIyzicoRegistration = (sellerId) =>
-  api.post(`/v1/admin/seller/${sellerId}/retry-iyzico`).then(r => r.data);
-
-// Finance
-export const getFinanceSummary = () =>
-  api.get('/v1/admin/finance/summary').then(r => r.data);
-
-export const getSellerFinance = (sellerId) =>
-  api.get(`/v1/admin/finance/sellers/${sellerId}`).then(r => r.data);
-
-export const updateCommissionRate = (rate) =>
-  api.put('/v1/admin/settings/commission-rate', { rate }).then(r => r.data);
-
-// Password Reset
-export const forgotPassword = (emailOrPhone) =>
-  api.post('/v1/auth/forgot-password', { emailOrPhone }).then(r => r.data);
-
-export const verifyResetCode = (emailOrPhone, code) =>
-  api.post('/v1/auth/verify-reset-code', { emailOrPhone, code }).then(r => r.data);
-
-export const resetPassword = (emailOrPhone, code, newPassword) =>
-  api.post('/v1/auth/reset-password', { emailOrPhone, code, newPassword }).then(r => r.data);
-
-// Analytics — period → startDate/endDate conversion
+// --- Helper ---
 function periodToDates(period) {
   const end = new Date();
   const start = new Date();
@@ -99,84 +13,61 @@ function periodToDates(period) {
   return { startDate: start.toISOString().split('T')[0], endDate: end.toISOString().split('T')[0] };
 }
 
+// --- iyzico ---
+export const retryIyzicoRegistration = (sellerId) => api.admin.finance.retryIyzico({ sellerId });
+
+// --- Finance ---
+export const getFinanceSummary = () => api.admin.finance.getSummary();
+export const getSellerFinance = (sellerId) => api.admin.finance.getSellerFinance({ sellerId });
+export const updateCommissionRate = (rate) => api.admin.finance.updateCommissionRate({ rate });
+
+// --- Password Reset ---
+export const forgotPassword = (emailOrPhone) => api.auth.forgotPassword({ emailOrPhone });
+export const verifyResetCode = (emailOrPhone, code) => api.auth.verifyResetCode({ emailOrPhone, code });
+export const resetPassword = (emailOrPhone, code, newPassword) => api.auth.resetPassword({ emailOrPhone, code, newPassword });
+
+// --- Analytics ---
 export const getAdminAnalytics = (period = 'month') => {
   const { startDate, endDate } = periodToDates(period);
-  return api.get(`/v1/admin/analytics/summary?startDate=${startDate}&endDate=${endDate}`).then(r => r.data);
+  return api.admin.analytics.getSummary({ startDate, endDate });
 };
-
 export const getAdminOrderTrends = (period = 'month') => {
   const { startDate, endDate } = periodToDates(period);
-  return api.get(`/v1/admin/analytics/trends?startDate=${startDate}&endDate=${endDate}`).then(r => r.data);
+  return api.admin.analytics.getTrends({ startDate, endDate });
 };
-
 export const getAdminTopRestaurants = (period = 'month', limit = 10) => {
   const { startDate, endDate } = periodToDates(period);
-  return api.get(`/v1/admin/analytics/top-restaurants?startDate=${startDate}&endDate=${endDate}&limit=${limit}`).then(r => r.data);
+  return api.admin.analytics.getTopRestaurants({ startDate, endDate, limit });
 };
 
-// Overdue Orders
-export const getOverdueOrders = (page = 1) =>
-  api.get(`/v1/admin/order/overdue?page=${page}&pageSize=20`).then(r => r.data);
+// --- Overdue Orders ---
+export const getOverdueOrders = (page = 1) => api.admin.order.getOverdue({ page });
 
-// Reviews
-export const getReviews = (page = 1, status = '') =>
-  api.get(`/v1/admin/reviews?page=${page}&pageSize=20${status ? `&status=${status}` : ''}`).then(r => r.data);
+// --- Reviews ---
+export const getReviews = (page = 1, status = '') => api.admin.review.getList({ page, status: status || undefined });
+export const deleteReview = (reviewId) => api.admin.review.remove({ reviewId });
 
-export const deleteReview = (reviewId) =>
-  api.delete(`/v1/admin/reviews/${reviewId}`).then(r => r.data);
-
-// Support
-export const getSupportStats = () =>
-  api.get('/v1/admin/support/stats').then(r => r.data);
-
+// --- Support ---
+export const getSupportStats = () => api.admin.support.getStats();
 export const getAllTickets = (page = 1, statusId = '', topicId = '') =>
-  api.get(`/v1/admin/support/tickets?page=${page}&pageSize=20${statusId ? `&statusId=${statusId}` : ''}${topicId ? `&topicId=${topicId}` : ''}`).then(r => r.data);
+  api.admin.support.getTickets({ page, statusId: statusId ? Number(statusId) : undefined, topicId: topicId ? Number(topicId) : undefined });
+export const getEscalatedTickets = (page = 1) => api.admin.support.getEscalated({ page });
+export const getTicketDetail = (ticketId) => api.admin.support.getTicketDetail({ ticketId });
+export const approveAction = (actionId) => api.admin.support.approveAction({ actionId });
+export const rejectAction = (actionId) => api.admin.support.rejectAction({ actionId });
 
-export const getEscalatedTickets = (page = 1) =>
-  api.get(`/v1/admin/support/escalated?page=${page}&pageSize=20`).then(r => r.data);
+// --- Commission ---
+export const getPlatformSchedules = () => api.admin.commission.getSettings();
+export const getActivePlatformSchedule = () => api.admin.commission.getActiveSchedule();
+export const createPlatformSchedule = (data) => api.admin.commission.createSchedule(data);
+export const getRestaurantCommission = (restaurantId) => api.admin.commission.getRestaurantCommission({ restaurantId });
+export const getRestaurantCommissionHistory = (restaurantId) => api.admin.commission.getRestaurantHistory({ restaurantId });
+export const setRestaurantCommission = (restaurantId, data) => api.admin.commission.setRestaurantCommission({ restaurantId, ...data });
 
-export const getTicketDetail = (ticketId) =>
-  api.get(`/v1/admin/support/ticket/${ticketId}`).then(r => r.data);
-
-export const approveAction = (actionId) =>
-  api.post(`/v1/admin/support/action/${actionId}/approve`).then(r => r.data);
-
-export const rejectAction = (actionId) =>
-  api.post(`/v1/admin/support/action/${actionId}/reject`).then(r => r.data);
-
-// Commission
-export const getPlatformSchedules = () =>
-  api.get('/v1/admin/commission/settings').then(r => r.data);
-
-export const getActivePlatformSchedule = () =>
-  api.get('/v1/admin/commission/settings/active').then(r => r.data);
-
-export const createPlatformSchedule = (data) =>
-  api.post('/v1/admin/commission/settings', data).then(r => r.data);
-
-export const getRestaurantCommission = (restaurantId) =>
-  api.get(`/v1/admin/commission/restaurant/${restaurantId}`).then(r => r.data);
-
-export const getRestaurantCommissionHistory = (restaurantId) =>
-  api.get(`/v1/admin/commission/restaurant/${restaurantId}/history`).then(r => r.data);
-
-export const setRestaurantCommission = (restaurantId, data) =>
-  api.put(`/v1/admin/commission/restaurant/${restaurantId}`, data).then(r => r.data);
-
-// Settlement
+// --- Settlement ---
 export const getSettlementPeriods = (page = 1, statusId = '') =>
-  api.get(`/v1/admin/settlement/periods?page=${page}&pageSize=20${statusId ? `&statusId=${statusId}` : ''}`).then(r => r.data);
-
-export const getSettlementPeriodDetail = (periodId) =>
-  api.get(`/v1/admin/settlement/period/${periodId}`).then(r => r.data);
-
-export const approveSettlement = (periodId) =>
-  api.post(`/v1/admin/settlement/period/${periodId}/approve`).then(r => r.data);
-
-export const paySettlement = (periodId, data) =>
-  api.post(`/v1/admin/settlement/period/${periodId}/pay`, data).then(r => r.data);
-
-export const cancelSettlement = (periodId, reason) =>
-  api.post(`/v1/admin/settlement/period/${periodId}/cancel?reason=${encodeURIComponent(reason || '')}`).then(r => r.data);
-
-export default api;
+  api.admin.settlement.getPeriods({ page, statusId: statusId ? Number(statusId) : undefined });
+export const getSettlementPeriodDetail = (periodId) => api.admin.settlement.getPeriodDetail({ periodId });
+export const approveSettlement = (periodId) => api.admin.settlement.approve({ periodId });
+export const paySettlement = (periodId, data) => api.admin.settlement.pay({ periodId, ...data });
+export const cancelSettlement = (periodId, reason) => api.admin.settlement.cancel({ periodId, reason });

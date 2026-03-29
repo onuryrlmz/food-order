@@ -14,7 +14,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {useAuth} from '../../context/AuthContext';
-import {companyService} from '../../api/companyService';
+import api from '../../api';
 
 const COMPANY_TYPES = [
   {value: 1, label: 'Şahıs'},
@@ -73,10 +73,10 @@ const CompanyRegisterScreen = () => {
         data.identityNumber = identityNumber.trim();
       }
 
-      const response = await companyService.register(data);
-      if (response.data.hasFailed) {
+      const result = await api.courier.company.register(data);
+      if (result.hasFailed) {
         const errorMsg =
-          response.data.messages?.[0]?.description || 'Başvuru gönderilemedi';
+          result.messages?.[0]?.description || 'Başvuru gönderilemedi';
         setError(errorMsg);
         Alert.alert('Hata', errorMsg);
       } else {

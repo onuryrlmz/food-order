@@ -1,87 +1,9 @@
-import axios from 'axios';
+import api, { client } from './service';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3762';
+// Default export: raw axios client (backward-compatible with existing page imports)
+export default client;
 
-const api = axios.create({
-  baseURL: BASE_URL,
-  headers: { 'Content-Type': 'application/json' },
-  withCredentials: true,
-});
-
-let isRefreshing = false;
-let failedQueue = [];
-
-const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
-    if (error) prom.reject(error);
-    else prom.resolve(token);
-  });
-  failedQueue = [];
-};
-
-api.interceptors.response.use(
-  (res) => {
-    const body = res.data;
-    if (body && body.hasFailed === true) {
-      const msg = body.messages?.[0]?.description || 'Bir hata oluştu';
-      const error = new Error(msg);
-      error.response = res;
-      error.isBusinessError = true;
-      return Promise.reject(error);
-    }
-    return res;
-  },
-  async (err) => {
-    const originalRequest = err.config;
-
-    if (err.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then(() => api(originalRequest));
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        await api.post('/v1/auth/refresh');
-        processQueue(null);
-        return api(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('seller_logged_in');
-          window.location.href = '/login';
-        }
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
-    }
-
-    return Promise.reject(err);
-  }
-);
-
-// Finance
-export const getSellerFinanceSummary = () =>
-  api.get('/v1/seller/finance/summary').then(r => r.data);
-
-export const getSellerPayments = (page = 1) =>
-  api.get(`/v1/seller/finance/payments?page=${page}`).then(r => r.data);
-
-// Password Reset
-export const forgotPassword = (emailOrPhone) =>
-  api.post('/v1/auth/forgot-password', { emailOrPhone }).then(r => r.data);
-
-export const verifyResetCode = (emailOrPhone, code) =>
-  api.post('/v1/auth/verify-reset-code', { emailOrPhone, code }).then(r => r.data);
-
-export const resetPassword = (emailOrPhone, code, newPassword) =>
-  api.post('/v1/auth/reset-password', { emailOrPhone, code, newPassword }).then(r => r.data);
-
-// Analytics — period → startDate/endDate conversion
+// --- Helper ---
 function periodToDates(period) {
   const end = new Date();
   const start = new Date();
@@ -91,43 +13,36 @@ function periodToDates(period) {
   return { startDate: start.toISOString().split('T')[0], endDate: end.toISOString().split('T')[0] };
 }
 
+// --- Finance ---
+export const getSellerFinanceSummary = () => api.seller.finance.getSummary();
+export const getSellerPayments = (page = 1) => api.seller.finance.getPayments({ page });
+
+// --- Password Reset ---
+export const forgotPassword = (emailOrPhone) => api.auth.forgotPassword({ emailOrPhone });
+export const verifyResetCode = (emailOrPhone, code) => api.auth.verifyResetCode({ emailOrPhone, code });
+export const resetPassword = (emailOrPhone, code, newPassword) => api.auth.resetPassword({ emailOrPhone, code, newPassword });
+
+// --- Analytics ---
 export const getSellerAnalytics = (restaurantId, period = 'month') => {
   const { startDate, endDate } = periodToDates(period);
-  return api.get(`/v1/seller/analytics/summary/${restaurantId}?startDate=${startDate}&endDate=${endDate}`).then(r => r.data);
+  return api.seller.analytics.getSummary({ restaurantId, startDate, endDate });
 };
-
 export const getSellerOrderTrends = (restaurantId, period = 'month') => {
   const { startDate, endDate } = periodToDates(period);
-  return api.get(`/v1/seller/analytics/trends/${restaurantId}?startDate=${startDate}&endDate=${endDate}`).then(r => r.data);
+  return api.seller.analytics.getTrends({ restaurantId, startDate, endDate });
 };
-
 export const getSellerTopProducts = (restaurantId, period = 'month', limit = 10) => {
   const { startDate, endDate } = periodToDates(period);
-  return api.get(`/v1/seller/analytics/top-products/${restaurantId}?startDate=${startDate}&endDate=${endDate}&limit=${limit}`).then(r => r.data);
+  return api.seller.analytics.getTopProducts({ restaurantId, startDate, endDate, limit });
 };
 
-// Image Upload
-export const uploadProductImage = (productId, file) => {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('productId', productId);
-  return api.post('/v1/seller/product/image', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }).then(r => r.data);
-};
+// --- Image Upload ---
+export const uploadProductImage = (productId, file) => api.seller.product.uploadImage(productId, file);
+export const deleteProductImage = (imageId) => api.seller.product.deleteImage({ imageId });
 
-export const deleteProductImage = (imageId) =>
-  api.delete(`/v1/seller/product/image/${imageId}`).then(r => r.data);
+// --- Commission ---
+export const getMyCommissions = () => api.seller.commission.getMy();
 
-// Commission
-export const getMyCommissions = () =>
-  api.get('/v1/seller/commission/my').then(r => r.data);
-
-// Settlement
-export const getMySettlementPeriods = (page = 1) =>
-  api.get(`/v1/seller/commission/settlement/periods?page=${page}&pageSize=20`).then(r => r.data);
-
-export const getMySettlementPeriodDetail = (periodId) =>
-  api.get(`/v1/seller/commission/settlement/period/${periodId}`).then(r => r.data);
-
-export default api;
+// --- Settlement ---
+export const getMySettlementPeriods = (page = 1) => api.seller.commission.getSettlementPeriods({ page });
+export const getMySettlementPeriodDetail = (periodId) => api.seller.commission.getSettlementPeriodDetail({ periodId });

@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {orderService} from '../../api';
+import api from '../../api';
 import {useAuth} from '../../context/AuthContext';
 import {useToast} from '../../context/ToastContext';
 import OrderStatusBadge from '../../components/OrderStatusBadge';
@@ -35,9 +35,9 @@ const OrderHistoryScreen = ({navigation}) => {
 
   const loadOrders = async (pageNum) => {
     try {
-      const res = await orderService.getHistory(pageNum, 20);
-      if (res.data?.data) {
-        const data = res.data.data;
+      const result = await api.customer.order.getHistory({page: pageNum, pageSize: 20});
+      if (result?.data) {
+        const data = result.data;
         if (pageNum === 1) {
           setOrders(data);
         } else {
@@ -67,12 +67,12 @@ const OrderHistoryScreen = ({navigation}) => {
 
   const handleReorder = async (orderId) => {
     try {
-      const res = await orderService.reorder(orderId);
-      if (res.data && !res.data.hasFailed) {
+      const result = await api.customer.order.reorder({orderId});
+      if (result && !result.hasFailed) {
         showToast('Urunler sepete eklendi', 'success');
         navigation.navigate('CartTab');
       } else {
-        showToast(res.data?.messages?.[0]?.description || 'Tekrar siparis verilemedi', 'error');
+        showToast(result?.messages?.[0]?.description || 'Tekrar siparis verilemedi', 'error');
       }
     } catch (e) {
       showToast('Tekrar siparis verilemedi', 'error');

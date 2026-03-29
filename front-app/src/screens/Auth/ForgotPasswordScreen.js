@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {authService} from '../../api';
+import api from '../../api';
 import {useToast} from '../../context/ToastContext';
 
 const ForgotPasswordScreen = ({navigation}) => {
@@ -27,12 +27,12 @@ const ForgotPasswordScreen = ({navigation}) => {
     }
     setLoading(true);
     try {
-      const res = await authService.forgotPassword(emailOrPhone.trim());
-      if (!res.data.hasFailed) {
+      const result = await api.auth.forgotPassword({emailOrPhone: emailOrPhone.trim()});
+      if (!result.hasFailed) {
         showToast('Dogrulama kodu gonderildi', 'success');
         navigation.navigate('VerifyCode', {emailOrPhone: emailOrPhone.trim()});
       } else {
-        showToast(res.data.messages?.[0]?.description || 'Kod gonderilemedi', 'error');
+        showToast(result.messages?.[0]?.description || 'Kod gonderilemedi', 'error');
       }
     } catch (error) {
       showToast('Bir hata olustu. Tekrar deneyin.', 'error');

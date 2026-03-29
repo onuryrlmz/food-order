@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {favoriteService} from '../../api';
+import api from '../../api';
 import RestaurantCard from '../../components/RestaurantCard';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import EmptyState from '../../components/EmptyState';
@@ -25,9 +25,9 @@ const FavoritesScreen = ({navigation}) => {
 
   const loadFavorites = async () => {
     try {
-      const res = await favoriteService.getFavorites(1, 50);
-      if (res.data && !res.data.hasFailed) {
-        setFavorites(res.data.data || []);
+      const result = await api.customer.favorite.getList({page: 1, pageSize: 50});
+      if (result && !result.hasFailed) {
+        setFavorites(result.data || []);
       }
     } catch (e) {
       console.log('Favorites error:', e);

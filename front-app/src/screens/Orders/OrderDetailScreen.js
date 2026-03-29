@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {orderService, reviewService} from '../../api';
+import api from '../../api';
 import {useToast} from '../../context/ToastContext';
 import {ORDER_STATUS, PAYMENT_OPTIONS} from '../../utils/constants';
 import OrderStatusBadge from '../../components/OrderStatusBadge';
@@ -39,8 +39,8 @@ const OrderDetailScreen = ({route, navigation}) => {
 
   useEffect(() => {
     if (order && [9, 10, 7].includes(order.statusId)) {
-      orderService.getOrderTracking(orderId)
-        .then(res => { if (res.data?.data) setCourierInfo(res.data.data); })
+      api.customer.order.getTracking({orderId})
+        .then(result => { if (result?.data) setCourierInfo(result.data); })
         .catch(() => {});
     }
   }, [order?.statusId]);
@@ -77,9 +77,9 @@ const OrderDetailScreen = ({route, navigation}) => {
 
   const loadOrder = async () => {
     try {
-      const res = await orderService.getOrderById(orderId);
-      if (res.data && !res.data.hasFailed) {
-        setOrder(res.data.data);
+      const result = await api.customer.order.getById({orderId});
+      if (result && !result.hasFailed) {
+        setOrder(result.data);
       }
     } catch (e) {
       console.log('Order detail error:', e);
@@ -98,12 +98,12 @@ const OrderDetailScreen = ({route, navigation}) => {
       onConfirm: async () => {
         setCancelling(true);
         try {
-          const res = await orderService.cancelOrder(orderId, 'Müşteri iptal etti');
-          if (!res.data.hasFailed) {
+          const result = await api.customer.order.cancel({orderId, reason: 'Müşteri iptal etti'});
+          if (!result.hasFailed) {
             showToast('Siparişiniz iptal edildi', 'success');
             loadOrder();
           } else {
-            showToast(res.data.messages?.[0]?.description || 'İptal edilemedi', 'error');
+            showToast(result.messages?.[0]?.description || 'İptal edilemedi', 'error');
           }
         } catch (e) {
           showToast('Sipariş iptal edilemedi', 'error');
@@ -127,16 +127,16 @@ const OrderDetailScreen = ({route, navigation}) => {
 
   const handleReviewSubmit = async ({rating, comment}) => {
     try {
-      const res = await reviewService.createReview({
+      const result = await api.customer.review.create({
         orderId,
         restaurantId: order.restaurantId,
         rating,
         comment,
       });
-      if (res.data && !res.data.hasFailed) {
+      if (result && !result.hasFailed) {
         showToast('Degerlendirmeniz kaydedildi', 'success');
       } else {
-        showToast(res.data?.messages?.[0]?.description || 'Degerlendirme gonderilemedi', 'error');
+        showToast(result?.messages?.[0]?.description || 'Degerlendirme gonderilemedi', 'error');
       }
     } catch (e) {
       showToast('Degerlendirme gonderilemedi', 'error');
@@ -147,12 +147,12 @@ const OrderDetailScreen = ({route, navigation}) => {
   const handleReorder = async () => {
     setReordering(true);
     try {
-      const res = await orderService.reorder(orderId);
-      if (res.data && !res.data.hasFailed) {
+      const result = await api.customer.order.reorder({orderId});
+      if (result && !result.hasFailed) {
         showToast('Urunler sepete eklendi', 'success');
         navigation.navigate('CartTab');
       } else {
-        showToast(res.data?.messages?.[0]?.description || 'Tekrar siparis verilemedi', 'error');
+        showToast(result?.messages?.[0]?.description || 'Tekrar siparis verilemedi', 'error');
       }
     } catch (e) {
       showToast('Tekrar siparis verilemedi', 'error');

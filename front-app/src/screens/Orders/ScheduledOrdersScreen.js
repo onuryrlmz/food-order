@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {scheduledOrderService} from '../../api';
+import api from '../../api';
 import {useAuth} from '../../context/AuthContext';
 import {useToast} from '../../context/ToastContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -41,9 +41,9 @@ const ScheduledOrdersScreen = ({navigation}) => {
 
   const loadOrders = async pageNum => {
     try {
-      const res = await scheduledOrderService.getAll(pageNum, 20);
-      if (res.data?.data) {
-        const data = res.data.data;
+      const result = await api.customer.scheduledOrder.getList({page: pageNum, pageSize: 20});
+      if (result?.data) {
+        const data = result.data;
         if (pageNum === 1) {
           setOrders(data);
         } else {
@@ -80,8 +80,8 @@ const ScheduledOrdersScreen = ({navigation}) => {
       confirmStyle: 'destructive',
       onConfirm: async () => {
         try {
-          const res = await scheduledOrderService.cancel(order.id);
-          if (res.data && !res.data.hasFailed) {
+          const result = await api.customer.scheduledOrder.cancel({id: order.id});
+          if (result && !result.hasFailed) {
             setOrders(prev =>
               prev.map(o =>
                 o.id === order.id ? {...o, status: 'Cancelled'} : o,
@@ -90,7 +90,7 @@ const ScheduledOrdersScreen = ({navigation}) => {
             showToast('Zamanlı sipariş iptal edildi', 'success');
           } else {
             showToast(
-              res.data?.messages?.[0]?.description || 'İptal işlemi başarısız',
+              result?.messages?.[0]?.description || 'İptal işlemi başarısız',
               'error',
             );
           }

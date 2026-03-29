@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {authService} from '../../api';
+import api from '../../api';
 import {useToast} from '../../context/ToastContext';
 
 const ChangePasswordScreen = ({navigation}) => {
@@ -40,15 +40,15 @@ const ChangePasswordScreen = ({navigation}) => {
 
     setLoading(true);
     try {
-      const res = await authService.changePassword({
+      const result = await api.auth.changePassword({
         currentPassword,
         newPassword,
       });
-      if (!res.data.hasFailed) {
+      if (!result.hasFailed) {
         showToast('Şifreniz başarıyla değiştirildi', 'success');
         navigation.goBack();
       } else {
-        showToast(res.data.messages?.[0]?.description || 'Şifre değiştirilemedi', 'error');
+        showToast(result.messages?.[0]?.description || 'Şifre değiştirilemedi', 'error');
       }
     } catch (e) {
       showToast('Bir hata oluştu', 'error');

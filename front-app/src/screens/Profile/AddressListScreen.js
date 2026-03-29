@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {addressService} from '../../api';
+import api from '../../api';
 import {useToast} from '../../context/ToastContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import EmptyState from '../../components/EmptyState';
@@ -33,9 +33,9 @@ const AddressListScreen = ({navigation}) => {
 
   const loadAddresses = async () => {
     try {
-      const res = await addressService.getList();
-      console.log('Address API response:', JSON.stringify(res.data));
-      const list = res.data?.rawData || res.data?.data || [];
+      const result = await api.customer.address.getList();
+      console.log('Address API response:', JSON.stringify(result));
+      const list = result?.rawData || result?.data || [];
       const items = Array.isArray(list) ? list : [];
       setAddresses(items);
     } catch (e) {
@@ -53,8 +53,8 @@ const AddressListScreen = ({navigation}) => {
 
   const handleSetDefault = async (id) => {
     try {
-      const res = await addressService.setDefault(id);
-      if (!res.data.hasFailed) {
+      const result = await api.customer.address.setDefault({id});
+      if (!result.hasFailed) {
         loadAddresses();
       }
     } catch (e) {
@@ -71,11 +71,11 @@ const AddressListScreen = ({navigation}) => {
       confirmStyle: 'destructive',
       onConfirm: async () => {
         try {
-          const res = await addressService.deleteAddress(id);
-          if (!res.data.hasFailed) {
+          const result = await api.customer.address.remove({id});
+          if (!result.hasFailed) {
             loadAddresses();
           } else {
-            showToast(res.data.messages?.[0]?.description || 'Silinemedi', 'error');
+            showToast(result.messages?.[0]?.description || 'Silinemedi', 'error');
           }
         } catch (e) {
           showToast('Adres silinemedi', 'error');

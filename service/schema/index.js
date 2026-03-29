@@ -4,3 +4,4 @@ export * from './cuisine.js';
 export * from './customer/index.js';
 export * from './courier/index.js';
 export * from './seller/index.js';
+export * from './admin/index.js';

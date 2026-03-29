@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
-import {addressService} from '../../api';
+import api from '../../api';
 import {useToast} from '../../context/ToastContext';
 
 const AddAddressScreen = ({route, navigation}) => {
@@ -55,18 +55,18 @@ const AddAddressScreen = ({route, navigation}) => {
         invoiceType: 1,
       };
 
-      let res;
+      let result;
       if (isEditing) {
-        res = await addressService.update({...data, id: editAddress.id});
+        result = await api.customer.address.update({...data, id: editAddress.id});
       } else {
-        res = await addressService.add(data);
+        result = await api.customer.address.create(data);
       }
 
-      if (!res.data.hasFailed) {
+      if (!result.hasFailed) {
         showToast(isEditing ? 'Adres güncellendi' : 'Adres eklendi', 'success');
         navigation.goBack();
       } else {
-        showToast(res.data.messages?.[0]?.description || 'İşlem başarısız', 'error');
+        showToast(result.messages?.[0]?.description || 'İşlem başarısız', 'error');
       }
     } catch (e) {
       showToast('Bir hata oluştu', 'error');

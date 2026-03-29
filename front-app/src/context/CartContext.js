@@ -1,6 +1,5 @@
 import React, {createContext, useContext, useState, useCallback, useEffect} from 'react';
-import {basketService} from '../api/basketService';
-import {restaurantService} from '../api';
+import api from '../api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CartContext = createContext(null);
@@ -21,9 +20,9 @@ export const CartProvider = ({children}) => {
 
   const fetchRestaurantJson = async (restaurantId) => {
     try {
-      const res = await restaurantService.getRestaurantInfo(restaurantId);
-      if (res.data && !res.data.hasFailed) {
-        const cdnUrl = res.data.data;
+      const result = await api.customer.restaurant.getInfo({id: restaurantId});
+      if (result && !result.hasFailed) {
+        const cdnUrl = result.data;
         if (typeof cdnUrl === 'string' && cdnUrl.startsWith('http')) {
           const jsonRes = await fetch(cdnUrl);
           return await jsonRes.json();
@@ -78,9 +77,9 @@ export const CartProvider = ({children}) => {
     try {
       const token = await AsyncStorage.getItem('auth_token');
       if (!token) return;
-      const res = await basketService.getBasket();
-      if (res.data && !res.data.hasFailed && res.data.data) {
-        const b = res.data.data;
+      const result = await api.customer.basket.getBasket();
+      if (result && !result.hasFailed && result.data) {
+        const b = result.data;
         if (b.basketItems && b.basketItems.length > 0) {
           // Restoran JSON'unu çekip value isimlerini zenginleştir
           const restaurantJson = await fetchRestaurantJson(b.restaurantId);
@@ -119,7 +118,7 @@ export const CartProvider = ({children}) => {
         const token = await AsyncStorage.getItem('auth_token');
         if (!token) return;
         if (!cartData) {
-          basketService.clearBasket().catch(() => {});
+          api.customer.basket.clear().catch(() => {});
           return;
         }
         const payload = {
@@ -146,7 +145,7 @@ export const CartProvider = ({children}) => {
             })),
           })),
         };
-        basketService.updateBasket(payload).catch(() => {});
+        api.customer.basket.update(payload).catch(() => {});
       } catch (e) {
         // Silently fail
       }
@@ -176,7 +175,7 @@ export const CartProvider = ({children}) => {
         // Farklı restoran veya boş sepet — yeni sepet oluştur
         // Farklı restoransa önce Redis'teki eski sepeti sil
         if (prev && prev.restaurantId !== restaurant.id) {
-          basketService.clearBasket().catch(() => {});
+          api.customer.basket.clear().catch(() => {});
         }
         cartData = {
           restaurantId: restaurant.id,

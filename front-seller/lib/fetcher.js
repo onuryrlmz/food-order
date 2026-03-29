@@ -1,4 +1,4 @@
-import api from './api';
+import { client } from './service';
 
-const fetcher = (url) => api.get(url).then((res) => res.data);
+const fetcher = (url) => client.get(url).then((res) => res.data);
 export default fetcher;

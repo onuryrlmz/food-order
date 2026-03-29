@@ -20,7 +20,7 @@ import CuisineFilter from '../../components/CuisineFilter';
 import EmptyState from '../../components/EmptyState';
 import ActiveOrderBanner, {ActiveOrdersSummary} from '../../components/ActiveOrderBanner';
 import FilterModal from '../../components/FilterModal';
-import {orderService, notificationService} from '../../api';
+import api from '../../api';
 
 const HomeScreen = ({navigation}) => {
   const {user, isAuthenticated} = useAuth();
@@ -42,9 +42,9 @@ const HomeScreen = ({navigation}) => {
       return;
     }
     try {
-      const res = await orderService.getActiveOrders();
-      if (res.data && !res.data.hasFailed) {
-        setActiveOrders(res.data.rawData || res.data.data || []);
+      const result = await api.customer.order.getActive();
+      if (result && !result.hasFailed) {
+        setActiveOrders(result.rawData || result.data || []);
       }
     } catch (e) {
       console.log('Active orders error:', e);
@@ -54,9 +54,9 @@ const HomeScreen = ({navigation}) => {
   const loadUnreadCount = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
-      const res = await notificationService.getUnreadCount();
-      if (res.data && !res.data.hasFailed) {
-        setUnreadCount(res.data.data?.count || 0);
+      const result = await api.customer.notification.getUnreadCount();
+      if (result && !result.hasFailed) {
+        setUnreadCount(result.data?.count || 0);
       }
     } catch (e) {}
   }, [isAuthenticated]);

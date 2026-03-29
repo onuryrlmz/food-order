@@ -53,6 +53,21 @@ cleanup_ghcr() {
     log "$COUNT eski image silindi."
 }
 
+# Monorepo service/ dizinini web projesine kopyala (Docker build için)
+prep_service() {
+    local PROJECT_DIR="$1"
+    cp -r service/ "${PROJECT_DIR}/service/"
+    # ../../service → ./service (Docker container içinde)
+    sed -i.bak "s|../../service/|./service/|g" "${PROJECT_DIR}/lib/service.js"
+    rm -f "${PROJECT_DIR}/lib/service.js.bak"
+}
+
+cleanup_service() {
+    local PROJECT_DIR="$1"
+    rm -rf "${PROJECT_DIR}/service/"
+    git checkout -- "${PROJECT_DIR}/lib/service.js" 2>/dev/null
+}
+
 # Hangi servisleri deploy edeceğini belirle
 TARGET="${1:-all}"
 
@@ -94,11 +109,13 @@ deploy_infra() {
 }
 
 deploy_admin() {
+    prep_service "front-admin"
     step "1/5 — Admin panel image build ediliyor (linux/amd64, no-cache)"
     docker build --platform linux/amd64 --no-cache \
         --build-arg NEXT_PUBLIC_API_BASE_URL=https://food-order-api.yrlmzteknoloji.com \
         -t $REGISTRY/food-order-admin:latest \
-        ./front-admin || err "Admin build başarısız!"
+        ./front-admin || { cleanup_service "front-admin"; err "Admin build başarısız!"; }
+    cleanup_service "front-admin"
 
     step "2/5 — GHCR'a push ediliyor"
     docker push $REGISTRY/food-order-admin:latest || err "Push başarısız!"
@@ -116,11 +133,13 @@ deploy_admin() {
 }
 
 deploy_seller() {
+    prep_service "front-seller"
     step "1/5 — Seller panel image build ediliyor (linux/amd64, no-cache)"
     docker build --platform linux/amd64 --no-cache \
         --build-arg NEXT_PUBLIC_API_BASE_URL=https://food-order-api.yrlmzteknoloji.com \
         -t $REGISTRY/food-order-seller:latest \
-        ./front-seller || err "Seller build başarısız!"
+        ./front-seller || { cleanup_service "front-seller"; err "Seller build başarısız!"; }
+    cleanup_service "front-seller"
 
     step "2/5 — GHCR'a push ediliyor"
     docker push $REGISTRY/food-order-seller:latest || err "Push başarısız!"

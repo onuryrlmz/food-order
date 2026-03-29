@@ -38,19 +38,13 @@ cleanup_ghcr() {
     step "GHCR temizliği — $IMAGE_NAME eski image'lar siliniyor"
 
     # Untagged (dangling) versiyonları al ve sil
-    local VERSIONS=$(gh api --paginate "user/packages/container/${IMAGE_NAME}/versions" \
-        --jq '.[] | select(.metadata.container.tags | length == 0) | .id' 2>/dev/null)
-
-    if [ -z "$VERSIONS" ]; then
-        log "Silinecek eski image yok."
-        return
-    fi
-
     local COUNT=0
-    for VERSION_ID in $VERSIONS; do
-        gh api --method DELETE "user/packages/container/${IMAGE_NAME}/versions/${VERSION_ID}" 2>/dev/null && ((COUNT++)) || true
+    gh api --paginate "user/packages/container/${IMAGE_NAME}/versions" \
+        --jq '.[] | select(.metadata.container.tags | length == 0) | .id' 2>/dev/null | while read -r VID; do
+        [ -z "$VID" ] && continue
+        gh api --method DELETE "user/packages/container/${IMAGE_NAME}/versions/$VID" --silent 2>/dev/null && ((COUNT++)) || true
     done
-    log "$COUNT eski image silindi."
+    log "${COUNT:-0} eski image silindi."
 }
 
 # Hangi servisleri deploy edeceğini belirle

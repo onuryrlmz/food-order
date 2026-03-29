@@ -290,6 +290,22 @@ public class CourierManager : ICourierService
             courier.LastLocationUpdate = DateTime.UtcNow;
 
             _unitOfWork.CourierRepository.Update(courier);
+
+            // Konum geçmişine kaydet
+            var activeAssignment = await _unitOfWork.DeliveryAssignmentRepository.GetAsync(
+                x => x.CourierId == courier.Id && (x.StatusId == 3 || x.StatusId == 5));
+
+            var locationHistory = new Domain.Entities.Courier.CourierLocationHistory
+            {
+                Id = Guid.NewGuid(),
+                CourierId = courier.Id,
+                DeliveryAssignmentId = activeAssignment?.Id,
+                Latitude = requestDto.Latitude,
+                Longitude = requestDto.Longitude,
+                RecordedAt = DateTime.UtcNow,
+            };
+            await _unitOfWork.CourierLocationHistoryRepository.AddAsync(locationHistory);
+
             await _unitOfWork.CompleteAsync();
             result.SetData(true);
         }

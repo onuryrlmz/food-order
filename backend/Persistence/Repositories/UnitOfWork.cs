@@ -54,6 +54,7 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     public IRestaurantCourierAgreementRepository RestaurantCourierAgreementRepository { get; }
     public IDeliveryAssignmentRepository DeliveryAssignmentRepository { get; }
     public ICourierEarningRepository CourierEarningRepository { get; }
+    public ICourierLocationHistoryRepository CourierLocationHistoryRepository { get; }
 
     // Buyer - Tip & Search
     public ITipRepository TipRepository { get; }
@@ -115,6 +116,7 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         IRestaurantCourierAgreementRepository restaurantCourierAgreementRepository,
         IDeliveryAssignmentRepository deliveryAssignmentRepository,
         ICourierEarningRepository courierEarningRepository,
+        ICourierLocationHistoryRepository courierLocationHistoryRepository,
         ITipRepository tipRepository,
         ISearchHistoryRepository searchHistoryRepository,
         INotificationRepository notificationRepository,
@@ -164,6 +166,7 @@ public class UnitOfWork : IUnitOfWork, IAsyncDisposable
         RestaurantCourierAgreementRepository = restaurantCourierAgreementRepository;
         DeliveryAssignmentRepository = deliveryAssignmentRepository;
         CourierEarningRepository = courierEarningRepository;
+        CourierLocationHistoryRepository = courierLocationHistoryRepository;
         TipRepository = tipRepository;
         SearchHistoryRepository = searchHistoryRepository;
         NotificationRepository = notificationRepository;

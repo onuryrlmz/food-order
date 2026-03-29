@@ -47,6 +47,7 @@ public interface IUnitOfWork : IDisposable
     IRestaurantCourierAgreementRepository RestaurantCourierAgreementRepository { get; }
     IDeliveryAssignmentRepository DeliveryAssignmentRepository { get; }
     ICourierEarningRepository CourierEarningRepository { get; }
+    ICourierLocationHistoryRepository CourierLocationHistoryRepository { get; }
 
     // Buyer - Tip & Search
     ITipRepository TipRepository { get; }

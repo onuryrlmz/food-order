@@ -58,7 +58,7 @@ prep_service() {
     local PROJECT_DIR="$1"
     cp -r service/ "${PROJECT_DIR}/service/"
     # ../../service → ./service (Docker container içinde)
-    sed -i.bak "s|../../service/|./service/|g" "${PROJECT_DIR}/lib/service.js"
+    sed -i.bak "s|../../service/|../service/|g" "${PROJECT_DIR}/lib/service.js"
     rm -f "${PROJECT_DIR}/lib/service.js.bak"
 }
 

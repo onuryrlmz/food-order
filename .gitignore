@@ -41,6 +41,18 @@ coverage.cobertura.xml
 yarn.lock
 package-lock.json
 
+# Environment (secrets)
+.env
+.env.local
+.env.production
+!.env.example
+
+# Xcode local overrides
+.xcode.env.local
+
+# Expo
+.expo/
+
 # Sistem dosyaları
 .DS_Store
 Thumbs.db

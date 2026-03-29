@@ -19,11 +19,37 @@ using WebAPI.Hubs;
 using WebAPI.Services;
 using TokenOptions = NArchitecture.Core.Security.JWT.TokenOptions;
 
-// .env dosyasını yükle (önce yükle ki diğer config'ler override edebilsin)
-DotNetEnv.Env.Load(Path.Combine(Directory.GetCurrentDirectory(), "..", ".env"));
-DotNetEnv.Env.Load(); // WebAPI klasöründe .env varsa onu da dene
+// Ana dizindeki tek .env dosyasından yükle
+var rootEnvPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".env");
+if (File.Exists(rootEnvPath))
+    DotNetEnv.Env.Load(rootEnvPath);
 
 var builder = WebApplication.CreateBuilder(args);
+
+// .env değişkenlerini .NET config section'larına map'le
+string? env(string key) => Environment.GetEnvironmentVariable(key);
+builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+{
+    ["ConnectionStrings:FoodOrderApp"] = env("LOCAL_DB_CONNECTION_STRING") ?? env("DB_CONNECTION_STRING"),
+    ["TokenOptions:SecurityKey"] = env("TOKEN_SECURITY_KEY"),
+    ["AwsS3:Domain"] = env("R2_DOMAIN"),
+    ["AwsS3:Endpoint"] = env("R2_ENDPOINT"),
+    ["AwsS3:BucketName"] = env("R2_BUCKET"),
+    ["AwsS3:AccessKey"] = env("R2_ACCESS_KEY"),
+    ["AwsS3:SecretKey"] = env("R2_SECRET_KEY"),
+    ["AwsS3:Token"] = env("R2_TOKEN"),
+    ["Redis:Host"] = env("REDIS_HOST") ?? "127.0.0.1",
+    ["Redis:Port"] = env("REDIS_PORT") ?? "6379",
+    ["Redis:Password"] = env("REDIS_PASSWORD") ?? "",
+    ["Redis:Ssl"] = "false",
+    ["MailSettings:Server"] = env("SMTP_SERVER"),
+    ["MailSettings:Port"] = env("SMTP_PORT") ?? "587",
+    ["MailSettings:UserName"] = env("SMTP_USER"),
+    ["MailSettings:Password"] = env("SMTP_PASSWORD"),
+    ["MailSettings:SenderEmail"] = env("SMTP_FROM"),
+    ["AiSupport:ApiKey"] = env("AI_SUPPORT_API_KEY"),
+    ["AiSupport:Model"] = env("AI_SUPPORT_MODEL"),
+});
 builder.Configuration.AddEnvironmentVariables();
 
 Global.Configuration = builder.Configuration;

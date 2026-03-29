@@ -224,7 +224,7 @@ public class CourierCompanyManager : ICourierCompanyService
                 })
                 .ToListAsync();
 
-            result.RawData = members;
+            result.SetData(members);
             result.TotalDataCount = totalCount;
         }
         catch (Exception e)
@@ -363,7 +363,7 @@ public class CourierCompanyManager : ICourierCompanyService
                 })
                 .ToListAsync();
 
-            result.RawData = earnings;
+            result.SetData(earnings);
             result.TotalDataCount = earnings.Count;
         }
         catch (Exception e)
@@ -411,7 +411,7 @@ public class CourierCompanyManager : ICourierCompanyService
                 })
                 .ToListAsync();
 
-            result.RawData = companies;
+            result.SetData(companies);
             result.TotalDataCount = totalCount;
         }
         catch (Exception e)

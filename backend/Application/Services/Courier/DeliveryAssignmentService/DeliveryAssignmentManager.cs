@@ -161,7 +161,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 })
                 .ToListAsync();
 
-            result.RawData = assignments;
+            result.SetData(assignments);
             result.TotalDataCount = totalCount;
         }
         catch (Exception e)
@@ -744,7 +744,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 })
                 .ToListAsync();
 
-            result.RawData = assignments;
+            result.SetData(assignments);
             result.TotalDataCount = assignments.Count;
         }
         catch (Exception e)
@@ -800,7 +800,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 })
                 .ToListAsync();
 
-            result.RawData = agreements;
+            result.SetData(agreements);
             result.TotalDataCount = agreements.Count;
         }
         catch (Exception e)
@@ -997,7 +997,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 })
                 .ToListAsync();
 
-            result.RawData = agreements;
+            result.SetData(agreements);
             result.TotalDataCount = agreements.Count;
         }
         catch (Exception e)

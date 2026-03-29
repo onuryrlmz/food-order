@@ -6,13 +6,13 @@ namespace Domain.Service;
 public class ServiceCollectionResult : ServiceResult
 {
     [DataMember]
-    public object RawData { get; set; }
+    public object Data { get; set; }
 
     [DataMember]
     public long TotalDataCount { get; set; }
 
-    public void SetRawData(object data)
+    public void SetData(object data)
     {
-        RawData = data;
+        Data = data;
     }
 }

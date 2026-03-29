@@ -66,7 +66,7 @@ public class CourierEarningManager : ICourierEarningService
                 })
                 .ToListAsync();
 
-            result.RawData = earnings;
+            result.SetData(earnings);
             result.TotalDataCount = totalCount;
         }
         catch (Exception e)

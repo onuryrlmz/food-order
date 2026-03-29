@@ -367,7 +367,7 @@ public class CourierManager : ICourierService
                 })
                 .ToListAsync();
 
-            result.RawData = couriers;
+            result.SetData(couriers);
             result.TotalDataCount = totalCount;
         }
         catch (Exception e)
@@ -489,7 +489,7 @@ public class CourierManager : ICourierService
                 })
                 .ToListAsync();
 
-            result.RawData = couriers;
+            result.SetData(couriers);
             result.TotalDataCount = couriers.Count;
         }
         catch (Exception e)

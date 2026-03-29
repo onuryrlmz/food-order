@@ -9,7 +9,7 @@ public class ServiceCollectionResult<TEntity> : ServiceCollectionResult
     private bool _HasData;
 
     [DataMember]
-    public List<TEntity> Data { get; set; }
+    public new List<TEntity> Data { get; set; }
 
     [DataMember]
     public bool HasData
@@ -37,7 +37,7 @@ public class ServiceCollectionResult<TEntity> : ServiceCollectionResult
         else
         {
             TotalDataCount = totalCount;
-            RawData = list;
+            base.Data = list;
             if (!HasFailed)
                 HasFailed = false;
         }

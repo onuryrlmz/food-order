@@ -32,26 +32,49 @@ run_scp() {
     sshpass -p "$PASS" scp -o StrictHostKeyChecking=no "$1" "${USER}@${HOST}:${2}"
 }
 
+# GHCR'daki eski untagged image'ları sil
+cleanup_ghcr() {
+    local IMAGE_NAME="$1"
+    step "GHCR temizliği — $IMAGE_NAME eski image'lar siliniyor"
+
+    # Untagged (dangling) versiyonları al ve sil
+    local VERSIONS=$(gh api --paginate "user/packages/container/${IMAGE_NAME}/versions" \
+        --jq '.[] | select(.metadata.container.tags | length == 0) | .id' 2>/dev/null)
+
+    if [ -z "$VERSIONS" ]; then
+        log "Silinecek eski image yok."
+        return
+    fi
+
+    local COUNT=0
+    for VERSION_ID in $VERSIONS; do
+        gh api --method DELETE "user/packages/container/${IMAGE_NAME}/versions/${VERSION_ID}" 2>/dev/null && ((COUNT++)) || true
+    done
+    log "$COUNT eski image silindi."
+}
+
 # Hangi servisleri deploy edeceğini belirle
 TARGET="${1:-all}"
 
 deploy_backend() {
-    step "1/4 — Backend image build ediliyor (linux/amd64)"
-    docker build --platform linux/amd64 \
+    step "1/5 — Backend image build ediliyor (linux/amd64, no-cache)"
+    docker build --platform linux/amd64 --no-cache \
         -t $REGISTRY/food-order-api:latest \
         -f backend/WebAPI/Dockerfile \
         ./backend || err "Backend build başarısız!"
 
-    step "2/4 — GHCR'a push ediliyor"
+    step "2/5 — GHCR'a push ediliyor"
     docker push $REGISTRY/food-order-api:latest || err "Push başarısız!"
 
-    step "3/4 — Sunucuya dosyalar gönderiliyor"
+    step "3/5 — Sunucuya dosyalar gönderiliyor"
     run_ssh "mkdir -p $REMOTE"
     run_scp ".env" "${REMOTE}/.env"
     run_scp "dcc-backend.yml" "${REMOTE}/dcc-backend.yml"
 
-    step "4/4 — Sunucuda backend ayağa kalkıyor"
+    step "4/5 — Sunucuda backend ayağa kalkıyor"
     run_ssh "cd $REMOTE && docker compose -f dcc-backend.yml pull && docker compose -f dcc-backend.yml up -d --force-recreate"
+
+    cleanup_ghcr "food-order-api"
 
     log "Backend deploy tamamlandı!"
 }
@@ -71,41 +94,45 @@ deploy_infra() {
 }
 
 deploy_admin() {
-    step "1/4 — Admin panel image build ediliyor (linux/amd64)"
-    docker build --platform linux/amd64 \
+    step "1/5 — Admin panel image build ediliyor (linux/amd64, no-cache)"
+    docker build --platform linux/amd64 --no-cache \
         --build-arg NEXT_PUBLIC_API_BASE_URL=https://food-order-api.yrlmzteknoloji.com \
         -t $REGISTRY/food-order-admin:latest \
         ./front-admin || err "Admin build başarısız!"
 
-    step "2/4 — GHCR'a push ediliyor"
+    step "2/5 — GHCR'a push ediliyor"
     docker push $REGISTRY/food-order-admin:latest || err "Push başarısız!"
 
-    step "3/4 — Sunucuya dosyalar gönderiliyor"
+    step "3/5 — Sunucuya dosyalar gönderiliyor"
     run_ssh "mkdir -p $REMOTE"
     run_scp "dcc-admin.yml" "${REMOTE}/dcc-admin.yml"
 
-    step "4/4 — Sunucuda admin panel ayağa kalkıyor"
+    step "4/5 — Sunucuda admin panel ayağa kalkıyor"
     run_ssh "cd $REMOTE && docker compose -f dcc-admin.yml pull && docker compose -f dcc-admin.yml up -d --force-recreate"
+
+    cleanup_ghcr "food-order-admin"
 
     log "Admin panel deploy tamamlandı!"
 }
 
 deploy_seller() {
-    step "1/4 — Seller panel image build ediliyor (linux/amd64)"
-    docker build --platform linux/amd64 \
+    step "1/5 — Seller panel image build ediliyor (linux/amd64, no-cache)"
+    docker build --platform linux/amd64 --no-cache \
         --build-arg NEXT_PUBLIC_API_BASE_URL=https://food-order-api.yrlmzteknoloji.com \
         -t $REGISTRY/food-order-seller:latest \
         ./front-seller || err "Seller build başarısız!"
 
-    step "2/4 — GHCR'a push ediliyor"
+    step "2/5 — GHCR'a push ediliyor"
     docker push $REGISTRY/food-order-seller:latest || err "Push başarısız!"
 
-    step "3/4 — Sunucuya dosyalar gönderiliyor"
+    step "3/5 — Sunucuya dosyalar gönderiliyor"
     run_ssh "mkdir -p $REMOTE"
     run_scp "dcc-seller.yml" "${REMOTE}/dcc-seller.yml"
 
-    step "4/4 — Sunucuda seller panel ayağa kalkıyor"
+    step "4/5 — Sunucuda seller panel ayağa kalkıyor"
     run_ssh "cd $REMOTE && docker compose -f dcc-seller.yml pull && docker compose -f dcc-seller.yml up -d --force-recreate"
+
+    cleanup_ghcr "food-order-seller"
 
     log "Seller panel deploy tamamlandı!"
 }

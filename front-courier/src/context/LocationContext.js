@@ -1,10 +1,7 @@
-import React, {createContext, useContext, useState, useRef, useCallback, useEffect} from 'react';
-import {Platform, PermissionsAndroid, Alert, AppState} from 'react-native';
+import React, {createContext, useContext, useState, useRef, useCallback} from 'react';
+import {Platform, PermissionsAndroid, Alert} from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
-import BackgroundFetch from 'react-native-background-fetch';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../api';
-import {API_BASE_URL} from '../utils/constants';
 
 const LocationContext = createContext(null);
 
@@ -15,75 +12,6 @@ export const LocationProvider = ({children}) => {
   const [isTracking, setIsTracking] = useState(false);
   const intervalRef = useRef(null);
   const watchIdRef = useRef(null);
-
-  // Background Fetch yapılandırması — uygulama kapalıyken konum gönderimi
-  useEffect(() => {
-    const initBackgroundFetch = async () => {
-      await BackgroundFetch.configure(
-        {
-          minimumFetchInterval: 15, // dakika (iOS minimum 15dk)
-          stopOnTerminate: false,   // Android: uygulama kapansa bile çalış
-          startOnBoot: true,        // Android: cihaz açılınca başla
-          enableHeadless: true,     // Android: headless task
-          requiredNetworkType: BackgroundFetch.NETWORK_TYPE_ANY,
-        },
-        async (taskId) => {
-          // Arka plan görevi çalıştığında
-          try {
-            const token = await AsyncStorage.getItem('auth_token');
-            if (!token) {
-              BackgroundFetch.finish(taskId);
-              return;
-            }
-
-            // Backend'den çevrimiçi mi kontrol et
-            const profileRes = await fetch(`${API_BASE_URL}/courier/profile`, {
-              headers: {Authorization: `Bearer ${token}`},
-            });
-            const profileData = await profileRes.json();
-            const status = profileData?.data?.availabilityStatusId;
-
-            if (status === 1 || status === 2) {
-              // Çevrimiçi — konum al ve gönder
-              Geolocation.getCurrentPosition(
-                async (position) => {
-                  try {
-                    await fetch(`${API_BASE_URL}/courier/location`, {
-                      method: 'PUT',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                      },
-                      body: JSON.stringify({
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                      }),
-                    });
-                  } catch (e) {
-                    // Sessizce geç
-                  }
-                  BackgroundFetch.finish(taskId);
-                },
-                () => BackgroundFetch.finish(taskId),
-                {enableHighAccuracy: true, timeout: 10000, maximumAge: 5000},
-              );
-            } else {
-              // Çevrimdışı — bir şey yapma
-              BackgroundFetch.finish(taskId);
-            }
-          } catch (e) {
-            BackgroundFetch.finish(taskId);
-          }
-        },
-        (taskId) => {
-          // Timeout callback
-          BackgroundFetch.finish(taskId);
-        },
-      );
-    };
-
-    initBackgroundFetch();
-  }, []);
 
   const requestPermission = async () => {
     if (Platform.OS === 'android') {
@@ -102,8 +30,7 @@ export const LocationProvider = ({children}) => {
         return false;
       }
     } else {
-      // iOS
-      const status = await Geolocation.requestAuthorization('always');
+      const status = await Geolocation.requestAuthorization('whenInUse');
       return status === 'always' || status === 'whenInUse';
     }
   };
@@ -134,11 +61,9 @@ export const LocationProvider = ({children}) => {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    // Background fetch'i durdurma — çevrimiçi kontrolünü o kendi yapıyor
     setIsTracking(false);
   }, []);
 
-  // Foreground'da periyodik konum gönderimi + backend durum kontrolü
   const sendLocationWithCheck = useCallback(async () => {
     try {
       const coords = await getCurrentPosition();
@@ -195,9 +120,6 @@ export const LocationProvider = ({children}) => {
 
     // Foreground'da her 30 saniyede konum gönder
     intervalRef.current = setInterval(sendLocationWithCheck, LOCATION_INTERVAL);
-
-    // Background fetch'i başlat
-    BackgroundFetch.start();
 
     setIsTracking(true);
     return true;

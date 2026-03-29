@@ -1,146 +1,207 @@
-import React, {createContext, useContext, useState, useEffect, useCallback} from 'react';
-import {Platform, Alert} from 'react-native';
-import BackgroundGeolocation from '@mauron85/react-native-background-geolocation';
+import React, {createContext, useContext, useState, useRef, useCallback, useEffect} from 'react';
+import {Platform, PermissionsAndroid, Alert, AppState} from 'react-native';
+import Geolocation from 'react-native-geolocation-service';
+import BackgroundFetch from 'react-native-background-fetch';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {courierService} from '../api/courierService';
 import {API_BASE_URL} from '../utils/constants';
 
 const LocationContext = createContext(null);
 
+const LOCATION_INTERVAL = 30000; // 30 saniye
+
 export const LocationProvider = ({children}) => {
   const [currentPosition, setCurrentPosition] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
+  const intervalRef = useRef(null);
+  const watchIdRef = useRef(null);
 
-  // Arka plan konum servisini yapılandır (bir kez)
+  // Background Fetch yapılandırması — uygulama kapalıyken konum gönderimi
   useEffect(() => {
-    BackgroundGeolocation.configure({
-      desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
-      stationaryRadius: 30,
-      distanceFilter: 50,
-      interval: 30000, // 30 saniye
-      fastestInterval: 15000,
-      activitiesInterval: 30000,
-      // Uygulama kapatılsa bile çalışmaya devam et
-      stopOnTerminate: false,
-      startOnBoot: false,
-      // Android foreground service bildirimi
-      notificationTitle: 'Konum takibi aktif',
-      notificationText: 'Teslimat için konumunuz takip ediliyor',
-      notificationIconColor: '#007AFF',
-      // iOS
-      saveBatteryOnBackground: true,
-      // Konum URL'e otomatik POST yapmasın — biz manuel göndereceğiz
-      url: null,
-      syncUrl: null,
-    });
+    const initBackgroundFetch = async () => {
+      await BackgroundFetch.configure(
+        {
+          minimumFetchInterval: 15, // dakika (iOS minimum 15dk)
+          stopOnTerminate: false,   // Android: uygulama kapansa bile çalış
+          startOnBoot: true,        // Android: cihaz açılınca başla
+          enableHeadless: true,     // Android: headless task
+          requiredNetworkType: BackgroundFetch.NETWORK_TYPE_ANY,
+        },
+        async (taskId) => {
+          // Arka plan görevi çalıştığında
+          try {
+            const token = await AsyncStorage.getItem('auth_token');
+            if (!token) {
+              BackgroundFetch.finish(taskId);
+              return;
+            }
 
-    // Konum güncellemelerini dinle
-    BackgroundGeolocation.on('location', async (location) => {
-      setCurrentPosition({
-        latitude: location.latitude,
-        longitude: location.longitude,
-      });
+            // Backend'den çevrimiçi mi kontrol et
+            const profileRes = await fetch(`${API_BASE_URL}/courier/profile`, {
+              headers: {Authorization: `Bearer ${token}`},
+            });
+            const profileData = await profileRes.json();
+            const status = profileData?.data?.availabilityStatusId;
 
-      // Backend'e konum gönder
-      try {
-        const token = await AsyncStorage.getItem('auth_token');
-        if (!token) return;
-
-        // Önce çevrimiçi mi kontrol et
-        const profileRes = await fetch(`${API_BASE_URL}/courier/profile`, {
-          headers: {Authorization: `Bearer ${token}`},
-        });
-        const profileData = await profileRes.json();
-        const status = profileData?.data?.availabilityStatusId;
-
-        if (status === 0) {
-          // Çevrimdışı — takibi durdur
-          BackgroundGeolocation.stop();
-          setIsTracking(false);
-          return;
-        }
-
-        // Konum gönder
-        await fetch(`${API_BASE_URL}/courier/location`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            latitude: location.latitude,
-            longitude: location.longitude,
-          }),
-        });
-      } catch (e) {
-        // Ağ hatası — bir sonraki güncelleme tekrar dener
-      }
-
-      // Arka planda olduğumuzu kütüphaneye bildir
-      BackgroundGeolocation.finish();
-    });
-
-    BackgroundGeolocation.on('error', (error) => {
-      console.log('Background location error:', error.message);
-    });
-
-    // Servis zaten çalışıyorsa (uygulama restart sonrası) state'i güncelle
-    BackgroundGeolocation.checkStatus(({isRunning}) => {
-      if (isRunning) {
-        setIsTracking(true);
-      }
-    });
-
-    return () => {
-      BackgroundGeolocation.removeAllListeners();
+            if (status === 1 || status === 2) {
+              // Çevrimiçi — konum al ve gönder
+              Geolocation.getCurrentPosition(
+                async (position) => {
+                  try {
+                    await fetch(`${API_BASE_URL}/courier/location`, {
+                      method: 'PUT',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                      }),
+                    });
+                  } catch (e) {
+                    // Sessizce geç
+                  }
+                  BackgroundFetch.finish(taskId);
+                },
+                () => BackgroundFetch.finish(taskId),
+                {enableHighAccuracy: true, timeout: 10000, maximumAge: 5000},
+              );
+            } else {
+              // Çevrimdışı — bir şey yapma
+              BackgroundFetch.finish(taskId);
+            }
+          } catch (e) {
+            BackgroundFetch.finish(taskId);
+          }
+        },
+        (taskId) => {
+          // Timeout callback
+          BackgroundFetch.finish(taskId);
+        },
+      );
     };
+
+    initBackgroundFetch();
   }, []);
+
+  const requestPermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Konum İzni',
+            message: 'Teslimat yapabilmek için konum izni gereklidir.',
+            buttonPositive: 'İzin Ver',
+            buttonNegative: 'Reddet',
+          },
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      } catch (err) {
+        return false;
+      }
+    } else {
+      // iOS
+      const status = await Geolocation.requestAuthorization('always');
+      return status === 'granted';
+    }
+  };
 
   const getCurrentPosition = useCallback(() => {
     return new Promise((resolve, reject) => {
-      BackgroundGeolocation.getCurrentLocation(
-        (location) => {
+      Geolocation.getCurrentPosition(
+        position => {
           const coords = {
-            latitude: location.latitude,
-            longitude: location.longitude,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
           };
           setCurrentPosition(coords);
           resolve(coords);
         },
-        (error) => {
-          reject(error);
-        },
-        {
-          timeout: 15000,
-          maximumAge: 10000,
-          enableHighAccuracy: true,
-        },
+        error => reject(error),
+        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
       );
     });
   }, []);
 
+  const stopTracking = useCallback(() => {
+    if (watchIdRef.current !== null) {
+      Geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    // Background fetch'i durdurma — çevrimiçi kontrolünü o kendi yapıyor
+    setIsTracking(false);
+  }, []);
+
+  // Foreground'da periyodik konum gönderimi + backend durum kontrolü
+  const sendLocationWithCheck = useCallback(async () => {
+    try {
+      const coords = await getCurrentPosition();
+
+      try {
+        const profileRes = await courierService.getProfile();
+        const status = profileRes.data?.data?.availabilityStatusId;
+
+        if (status === 0) {
+          stopTracking();
+          return;
+        }
+      } catch (profileErr) {
+        // Profil alınamazsa yine de konum gönder
+      }
+
+      await courierService.updateLocation(coords.latitude, coords.longitude);
+    } catch (error) {
+      // Sessizce geç
+    }
+  }, [getCurrentPosition, stopTracking]);
+
   const startTracking = useCallback(async () => {
     if (isTracking) return true;
 
-    // İzin kontrolü — BackgroundGeolocation kendi izin yönetimini yapar
-    // ama ilk konumu almayı deneyelim
+    const hasPermission = await requestPermission();
+    if (!hasPermission) {
+      Alert.alert(
+        'Konum İzni Gerekli',
+        'Çevrimiçi olabilmek için konum izni vermeniz gerekmektedir.',
+      );
+      return false;
+    }
+
     try {
       const coords = await getCurrentPosition();
       await courierService.updateLocation(coords.latitude, coords.longitude);
     } catch (e) {
-      Alert.alert('Konum Hatası', 'Konumunuz alınamadı. GPS açık olduğundan ve konum izni verdiğinizden emin olun.');
+      Alert.alert('Konum Hatası', 'Konumunuz alınamadı. GPS açık olduğundan emin olun.');
       return false;
     }
 
-    BackgroundGeolocation.start();
+    // Foreground konum izleme (UI güncelleme)
+    watchIdRef.current = Geolocation.watchPosition(
+      position => {
+        setCurrentPosition({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      () => {},
+      {enableHighAccuracy: true, distanceFilter: 50, interval: 10000, fastestInterval: 5000},
+    );
+
+    // Foreground'da her 30 saniyede konum gönder
+    intervalRef.current = setInterval(sendLocationWithCheck, LOCATION_INTERVAL);
+
+    // Background fetch'i başlat
+    BackgroundFetch.start();
+
     setIsTracking(true);
     return true;
-  }, [isTracking, getCurrentPosition]);
-
-  const stopTracking = useCallback(() => {
-    BackgroundGeolocation.stop();
-    setIsTracking(false);
-  }, []);
+  }, [isTracking, getCurrentPosition, sendLocationWithCheck]);
 
   return (
     <LocationContext.Provider
@@ -155,6 +216,50 @@ export const LocationProvider = ({children}) => {
     </LocationContext.Provider>
   );
 };
+
+// Android Headless Task — uygulama tamamen kapalıyken çalışır
+BackgroundFetch.registerHeadlessTask(async ({taskId}) => {
+  try {
+    const token = await AsyncStorage.getItem('auth_token');
+    if (!token) {
+      BackgroundFetch.finish(taskId);
+      return;
+    }
+
+    const profileRes = await fetch(`${API_BASE_URL}/courier/profile`, {
+      headers: {Authorization: `Bearer ${token}`},
+    });
+    const profileData = await profileRes.json();
+    const status = profileData?.data?.availabilityStatusId;
+
+    if (status === 1 || status === 2) {
+      Geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            await fetch(`${API_BASE_URL}/courier/location`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+              }),
+            });
+          } catch (e) {}
+          BackgroundFetch.finish(taskId);
+        },
+        () => BackgroundFetch.finish(taskId),
+        {enableHighAccuracy: true, timeout: 10000, maximumAge: 5000},
+      );
+    } else {
+      BackgroundFetch.finish(taskId);
+    }
+  } catch (e) {
+    BackgroundFetch.finish(taskId);
+  }
+});
 
 export const useLocation = () => {
   const context = useContext(LocationContext);

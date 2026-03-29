@@ -1,6 +1,4 @@
 PODS:
-  - "@mauron85_react-native-background-geolocation (0.6.3)":
-    - React
   - FBLazyVector (0.84.1)
   - hermes-engine (250829098.0.9):
     - hermes-engine/Pre-built (= 250829098.0.9)
@@ -1858,6 +1856,9 @@ PODS:
     - React-utils (= 0.84.1)
     - ReactNativeDependencies
   - ReactNativeDependencies (0.84.1)
+  - RNBackgroundFetch (4.3.0):
+    - React-Core
+    - TSBackgroundFetch (~> 4.0.0)
   - RNCAsyncStorage (2.1.2):
     - hermes-engine
     - RCTRequired
@@ -1971,10 +1972,10 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - TSBackgroundFetch (4.0.6)
   - Yoga (0.0.0)
 
 DEPENDENCIES:
-  - "@mauron85_react-native-background-geolocation (from `../node_modules/@mauron85/react-native-background-geolocation`)"
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
@@ -2050,15 +2051,18 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios/ReactCodegen`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - ReactNativeDependencies (from `../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)
+  - RNBackgroundFetch (from `../node_modules/react-native-background-fetch`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
+SPEC REPOS:
+  trunk:
+    - TSBackgroundFetch
+
 EXTERNAL SOURCES:
-  "@mauron85_react-native-background-geolocation":
-    :path: "../node_modules/@mauron85/react-native-background-geolocation"
   FBLazyVector:
     :path: "../node_modules/react-native/Libraries/FBLazyVector"
   hermes-engine:
@@ -2208,6 +2212,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   ReactNativeDependencies:
     :podspec: "../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec"
+  RNBackgroundFetch:
+    :path: "../node_modules/react-native-background-fetch"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNGestureHandler:
@@ -2220,7 +2226,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  "@mauron85_react-native-background-geolocation": fa34ab82e94212be16ef6e75c32bcb707b0a1524
   FBLazyVector: e97c19a5a442429d1988f182a1940fb08df514da
   hermes-engine: 4add68d499f8c82a4476972b4d8d5d8937929070
   RCTDeprecation: af44b104091a34482596cd9bd7e8d90c4e9b4bd7
@@ -2295,10 +2300,12 @@ SPEC CHECKSUMS:
   ReactCodegen: 4fa1b291ad275013e39212f2463c46480fb53afe
   ReactCommon: 309419492d417c4cbb87af06f67735afa40ecb9d
   ReactNativeDependencies: 6b53de55177cea0ce91015ec66a8929207796a9f
+  RNBackgroundFetch: 73318e61a4062a9eb27397045b591e6698c929c5
   RNCAsyncStorage: 2a1048cbacbdb53598ccea4a0095f979ab1417c7
   RNGestureHandler: 6d378fd1aa991c7ab62a4215ee6cc417895a6954
   RNScreens: 088d923c4327c63c9f8c942cae17a9d038f47d97
   RNVectorIcons: af977c18ed27deba54ed038b439fca2911a08cfc
+  TSBackgroundFetch: 0afbeaae4e1132866e1d4b6e55265af26b5958ae
   Yoga: 7c1c3b93e408ac46c7ed64b5641ca7161747378d
 
 PODFILE CHECKSUM: 370024b2442d45371146ec5f248d547f7488460e

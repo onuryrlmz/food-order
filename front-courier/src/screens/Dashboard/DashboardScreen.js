@@ -59,19 +59,26 @@ const DashboardScreen = () => {
     }
   };
 
+  // Ekran her odaklandığında backend'den güncel durumu al
   useFocusEffect(
     useCallback(() => {
-      fetchData();
+      const syncStatus = async () => {
+        // Profili yenile — backend'den güncel availabilityStatus gelsin
+        await refreshProfile();
+        await fetchData();
+      };
+      syncStatus();
     }, []),
   );
 
+  // user değiştiğinde (ilk yükleme veya refreshProfile sonrası) durumu senkronize et
   useEffect(() => {
     if (!user) return;
 
     const isBackendOnline = user.availabilityStatus === 1 || user.availabilityStatus === 2;
     setIsOnline(isBackendOnline);
 
-    // Backend çevrimiçi diyor ama konum takibi başlamamışsa başlat
+    // Backend çevrimiçi diyor — konum takibini başlat
     if (isBackendOnline) {
       startTracking().catch(() => {});
     }

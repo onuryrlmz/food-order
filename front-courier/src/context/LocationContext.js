@@ -1,4 +1,4 @@
-import React, {createContext, useContext, useState, useRef, useCallback} from 'react';
+import React, {createContext, useContext, useState, useRef, useCallback, useEffect} from 'react';
 import {Platform, PermissionsAndroid, Alert} from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 import api from '../api';
@@ -12,6 +12,17 @@ export const LocationProvider = ({children}) => {
   const [isTracking, setIsTracking] = useState(false);
   const intervalRef = useRef(null);
   const watchIdRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null) {
+        Geolocation.clearWatch(watchIdRef.current);
+      }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
 
   const requestPermission = async () => {
     if (Platform.OS === 'android') {

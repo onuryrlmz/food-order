@@ -44,7 +44,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [pendingCartAction, setPendingCartAction] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(selectedRestaurant?.isFavorite || false);
   const mainScrollRef = useRef(null);
   const tabScrollRef = useRef(null);
   const sectionLayouts = useRef({});
@@ -62,6 +62,12 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
       selectRestaurant(restaurantId);
     }
   }, [restaurantId]);
+
+  useEffect(() => {
+    if (selectedRestaurant?.isFavorite !== undefined) {
+      setIsFavorite(selectedRestaurant.isFavorite);
+    }
+  }, [selectedRestaurant]);
 
   // selectedRestaurantJson yüklenince menuData'yı set et
   useEffect(() => {
@@ -320,11 +326,17 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
       <View style={styles.infoRow}>
         <View style={styles.infoChip}>
           <Icon name="star" size={16} color={Colors.star} />
-          <Text style={styles.infoChipText}>4.5</Text>
+          <Text style={styles.infoChipText}>{selectedRestaurant?.rating ?? '-'}</Text>
         </View>
         <View style={styles.infoChip}>
           <Icon name="clock-outline" size={16} color={Colors.primary} />
-          <Text style={styles.infoChipText}>30-45 dk</Text>
+          <Text style={styles.infoChipText}>
+            {selectedRestaurant?.minDeliveryTime && selectedRestaurant?.maxDeliveryTime
+              ? selectedRestaurant.minDeliveryTime === selectedRestaurant.maxDeliveryTime
+                ? `${selectedRestaurant.minDeliveryTime} dk`
+                : `${selectedRestaurant.minDeliveryTime}-${selectedRestaurant.maxDeliveryTime} dk`
+              : '-'}
+          </Text>
         </View>
       </View>
       <View style={styles.searchContainer}>

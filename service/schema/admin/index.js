@@ -37,6 +37,8 @@ export const SetRestaurantCommissionSchema = z.object({
   restaurantId: z.string().uuid(),
   commissionRate: z.number().optional(),
   fixedFee: z.number().optional(),
+  effectiveFrom: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 // Settlement
@@ -46,7 +48,8 @@ export const AdminSettlementPeriodsQuerySchema = PaginationSchema.extend({
 });
 export const PaySettlementSchema = z.object({
   periodId: z.string().uuid(),
-  paymentRef: z.string().optional(),
+  bankTransferRef: z.string().optional(),
+  notes: z.string().optional(),
 });
 export const CancelSettlementSchema = z.object({
   periodId: z.string().uuid(),
@@ -58,10 +61,8 @@ export const ApproveCourierSchema = z.object({ courierId: z.string().uuid() });
 
 // Platform Schedule
 export const CreatePlatformScheduleSchema = z.object({
-  name: z.string().optional(),
-  tiers: z.array(z.object({
-    minAmount: z.number().min(0),
-    maxAmount: z.number().optional(),
-    rate: z.number().min(0).max(100),
-  })),
+  commissionRate: z.number().min(0).max(100),
+  fixedFee: z.number().min(0).optional(),
+  effectiveFrom: z.string().optional(),
+  notes: z.string().optional(),
 });

@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { login } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ email: 'admin@esnaftan.com', password: 'Admin123!' });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -66,7 +67,7 @@ export default function LoginPage() {
             </div>
 
             <div className="text-right">
-              <a href="/forgot-password" className="text-sm text-orange-500 hover:underline">Sifremi Unuttum</a>
+              <Link href="/forgot-password" className="text-sm text-orange-500 hover:underline">Sifremi Unuttum</Link>
             </div>
 
             {error && (

@@ -6,7 +6,7 @@ import { login } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ email: 'info@pizzaci.com', password: 'Admin123!' });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 

@@ -2,8 +2,10 @@ import React from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
+import {useAuth} from '../../context/AuthContext';
 
 const PendingApprovalScreen = ({navigation}) => {
+  const {logout} = useAuth();
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -24,7 +26,7 @@ const PendingApprovalScreen = ({navigation}) => {
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate('Login')}>
+          onPress={() => logout()}>
           <Icon
             name="arrow-left"
             size={20}

@@ -39,6 +39,8 @@ export default function CouriersPage() {
   const [settingsModal, setSettingsModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [assignModal, setAssignModal] = useState(null); // { orderId } when open
+  const [selectedCourierId, setSelectedCourierId] = useState('');
 
   // Settings form state
   const [settingsForm, setSettingsForm] = useState({ defaultAssignmentStrategy: 1, hasOwnCouriers: false });
@@ -55,9 +57,7 @@ export default function CouriersPage() {
 
   // Couriers
   const couriersUrl = selectedRestaurant ? `/v1/seller/courier/restaurant/${selectedRestaurant}/couriers` : null;
-  const { data: couriersData, isLoading: couriersLoading } = useSWR(
-    activeTab === 'couriers' ? couriersUrl : null, fetcher
-  );
+  const { data: couriersData, isLoading: couriersLoading } = useSWR(couriersUrl, fetcher);
   const couriers = couriersData?.data || [];
 
   // Deliveries
@@ -340,8 +340,8 @@ export default function CouriersPage() {
                           </div>
                           {d.statusId === 1 && (
                             <Button size="sm" variant="outline" onClick={() => {
-                              const courierId = prompt('Kurye ID girin:');
-                              if (courierId) handleManualAssign(d.orderId || d.id, courierId);
+                              setSelectedCourierId('');
+                              setAssignModal({ orderId: d.orderId || d.id });
                             }}>
                               Kurye Ata
                             </Button>
@@ -413,6 +413,45 @@ export default function CouriersPage() {
             <Button variant="danger" loading={saving} onClick={() => handleDeleteAgreement(deleteConfirm.id)}>Sonlandır</Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Assign Courier Modal */}
+      <Modal isOpen={!!assignModal} onClose={() => setAssignModal(null)} title="Kurye Ata" size="sm">
+        {assignModal && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Kurye Seçin</label>
+              {couriers.length === 0 ? (
+                <p className="text-sm text-gray-400">Uygun kurye bulunamadı</p>
+              ) : (
+                <select
+                  value={selectedCourierId}
+                  onChange={e => setSelectedCourierId(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
+                >
+                  <option value="">-- Kurye seçin --</option>
+                  {couriers.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.fullName || c.name || c.id} {COURIER_AVAILABILITY[c.availabilityStatus] ? `(${COURIER_AVAILABILITY[c.availabilityStatus]})` : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="secondary" onClick={() => setAssignModal(null)}>Vazgeç</Button>
+              <Button
+                disabled={!selectedCourierId}
+                onClick={async () => {
+                  await handleManualAssign(assignModal.orderId, selectedCourierId);
+                  setAssignModal(null);
+                }}
+              >
+                Ata
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Delivery Settings Modal */}

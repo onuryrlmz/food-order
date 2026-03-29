@@ -19,7 +19,8 @@ const MONTHS = [
   'Temmuz', 'Agustos', 'Eylul', 'Ekim', 'Kasim', 'Aralik',
 ];
 
-const YEARS = [2025, 2026];
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({length: 3}, (_, i) => currentYear - 1 + i);
 
 const EarningsScreen = () => {
   const now = new Date();

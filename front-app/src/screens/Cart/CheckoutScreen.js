@@ -13,6 +13,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Colors, Fonts, Spacing, BorderRadius} from '../../theme';
 import {useCart} from '../../context/CartContext';
+import {useAppData} from '../../context/AppDataContext';
 import {useAuth} from '../../context/AuthContext';
 import {useToast} from '../../context/ToastContext';
 import api from '../../api';
@@ -20,6 +21,7 @@ import {PAYMENT_OPTIONS} from '../../utils/constants';
 
 const CheckoutScreen = ({navigation}) => {
   const {cart, clearCart, appliedCoupon, discountAmount, applyCoupon, removeCoupon, orderNote, setOrderNote} = useCart();
+  const {restaurants} = useAppData();
   const {user} = useAuth();
   const {showToast} = useToast();
   const insets = useSafeAreaInsets();
@@ -305,7 +307,8 @@ const CheckoutScreen = ({navigation}) => {
     return null;
   }
 
-  const deliveryFee = 9.99;
+  const cartRestaurant = restaurants.find(r => r.id === cart.restaurantId);
+  const deliveryFee = cartRestaurant?.deliveryPrice ?? 0;
   const subtotal = cart.totalPrice;
   const finalDiscount = discountAmount || 0;
   const total = Math.max(0, subtotal - finalDiscount + deliveryFee);

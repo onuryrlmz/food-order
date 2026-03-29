@@ -34,7 +34,6 @@ const AddressListScreen = ({navigation}) => {
   const loadAddresses = async () => {
     try {
       const result = await api.customer.address.getList();
-      console.log('Address API response:', JSON.stringify(result));
       const list = result?.data || [];
       const items = Array.isArray(list) ? list : [];
       setAddresses(items);

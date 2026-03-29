@@ -127,7 +127,7 @@ const ScheduledOrdersScreen = ({navigation}) => {
     <TouchableOpacity
       style={styles.orderCard}
       onPress={() =>
-        navigation.navigate('ScheduledOrderDetail', {orderId: item.id})
+        navigation.navigate('OrderDetail', {orderId: item.id})
       }
       activeOpacity={0.9}>
       <View style={styles.orderHeader}>

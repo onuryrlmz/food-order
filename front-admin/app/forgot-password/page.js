@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { forgotPassword, verifyResetCode, resetPassword } from '@/lib/api';
 
 export default function ForgotPasswordPage() {
@@ -207,7 +208,7 @@ export default function ForgotPasswordPage() {
           )}
 
           <div className="mt-4 text-center">
-            <a href="/login" className="text-sm text-orange-500 hover:underline">Giris ekranina don</a>
+            <Link href="/login" className="text-sm text-orange-500 hover:underline">Giris ekranina don</Link>
           </div>
         </div>
       </div>

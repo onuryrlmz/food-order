@@ -19,7 +19,7 @@ import {useToast} from '../../context/ToastContext';
 
 const CartScreen = ({navigation}) => {
   const {cart, updateItemQuantity, removeItem, clearCart, appliedCoupon, discountAmount, applyCoupon, removeCoupon, getFinalTotal, orderNote, setOrderNote} = useCart();
-  const {selectRestaurant} = useAppData();
+  const {selectRestaurant, restaurants} = useAppData();
   const {showConfirm} = useToast();
   const [couponCode, setCouponCode] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
@@ -126,7 +126,8 @@ const CartScreen = ({navigation}) => {
     );
   }
 
-  const deliveryFee = 9.99;
+  const cartRestaurant = restaurants.find(r => r.id === cart.restaurantId);
+  const deliveryFee = cartRestaurant?.deliveryPrice ?? 0;
   const subtotal = cart.totalPrice;
   const finalDiscount = discountAmount;
   const finalTotal = Math.max(0, subtotal - finalDiscount + deliveryFee);

@@ -1,6 +1,7 @@
 import React, {createContext, useContext, useState, useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../api';
+import {setOnAuthReset} from '../api';
 
 const AuthContext = createContext(null);
 
@@ -11,6 +12,14 @@ export const AuthProvider = ({children}) => {
 
   useEffect(() => {
     checkAuth();
+  }, []);
+
+  useEffect(() => {
+    setOnAuthReset(() => {
+      setUser(null);
+      setIsAuthenticated(false);
+    });
+    return () => { setOnAuthReset(null); };
   }, []);
 
   const checkAuth = async () => {

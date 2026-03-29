@@ -76,7 +76,7 @@ export const AuthProvider = ({children}) => {
       await api.auth.logout({refreshToken});
     } catch (e) {}
     clearOneSignalUserId();
-    await AsyncStorage.multiRemove(['auth_token', 'refresh_token']);
+    await AsyncStorage.multiRemove(['auth_token', 'refresh_token', 'user_info']);
     setUser(null);
     setIsAuthenticated(false);
   };

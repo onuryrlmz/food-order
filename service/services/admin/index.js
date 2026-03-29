@@ -123,7 +123,7 @@ class AdminSettlementService extends BaseService {
   }
   cancel(data) {
     const { periodId, reason } = CancelSettlementSchema.parse(data);
-    return this.post(`/admin/settlement/period/${periodId}/cancel`, null, { reason });
+    return this.post(`/admin/settlement/period/${periodId}/cancel`, { reason });
   }
 }
 

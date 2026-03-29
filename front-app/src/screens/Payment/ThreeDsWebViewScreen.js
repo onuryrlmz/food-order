@@ -18,8 +18,11 @@ const ThreeDsWebViewScreen = ({navigation, route}) => {
       if (data.status === 'success') {
         showToast('Ödeme başarılı!', 'success');
         navigation.reset({
-          index: 0,
-          routes: [{name: 'MainTabs'}],
+          index: 1,
+          routes: [
+            {name: 'MainTabs'},
+            {name: 'OrderDetail', params: {orderId}},
+          ],
         });
       } else {
         showToast(data.message || 'Ödeme başarısız oldu.', 'error');

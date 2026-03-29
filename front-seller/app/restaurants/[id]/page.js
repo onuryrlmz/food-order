@@ -24,7 +24,7 @@ export default function RestaurantDetailPage({ params }) {
   const [savingHour, setSavingHour] = useState(null);
 
   const { data: hoursData, mutate: mutateHours } = useSWR(`/v1/seller/restaurant/${id}/working-hours`, fetcher);
-  const { data: restaurantsData } = useSWR('/v1/seller/restaurant/list', fetcher);
+  const { data: restaurantsData, mutate: mutateRestaurant } = useSWR('/v1/seller/restaurant/list', fetcher);
 
   const restaurant = restaurantsData?.data?.find(r => r.id === id);
   const hours = hoursData?.data || [];
@@ -36,10 +36,10 @@ export default function RestaurantDetailPage({ params }) {
       name: restaurant.name || '',
       phone: restaurant.phone || '',
       email: restaurant.email || '',
-      description: '',
-      minimumOrderPrice: 0,
-      minDeliveryTime: 20,
-      maxDeliveryTime: 45,
+      description: restaurant.description || '',
+      minimumOrderPrice: restaurant.minimumOrderPrice || 0,
+      minDeliveryTime: restaurant.minDeliveryTime || 20,
+      maxDeliveryTime: restaurant.maxDeliveryTime || 45,
       coverImage: '',
     });
     setEditModal(true);
@@ -57,6 +57,7 @@ export default function RestaurantDetailPage({ params }) {
       });
       toast('Restoran güncellendi', 'success');
       setEditModal(false);
+      mutateRestaurant();
     } catch (err) {
       toast(err.response?.data?.messages?.[0]?.description || 'Hata oluştu', 'error');
     } finally {

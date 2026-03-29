@@ -208,7 +208,7 @@ const RegisterScreen = ({navigation}) => {
               placeholderTextColor={Colors.textTertiary}
               value={password}
               onChangeText={setPassword}
-              //secureTextEntry={!showPassword}
+              secureTextEntry={!showPassword}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               <Icon
@@ -232,7 +232,7 @@ const RegisterScreen = ({navigation}) => {
               placeholderTextColor={Colors.textTertiary}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
-              //secureTextEntry={!showPassword}
+              secureTextEntry={!showPassword}
             />
           </View>
 

@@ -11,8 +11,6 @@
   "dependencies": {
     "@microsoft/signalr": "^10.0.0",
     "axios": "^1.13.6",
-    "devextreme": "^25.2.5",
-    "devextreme-react": "^25.2.5",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",

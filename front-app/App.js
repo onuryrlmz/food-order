@@ -12,7 +12,7 @@ import {initOneSignal} from './src/utils/onesignal';
 
 function App() {
   useEffect(() => {
-    initOneSignal();
+    initOneSignal(null);
   }, []);
 
   return (

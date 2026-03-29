@@ -25,11 +25,18 @@ export function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={addToast}>
       {children}
+      <style jsx global>{`
+        @keyframes toast-slide-in {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `}</style>
       <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2">
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`${colors[t.type]} text-white px-4 py-3 rounded-lg shadow-lg text-sm font-medium max-w-sm animate-slide-in`}
+            className={`${colors[t.type]} text-white px-4 py-3 rounded-lg shadow-lg text-sm font-medium max-w-sm`}
+            style={{ animation: 'toast-slide-in 0.3s ease-out' }}
           >
             {t.message}
           </div>

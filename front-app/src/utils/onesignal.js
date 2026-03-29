@@ -5,10 +5,11 @@ try {
   // OneSignal native module not available (e.g. simulator)
 }
 
-const ONESIGNAL_APP_ID = 'YOUR_ONESIGNAL_APP_ID'; // TODO: Replace with actual app ID
+const ONESIGNAL_APP_ID = 'YOUR_ONESIGNAL_APP_ID'; // TODO: Replace with actual app ID from env/CI
 
 export const initOneSignal = (navigationRef) => {
   if (!OneSignal) return;
+  if (!ONESIGNAL_APP_ID || ONESIGNAL_APP_ID === 'YOUR_ONESIGNAL_APP_ID') return;
   try {
     OneSignal.initialize(ONESIGNAL_APP_ID);
     OneSignal.Notifications.requestPermission(true);

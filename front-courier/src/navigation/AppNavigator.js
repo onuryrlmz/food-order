@@ -19,10 +19,12 @@ import DeliveryHistoryScreen from '../screens/Delivery/DeliveryHistoryScreen';
 import EarningsScreen from '../screens/Earnings/EarningsScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import AgreementsScreen from '../screens/Agreements/AgreementsScreen';
+import ActiveDeliveryScreen from '../screens/Delivery/ActiveDeliveryScreen';
 
 const AuthStackNav = createNativeStackNavigator();
 const SetupStackNav = createNativeStackNavigator();
 const ProfileStackNav = createNativeStackNavigator();
+const MainStackNav = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 // Auth screens: Login & Register (no courier profile, no token)
@@ -103,6 +105,14 @@ const MainTabs = () => {
   );
 };
 
+// Main stack: tabs + full-screen routes accessible from any tab
+const MainStack = () => (
+  <MainStackNav.Navigator screenOptions={{headerShown: false}}>
+    <MainStackNav.Screen name="MainTabs" component={MainTabs} />
+    <MainStackNav.Screen name="ActiveDelivery" component={ActiveDeliveryScreen} />
+  </MainStackNav.Navigator>
+);
+
 const SplashView = () => (
   <View style={styles.splashContainer}>
     <Icon name="motorbike" size={64} color={Colors.primary} />
@@ -125,7 +135,7 @@ const AppNavigator = () => {
       ) : isAuthenticated && !user ? (
         <CourierSetupStack />
       ) : (
-        <MainTabs />
+        <MainStack />
       )}
     </NavigationContainer>
   );

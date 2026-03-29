@@ -25,6 +25,8 @@ services:
   yrlmz-food-order-redis:
     container_name: yrlmz-food-order-redis
     image: redis:7-alpine
+    ports:
+      - "1502:6379"
     command: redis-server --appendonly yes
     logging:
       options:

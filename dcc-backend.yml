@@ -15,7 +15,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__FoodOrderApp=${DB_CONNECTION_STRING}
       - Redis__Host=${REDIS_HOST:-food-order-redis}
-      - Redis__Port=${REDIS_PORT:-6379}
+      - Redis__Port=6379
       - Redis__Password=${REDIS_PASSWORD:-}
       - Redis__Ssl=false
       - TokenOptions__SecurityKey=${TOKEN_SECURITY_KEY}

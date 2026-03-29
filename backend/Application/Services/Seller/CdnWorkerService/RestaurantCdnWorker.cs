@@ -92,6 +92,7 @@ public class RestaurantCdnWorker : BackgroundService
                     continue;
                 }
 
+
                 var fileName = $"{item.RestaurantId}.json";
                 var bytes = Encoding.UTF8.GetBytes(json);
                 var url = await s3Adapter.UploadBytesAsync(bytes, fileName, CdnFolder, "application/json");

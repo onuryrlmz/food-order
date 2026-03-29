@@ -7,5 +7,5 @@ public class InitiatePaymentRequestDto
     public string ExpireMonth { get; set; }
     public string ExpireYear { get; set; }
     public string Cvc { get; set; }
-    public string BuyerIp { get; set; } = "85.34.78.112";
+    public string BuyerIp { get; set; } = "";
 }

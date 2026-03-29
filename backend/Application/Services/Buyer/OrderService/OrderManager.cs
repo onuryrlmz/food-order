@@ -13,8 +13,10 @@ using Domain.Entities.Common;
 using Domain.Entities.Seller;
 using Domain.Service;
 using Application.Services.Common.NotificationService;
+using Hangfire;
 using Infrastructure.Adapters.IyzicoServiceAdapter;
 using Infrastructure.Adapters.OneSignalAdapter;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -40,6 +42,7 @@ public class OrderManager : IOrderService
     private readonly IRealtimeNotifier _realtimeNotifier;
     private readonly IBasketService _basketService;
     private readonly IDeliveryAssignmentService _deliveryAssignmentService;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public OrderManager(
         IUnitOfWork unitOfWork,
@@ -54,7 +57,8 @@ public class OrderManager : IOrderService
         INotificationService notificationService,
         IRealtimeNotifier realtimeNotifier,
         IBasketService basketService,
-        IDeliveryAssignmentService deliveryAssignmentService)
+        IDeliveryAssignmentService deliveryAssignmentService,
+        IHttpContextAccessor httpContextAccessor)
     {
         _unitOfWork = unitOfWork;
         _tokenAccessor = tokenAccessor;
@@ -69,6 +73,7 @@ public class OrderManager : IOrderService
         _realtimeNotifier = realtimeNotifier;
         _basketService = basketService;
         _deliveryAssignmentService = deliveryAssignmentService;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<ServiceObjectResult<PlaceOrderResponseDto>> PlaceOrder(PlaceOrderRequestDto requestDto)
@@ -411,7 +416,7 @@ public class OrderManager : IOrderService
                     BuyerName = user?.FirstName ?? "Müşteri",
                     BuyerSurname = user?.LastName ?? "Kullanıcı",
                     BuyerPhone = user?.PhoneNumber ?? "+905000000000",
-                    BuyerIp = "85.34.78.112",
+                    BuyerIp = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? "127.0.0.1",
                     BuyerId = token.UserId.ToString(),
                     DeliveryCity = "Istanbul",
                     DeliveryAddress = "Teslimat Adresi",
@@ -627,20 +632,37 @@ public class OrderManager : IOrderService
             order.CancellationReason = reason;
             _unitOfWork.OrderRepository.Update(order);
             await AddStatusHistory(order.Id, OrderStatusEnums.CancelledByBuyer, reason);
+
+            // Aktif teslimat atamasını iptal et
+            try
+            {
+                var activeAssignment = await _unitOfWork.DeliveryAssignmentRepository.GetAsync(
+                    x => x.OrderId == orderId && x.StatusId != 7 && x.StatusId != 6 && x.StatusId != 4,
+                    enableTracking: true);
+                if (activeAssignment != null)
+                {
+                    activeAssignment.StatusId = 7; // Cancelled
+                    _unitOfWork.DeliveryAssignmentRepository.Update(activeAssignment);
+
+                    if (activeAssignment.CourierId.HasValue)
+                    {
+                        var courier = await _unitOfWork.CourierRepository.GetAsync(
+                            x => x.Id == activeAssignment.CourierId.Value, enableTracking: true);
+                        if (courier != null)
+                        {
+                            courier.AvailabilityStatusId = 1; // Online
+                            _unitOfWork.CourierRepository.Update(courier);
+                        }
+                    }
+                }
+            }
+            catch { /* Silent — don't block cancellation */ }
+
             await _unitOfWork.CompleteAsync();
 
-            // Auto-refund on cancellation
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await _paymentService.RefundOrderAsync(order.Id, "Müşteri tarafından iptal");
-                }
-                catch
-                {
-                    /* best effort */
-                }
-            });
+            // Auto-refund on cancellation (Hangfire creates its own DI scope)
+            BackgroundJob.Enqueue<IPaymentService>(s =>
+                s.RefundOrderAsync(order.Id, "Müşteri tarafından iptal"));
 
             result.SetData(true);
         }
@@ -713,50 +735,18 @@ public class OrderManager : IOrderService
             await AddStatusHistory(order.Id, (OrderStatusEnums)statusId);
             await _unitOfWork.CompleteAsync();
 
-            // Auto-trigger courier assignment when order moves to Preparing
+            // Auto-trigger courier assignment when order moves to Preparing (Hangfire creates its own DI scope)
             if (statusId == (short)OrderStatusEnums.Preparing)
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        await _deliveryAssignmentService.CreateAssignment(order.Id);
-                    }
-                    catch
-                    {
-                        /* best effort - manual assignment still possible */
-                    }
-                });
+                BackgroundJob.Enqueue<IDeliveryAssignmentService>(s => s.CreateAssignment(order.Id));
 
-            // Push notification + SignalR
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    var statusName = (OrderStatusEnums)statusId switch
-                    {
-                        OrderStatusEnums.Preparing => "Siparişiniz hazırlanıyor",
-                        OrderStatusEnums.OnTheWay => "Siparişiniz yola çıktı",
-                        OrderStatusEnums.Delivered => "Siparişiniz teslim edildi",
-                        OrderStatusEnums.CourierAssigned => "Siparişinize kurye atandı",
-                        OrderStatusEnums.CourierPickedUp => "Siparişiniz kurye tarafından teslim alındı",
-                        OrderStatusEnums.RejectedByRestaurant => "Siparişiniz restoran tarafından reddedildi",
-                        _ => "Sipariş durumu güncellendi"
-                    };
+            // Push notification + SignalR (Hangfire creates its own DI scope)
+            BackgroundJob.Enqueue<IOrderService>(s =>
+                s.NotifyOrderStatusChangedBackground(order.Id, order.UserId, statusId));
 
-                    await _notificationService.SendToUserAsync(order.UserId, "Sipariş Güncelleme", statusName,
-                        new Dictionary<string, string> { { "orderId", order.Id.ToString() } });
-
-                    await _realtimeNotifier.NotifyOrderStatusChanged(order.Id, statusId);
-
-                    // Auto-refund on rejection
-                    if (statusId == (short)OrderStatusEnums.RejectedByRestaurant)
-                        await _paymentService.RefundOrderAsync(order.Id, "Restoran tarafından reddedildi");
-                }
-                catch
-                {
-                    /* best effort */
-                }
-            });
+            // Auto-refund on rejection (Hangfire creates its own DI scope)
+            if (statusId == (short)OrderStatusEnums.RejectedByRestaurant)
+                BackgroundJob.Enqueue<IPaymentService>(s =>
+                    s.RefundOrderAsync(order.Id, "Restoran tarafından reddedildi"));
 
             result.SetData(true);
         }
@@ -842,7 +832,9 @@ public class OrderManager : IOrderService
                 BuyerName = "Müşteri",
                 BuyerSurname = "Kullanıcı",
                 BuyerPhone = "+905000000000",
-                BuyerIp = requestDto.BuyerIp,
+                BuyerIp = string.IsNullOrEmpty(requestDto.BuyerIp)
+                    ? _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? "127.0.0.1"
+                    : requestDto.BuyerIp,
                 BuyerId = token.UserId.ToString(),
                 DeliveryCity = "Istanbul",
                 DeliveryAddress = "Teslimat Adresi",
@@ -1100,6 +1092,32 @@ public class OrderManager : IOrderService
         catch
         {
             return (string.Empty, null, new List<OrderItemValueDto>());
+        }
+    }
+
+    public async Task NotifyOrderStatusChangedBackground(Guid orderId, Guid userId, short statusId)
+    {
+        try
+        {
+            var statusName = (OrderStatusEnums)statusId switch
+            {
+                OrderStatusEnums.Preparing => "Siparişiniz hazırlanıyor",
+                OrderStatusEnums.OnTheWay => "Siparişiniz yola çıktı",
+                OrderStatusEnums.Delivered => "Siparişiniz teslim edildi",
+                OrderStatusEnums.CourierAssigned => "Siparişinize kurye atandı",
+                OrderStatusEnums.CourierPickedUp => "Siparişiniz kurye tarafından teslim alındı",
+                OrderStatusEnums.RejectedByRestaurant => "Siparişiniz restoran tarafından reddedildi",
+                _ => "Sipariş durumu güncellendi"
+            };
+
+            await _notificationService.SendToUserAsync(userId, "Sipariş Güncelleme", statusName,
+                new Dictionary<string, string> { { "orderId", orderId.ToString() } });
+
+            await _realtimeNotifier.NotifyOrderStatusChanged(orderId, statusId);
+        }
+        catch
+        {
+            /* best effort — background job, no caller to report to */
         }
     }
 

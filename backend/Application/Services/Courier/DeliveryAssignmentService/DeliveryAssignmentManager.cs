@@ -5,7 +5,9 @@ using Domain.Dto.Courier;
 using Domain.Dto.Seller.Courier;
 using Domain.Entities.Buyer;
 using Domain.Service;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Persistence.Contexts;
 using Persistence.IRepositories;
 
@@ -17,17 +19,20 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
     private readonly ITokenAccessor _tokenAccessor;
     private readonly BaseDbContext _context;
     private readonly IRealtimeNotifier _realtimeNotifier;
+    private readonly IConfiguration _configuration;
 
     public DeliveryAssignmentManager(
         IUnitOfWork unitOfWork,
         ITokenAccessor tokenAccessor,
         BaseDbContext context,
-        IRealtimeNotifier realtimeNotifier)
+        IRealtimeNotifier realtimeNotifier,
+        IConfiguration configuration)
     {
         _unitOfWork = unitOfWork;
         _tokenAccessor = tokenAccessor;
         _context = context;
         _realtimeNotifier = realtimeNotifier;
+        _configuration = configuration;
     }
 
     public async Task<ServiceObjectResult<DeliveryAssignmentResponseDto>> GetActiveAssignment()
@@ -240,17 +245,9 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
 
             await _unitOfWork.CompleteAsync();
 
-            // Notify order status change
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await _realtimeNotifier.NotifyOrderStatusChanged(assignment.OrderId, (short)OrderStatusEnums.CourierAssigned);
-                }
-                catch
-                {
-                }
-            });
+            // Notify order status change (Hangfire creates its own DI scope)
+            BackgroundJob.Enqueue<IRealtimeNotifier>(s =>
+                s.NotifyOrderStatusChanged(assignment.OrderId, (short)OrderStatusEnums.CourierAssigned));
 
             result.SetData(true);
         }
@@ -363,16 +360,9 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
 
             await _unitOfWork.CompleteAsync();
 
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await _realtimeNotifier.NotifyOrderStatusChanged(assignment.OrderId, (short)OrderStatusEnums.CourierPickedUp);
-                }
-                catch
-                {
-                }
-            });
+            // Notify order status change (Hangfire creates its own DI scope)
+            BackgroundJob.Enqueue<IRealtimeNotifier>(s =>
+                s.NotifyOrderStatusChanged(assignment.OrderId, (short)OrderStatusEnums.CourierPickedUp));
 
             result.SetData(true);
         }
@@ -446,18 +436,27 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             courier.TotalDeliveries += 1;
             _unitOfWork.CourierRepository.Update(courier);
 
+            // Kurye kazancını oluştur
+            var earning = new Domain.Entities.Courier.CourierEarning
+            {
+                Id = Guid.NewGuid(),
+                CourierId = assignment.CourierId!.Value,
+                DeliveryAssignmentId = assignment.Id,
+                OrderId = assignment.OrderId,
+                DeliveryFee = assignment.DeliveryFee ?? 0,
+                TipAmount = 0,
+                BonusAmount = 0,
+                TotalEarning = assignment.DeliveryFee ?? 0,
+                IsSettled = false,
+                CreatedDate = DateTime.UtcNow,
+            };
+            await _unitOfWork.CourierEarningRepository.AddAsync(earning);
+
             await _unitOfWork.CompleteAsync();
 
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await _realtimeNotifier.NotifyOrderStatusChanged(assignment.OrderId, (short)OrderStatusEnums.Delivered);
-                }
-                catch
-                {
-                }
-            });
+            // Notify order status change (Hangfire creates its own DI scope)
+            BackgroundJob.Enqueue<IRealtimeNotifier>(s =>
+                s.NotifyOrderStatusChanged(assignment.OrderId, (short)OrderStatusEnums.Delivered));
 
             result.SetData(true);
         }
@@ -519,7 +518,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 RestaurantLongitude = restaurant.Longitude,
                 CustomerLatitude = decimal.TryParse(deliveryAddress?.Latitude, out var lat) ? lat : null,
                 CustomerLongitude = decimal.TryParse(deliveryAddress?.Longitude, out var lng) ? lng : null,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(3),
+                ExpiresAt = DateTime.UtcNow.AddMinutes(_configuration.GetValue<int>("CourierSettings:AutoAssignExpiryMinutes", 3)),
                 AttemptNumber = 1
             };
 
@@ -636,7 +635,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 CustomerLatitude = decimal.TryParse(deliveryAddress?.Latitude, out var lat) ? lat : null,
                 CustomerLongitude = decimal.TryParse(deliveryAddress?.Longitude, out var lng) ? lng : null,
                 OfferedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(5),
+                ExpiresAt = DateTime.UtcNow.AddMinutes(_configuration.GetValue<int>("CourierSettings:ManualAssignExpiryMinutes", 5)),
                 AttemptNumber = 1
             };
 
@@ -1101,7 +1100,7 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 RestaurantId = restaurantId,
                 CourierId = courier.Id,
                 StatusId = (short)CourierAgreementStatusEnums.PendingApproval,
-                AssignmentStrategyId = 1, // Manuel by default
+                AssignmentStrategyId = (short)CourierAssignmentStrategyEnums.ManualByRestaurant,
                 AgreedDeliveryFee = requestDto.AgreedDeliveryFee,
                 PerKmFee = requestDto.PerKmFee,
                 Priority = 1,

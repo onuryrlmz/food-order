@@ -106,7 +106,7 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
                 ConversationId = Guid.NewGuid().ToString(),
                 PaymentTransactionId = paymentTransactionId,
                 Price = amount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
-                Ip = "85.34.78.112",
+                Ip = "127.0.0.1",
                 Currency = Currency.TRY.ToString()
             };
 

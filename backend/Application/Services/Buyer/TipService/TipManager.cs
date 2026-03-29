@@ -58,6 +58,7 @@ public class TipManager : ITipService
             decimal tipAmount;
             if (requestDto.PresetPercentage.HasValue)
             {
+                // Preset tip percentages — kept as constants; change here AND in GetTipOptions if updated
                 var validPercentages = new short[] { 10, 15, 20 };
                 if (!validPercentages.Contains(requestDto.PresetPercentage.Value))
                 {
@@ -152,6 +153,7 @@ public class TipManager : ITipService
                 return result;
             }
 
+            // Preset tip percentages — kept as constants; change here AND in AddTip if updated
             var presetPercentages = new List<short> { 10, 15, 20 };
             var presetAmounts = presetPercentages
                 .Select(p => Math.Round(order.TotalPrice * p / 100m, 2))

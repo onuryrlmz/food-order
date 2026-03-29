@@ -5,6 +5,7 @@ using Domain.Dto.Buyer.ScheduledOrder;
 using Domain.Entities.Buyer;
 using Domain.Service;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Persistence.Contexts;
 using Persistence.IRepositories;
 
@@ -20,12 +21,14 @@ public class ScheduledOrderManager : IScheduledOrderService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITokenAccessor _tokenAccessor;
     private readonly BaseDbContext _context;
+    private readonly IConfiguration _configuration;
 
-    public ScheduledOrderManager(IUnitOfWork unitOfWork, ITokenAccessor tokenAccessor, BaseDbContext context)
+    public ScheduledOrderManager(IUnitOfWork unitOfWork, ITokenAccessor tokenAccessor, BaseDbContext context, IConfiguration configuration)
     {
         _unitOfWork = unitOfWork;
         _tokenAccessor = tokenAccessor;
         _context = context;
+        _configuration = configuration;
     }
 
     public async Task<ServiceObjectResult<ScheduledOrderDto>> CreateScheduledOrder(CreateScheduledOrderRequestDto requestDto)
@@ -40,17 +43,20 @@ public class ScheduledOrderManager : IScheduledOrderService
                 return result;
             }
 
-            // Validate scheduled time is at least 1 hour in the future
-            if (requestDto.ScheduledDeliveryTime < DateTime.UtcNow.AddHours(1))
+            var minHoursAhead = _configuration.GetValue<int>("ScheduledOrder:MinHoursAhead", 1);
+            var maxDaysAhead = _configuration.GetValue<int>("ScheduledOrder:MaxDaysAhead", 7);
+
+            // Validate scheduled time is at least N hours in the future
+            if (requestDto.ScheduledDeliveryTime < DateTime.UtcNow.AddHours(minHoursAhead))
             {
-                result.Fail("Scheduled delivery time must be at least 1 hour from now");
+                result.Fail($"Scheduled delivery time must be at least {minHoursAhead} hour(s) from now");
                 return result;
             }
 
-            // Validate scheduled time is no more than 7 days out
-            if (requestDto.ScheduledDeliveryTime > DateTime.UtcNow.AddDays(7))
+            // Validate scheduled time is no more than N days out
+            if (requestDto.ScheduledDeliveryTime > DateTime.UtcNow.AddDays(maxDaysAhead))
             {
-                result.Fail("Scheduled delivery time cannot be more than 7 days from now");
+                result.Fail($"Scheduled delivery time cannot be more than {maxDaysAhead} days from now");
                 return result;
             }
 
@@ -63,8 +69,9 @@ public class ScheduledOrderManager : IScheduledOrderService
                 return result;
             }
 
-            // Calculate ProcessAt (45 minutes before scheduled delivery)
-            var processAt = requestDto.ScheduledDeliveryTime.AddMinutes(-45);
+            // Calculate ProcessAt (N minutes before scheduled delivery)
+            var processMinutesBefore = _configuration.GetValue<int>("ScheduledOrder:ProcessMinutesBefore", 45);
+            var processAt = requestDto.ScheduledDeliveryTime.AddMinutes(-processMinutesBefore);
 
             var scheduledOrder = new ScheduledOrder
             {
@@ -265,14 +272,16 @@ public class ScheduledOrderManager : IScheduledOrderService
 
             if (requestDto.ScheduledDeliveryTime.HasValue)
             {
-                if (requestDto.ScheduledDeliveryTime.Value < DateTime.UtcNow.AddHours(1))
+                var minHoursAhead = _configuration.GetValue<int>("ScheduledOrder:MinHoursAhead", 1);
+                if (requestDto.ScheduledDeliveryTime.Value < DateTime.UtcNow.AddHours(minHoursAhead))
                 {
-                    result.Fail("Scheduled delivery time must be at least 1 hour from now");
+                    result.Fail($"Scheduled delivery time must be at least {minHoursAhead} hour(s) from now");
                     return result;
                 }
 
+                var processMinutesBefore = _configuration.GetValue<int>("ScheduledOrder:ProcessMinutesBefore", 45);
                 order.ScheduledDeliveryTime = requestDto.ScheduledDeliveryTime.Value;
-                order.ProcessAt = requestDto.ScheduledDeliveryTime.Value.AddMinutes(-45);
+                order.ProcessAt = requestDto.ScheduledDeliveryTime.Value.AddMinutes(-processMinutesBefore);
             }
 
             if (requestDto.Notes != null)

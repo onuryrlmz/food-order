@@ -1,6 +1,7 @@
 using Application.Services.Courier.CourierService;
 using Application.Services.Courier.CourierCompanyService;
 using Application.Services.Courier.CourierEarningService;
+using Application.Services.Courier.DeliveryAssignmentService;
 using Base.Enums;
 using Domain.Service;
 using Microsoft.AspNetCore.Mvc;
@@ -15,15 +16,18 @@ public class AdminCourierController : BaseController
     private readonly ICourierService _courierService;
     private readonly ICourierCompanyService _courierCompanyService;
     private readonly ICourierEarningService _courierEarningService;
+    private readonly IDeliveryAssignmentService _deliveryAssignmentService;
 
     public AdminCourierController(
         ICourierService courierService,
         ICourierCompanyService courierCompanyService,
-        ICourierEarningService courierEarningService)
+        ICourierEarningService courierEarningService,
+        IDeliveryAssignmentService deliveryAssignmentService)
     {
         _courierService = courierService;
         _courierCompanyService = courierCompanyService;
         _courierEarningService = courierEarningService;
+        _deliveryAssignmentService = deliveryAssignmentService;
     }
 
     [HttpGet("companies")]
@@ -73,5 +77,12 @@ public class AdminCourierController : BaseController
     public async Task<ServiceObjectResult<bool>> SettleEarnings([FromBody] List<Guid> earningIds)
     {
         return await _courierEarningService.SettleEarnings(earningIds);
+    }
+
+    [HttpPost("assignment/{assignmentId}/cancel")]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
+    public async Task<ServiceObjectResult<bool>> CancelAssignment(Guid assignmentId, [FromQuery] string reason = "Admin tarafından iptal edildi")
+    {
+        return await _deliveryAssignmentService.CancelAssignment(assignmentId, reason);
     }
 }

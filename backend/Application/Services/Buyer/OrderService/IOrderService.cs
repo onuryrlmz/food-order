@@ -18,4 +18,7 @@ public interface IOrderService
     Task<ServiceObjectResult<InitiatePaymentResponseDto>> InitiatePayment(Guid orderId, InitiatePaymentRequestDto requestDto);
     Task<ServiceCollectionResult<AdminGetOrderResponseDto>> GetOverdueOrdersForAdmin(int page = 1, int pageSize = 20);
     Task<ServiceObjectResult<ReorderResponseDto>> ReorderAsync(Guid orderId);
+
+    // Background-callable methods (invoked via Hangfire — must accept only serializable args)
+    Task NotifyOrderStatusChangedBackground(Guid orderId, Guid userId, short statusId);
 }

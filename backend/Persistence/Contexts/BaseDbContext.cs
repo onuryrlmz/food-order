@@ -15,7 +15,6 @@ public sealed class BaseDbContext : DbContext
     public BaseDbContext(DbContextOptions dbContextOptions, IConfiguration configuration) : base(dbContextOptions)
     {
         Configuration = configuration;
-        Database?.Migrate();
     }
 
     private IConfiguration Configuration { get; set; }

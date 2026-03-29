@@ -5,6 +5,7 @@ using Domain.Entities.Common;
 using Domain.Entities.Seller;
 using Domain.Service;
 using Application.Services.Common.NotificationService;
+using Hangfire;
 using Infrastructure.Adapters.IyzicoServiceAdapter;
 using Infrastructure.Adapters.OneSignalAdapter;
 using Microsoft.EntityFrameworkCore;
@@ -173,33 +174,9 @@ public class PaymentManager : IPaymentService
 
                     await _context.SaveChangesAsync();
 
-                    // Notify restaurant about new order
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            // Find seller user for push notification
-                            var restaurant = await _context.Set<Domain.Entities.Seller.Restaurant>()
-                                .FirstOrDefaultAsync(r => r.Id == order.RestaurantId);
-                            if (restaurant != null)
-                            {
-                                var sellerUser = await _context.Set<User>()
-                                    .FirstOrDefaultAsync(u => u.SellerId == restaurant.SellerId);
-                                if (sellerUser != null)
-                                    await _notificationService.SendToUserAsync(sellerUser.Id, "Yeni Sipariş",
-                                        $"Yeni sipariş #{order.Id.ToString()[..8]}",
-                                        new Dictionary<string, string> { { "orderId", order.Id.ToString() } });
-                            }
-
-                            await _realtimeNotifier.NotifyNewOrderToRestaurant(order.RestaurantId, order.Id, order.TotalPrice);
-                            await _realtimeNotifier.NotifyOrderStatusChanged(order.Id,
-                                (short)OrderStatusEnums.WaitingRestaurantApproval);
-                        }
-                        catch
-                        {
-                            /* best effort */
-                        }
-                    });
+                    // Notify restaurant about new order (Hangfire creates its own DI scope)
+                    BackgroundJob.Enqueue<IPaymentService>(s =>
+                        s.NotifyRestaurantNewOrderBackground(order.Id, order.RestaurantId, order.TotalPrice));
 
                     result.SetData(true);
                 }
@@ -268,20 +245,11 @@ public class PaymentManager : IPaymentService
             _unitOfWork.PaymentRepository.Update(payment);
             await _context.SaveChangesAsync();
 
-            // Notify customer
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await _notificationService.SendToUserAsync(payment.UserId, "Iade Bilgisi",
-                        $"Siparişiniz için {payment.Amount:F2} TL iade yapıldı.",
-                        new Dictionary<string, string> { { "orderId", orderId.ToString() } });
-                }
-                catch
-                {
-                    /* best effort */
-                }
-            });
+            // Notify customer (Hangfire creates its own DI scope)
+            BackgroundJob.Enqueue<INotificationService>(s =>
+                s.SendToUserAsync(payment.UserId, "Iade Bilgisi",
+                    $"Siparişiniz için {payment.Amount:F2} TL iade yapıldı.",
+                    new Dictionary<string, string> { { "orderId", orderId.ToString() } }));
 
             result.SetData(true);
         }
@@ -291,6 +259,32 @@ public class PaymentManager : IPaymentService
         }
 
         return result;
+    }
+
+    public async Task NotifyRestaurantNewOrderBackground(Guid orderId, Guid restaurantId, decimal totalPrice)
+    {
+        try
+        {
+            var restaurant = await _context.Set<Domain.Entities.Seller.Restaurant>()
+                .FirstOrDefaultAsync(r => r.Id == restaurantId);
+            if (restaurant != null)
+            {
+                var sellerUser = await _context.Set<User>()
+                    .FirstOrDefaultAsync(u => u.SellerId == restaurant.SellerId);
+                if (sellerUser != null)
+                    await _notificationService.SendToUserAsync(sellerUser.Id, "Yeni Sipariş",
+                        $"Yeni sipariş #{orderId.ToString()[..8]}",
+                        new Dictionary<string, string> { { "orderId", orderId.ToString() } });
+            }
+
+            await _realtimeNotifier.NotifyNewOrderToRestaurant(restaurantId, orderId, totalPrice);
+            await _realtimeNotifier.NotifyOrderStatusChanged(orderId,
+                (short)OrderStatusEnums.WaitingRestaurantApproval);
+        }
+        catch
+        {
+            /* best effort — background job, no caller to report to */
+        }
     }
 
     private async Task FailPaymentAndOrder(Payment? payment, Order order, string? paymentId, string errorMessage)

@@ -1,6 +1,7 @@
 using Base.Enums;
 using Domain.Entities.Courier;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Persistence.Contexts;
 
@@ -10,11 +11,13 @@ public class CourierJobService : ICourierJobService
 {
     private readonly BaseDbContext _context;
     private readonly ILogger<CourierJobService> _logger;
+    private readonly IConfiguration _configuration;
 
-    public CourierJobService(BaseDbContext context, ILogger<CourierJobService> logger)
+    public CourierJobService(BaseDbContext context, ILogger<CourierJobService> logger, IConfiguration configuration)
     {
         _context = context;
         _logger = logger;
+        _configuration = configuration;
     }
 
     public async Task CheckExpiredAssignments()
@@ -62,7 +65,8 @@ public class CourierJobService : ICourierJobService
     {
         try
         {
-            var threshold = DateTime.UtcNow.AddMinutes(-30);
+            var inactivityMinutes = _configuration.GetValue<int>("CourierSettings:InactivityTimeoutMinutes", 30);
+            var threshold = DateTime.UtcNow.AddMinutes(-inactivityMinutes);
 
             var inactiveCouriers = await _context.Set<Domain.Entities.Courier.Courier>()
                 .Where(c => c.DeletedDate == null

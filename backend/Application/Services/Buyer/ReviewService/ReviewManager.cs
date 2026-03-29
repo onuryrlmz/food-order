@@ -90,6 +90,38 @@ public class ReviewManager : IReviewService
                 await _unitOfWork.RestaurantRepository.UpdateAsync(restaurant);
             }
 
+            // Kurye rating güncelle
+            if (order.CourierId.HasValue)
+            {
+                var courier = await _unitOfWork.CourierRepository.GetAsync(
+                    x => x.Id == order.CourierId.Value, enableTracking: true);
+                if (courier != null)
+                {
+                    var newCount = courier.RatingCount + 1;
+                    courier.Rating = ((courier.Rating * courier.RatingCount) + requestDto.Rating) / newCount;
+                    courier.RatingCount = newCount;
+                    _unitOfWork.CourierRepository.Update(courier);
+                }
+            }
+            else
+            {
+                // CourierId Order üzerinde yoksa DeliveryAssignment üzerinden bul
+                var assignment = await _unitOfWork.DeliveryAssignmentRepository.GetAsync(
+                    x => x.OrderId == order.Id && x.StatusId == (short)Base.Enums.DeliveryAssignmentStatusEnums.Delivered);
+                if (assignment?.CourierId != null)
+                {
+                    var courier = await _unitOfWork.CourierRepository.GetAsync(
+                        x => x.Id == assignment.CourierId.Value, enableTracking: true);
+                    if (courier != null)
+                    {
+                        var newCount = courier.RatingCount + 1;
+                        courier.Rating = ((courier.Rating * courier.RatingCount) + requestDto.Rating) / newCount;
+                        courier.RatingCount = newCount;
+                        _unitOfWork.CourierRepository.Update(courier);
+                    }
+                }
+            }
+
             await _unitOfWork.CompleteAsync();
 
             result.SetData(new ReviewDto

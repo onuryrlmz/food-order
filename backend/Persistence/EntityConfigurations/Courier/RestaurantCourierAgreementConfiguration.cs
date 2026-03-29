@@ -27,9 +27,11 @@ public class RestaurantCourierAgreementConfiguration : IEntityTypeConfiguration<
         builder.Property(a => a.DeletedDate).HasColumnName("DeletedDate");
 
         builder.HasOne(a => a.Restaurant).WithMany().HasForeignKey(a => a.RestaurantId);
+        builder.HasOne(a => a.CourierCompany).WithMany().HasForeignKey(a => a.CourierCompanyId);
         builder.HasOne(a => a.Courier).WithMany().HasForeignKey(a => a.CourierId);
 
         builder.HasIndex(a => a.RestaurantId);
+        builder.HasIndex(a => a.CourierCompanyId);
 
         builder.HasQueryFilter(a => !a.DeletedDate.HasValue);
     }

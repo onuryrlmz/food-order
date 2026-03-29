@@ -9,8 +9,8 @@ import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import fetcher from '@/lib/fetcher';
-import api from '@/lib/api';
 import { uploadProductImage, deleteProductImage } from '@/lib/api';
+import sellerApi from '@/lib/service';
 
 // ─── Image Upload Section ────────────────────────────────────────────────────
 function ProductImageUpload({ productId, images = [], onUpdate }) {
@@ -121,8 +121,8 @@ function ProductsTab({ restaurantId }) {
         productType: parseInt(form.productType),
         orderIndex: parseInt(form.orderIndex) || 0,
       };
-      if (modal === 'add') await api.post('/v1/seller/product', payload);
-      else await api.put('/v1/seller/product', payload);
+      if (modal === 'add') await sellerApi.seller.product.create(payload);
+      else await sellerApi.seller.product.update(payload);
       toast(modal === 'add' ? 'Ürün eklendi' : 'Ürün güncellendi', 'success');
       setModal(null);
       mutate();
@@ -137,7 +137,7 @@ function ProductsTab({ restaurantId }) {
     if (!confirm('Bu ürünü silmek istediğinize emin misiniz?')) return;
     setDeleting(id);
     try {
-      await api.delete('/v1/seller/product', { data: { id, restaurantId } });
+      await sellerApi.seller.product.remove({ id, restaurantId });
       toast('Ürün silindi', 'success');
       mutate();
     } catch (err) {
@@ -263,8 +263,8 @@ function CategoriesTab({ restaurantId }) {
     setSaving(true);
     try {
       const payload = { ...form, restaurantId, orderIndex: parseInt(form.orderIndex) || 0 };
-      if (modal === 'add') await api.post('/v1/seller/category', payload);
-      else await api.put('/v1/seller/category', payload);
+      if (modal === 'add') await sellerApi.seller.category.create(payload);
+      else await sellerApi.seller.category.update(payload);
       toast(modal === 'add' ? 'Kategori eklendi' : 'Kategori güncellendi', 'success');
       setModal(null);
       mutateCats();
@@ -278,7 +278,7 @@ function CategoriesTab({ restaurantId }) {
   const handleDelete = async (id) => {
     if (!confirm('Kategoriyi silmek istiyor musunuz?')) return;
     try {
-      await api.delete('/v1/seller/category', { data: { id, restaurantId } });
+      await sellerApi.seller.category.remove({ id, restaurantId });
       toast('Kategori silindi', 'success');
       mutateCats();
     } catch (err) {
@@ -291,7 +291,7 @@ function CategoriesTab({ restaurantId }) {
     setAssigning(true);
     try {
       const existingDetails = assignModal.categoryDetails || [];
-      await api.post('/v1/seller/category-detail', {
+      await sellerApi.seller.category.createDetail({
         categoryId: assignModal.id,
         menuId: assignMenuId,
         orderIndex: existingDetails.length,
@@ -309,7 +309,7 @@ function CategoriesTab({ restaurantId }) {
 
   const handleRemoveDetail = async (detail) => {
     try {
-      await api.delete('/v1/seller/category-detail', { data: { id: detail.id, categoryId: detail.categoryId, restaurantId } });
+      await sellerApi.seller.category.removeDetail({ id: detail.id, categoryId: detail.categoryId, restaurantId });
       toast('Menü kategoriden çıkarıldı', 'success');
       mutateCats();
     } catch (err) {
@@ -428,14 +428,14 @@ function MenuDetailModal({ menu, onClose, restaurantId, mutate, products, subPro
       const { type, targetId } = subModal;
       if (type === 'option') {
         if (optionMode === 'template' && selectedTemplateId) {
-          await api.post('/v1/seller/menu-option', { menuId: targetId, optionTemplateId: selectedTemplateId });
+          await sellerApi.seller.menu.createOption({ menuId: targetId, optionTemplateId: selectedTemplateId });
         } else {
-          await api.post('/v1/seller/menu-option', { menuId: targetId, name: subForm.name, minCount: +subForm.minCount||1, maxCount: +subForm.maxCount||1, orderIndex: 0 });
+          await sellerApi.seller.menu.createOption({ menuId: targetId, name: subForm.name, minCount: +subForm.minCount||1, maxCount: +subForm.maxCount||1, orderIndex: 0 });
         }
       }
-      if (type === 'value')        await api.post('/v1/seller/menu-option-value', { menuOptionId: targetId, productId: subForm.productId, price: +subForm.price||0, orderIndex: 0 });
-      if (type === 'vOption')      await api.post('/v1/seller/menu-option-value-option', { menuOptionValueId: targetId, name: subForm.name, minCount: +subForm.minCount||0, maxCount: +subForm.maxCount||99, orderIndex: 0 });
-      if (type === 'vOptionValue') await api.post('/v1/seller/menu-option-value-option-value', { menuOptionValueOptionId: targetId, productId: subForm.productId, price: +subForm.price||0, orderIndex: 0 });
+      if (type === 'value')        await sellerApi.seller.menu.createOptionValue({ menuOptionId: targetId, productId: subForm.productId, price: +subForm.price||0, orderIndex: 0 });
+      if (type === 'vOption')      await sellerApi.seller.menu.createValueOption({ menuOptionValueId: targetId, name: subForm.name, minCount: +subForm.minCount||0, maxCount: +subForm.maxCount||99, orderIndex: 0 });
+      if (type === 'vOptionValue') await sellerApi.seller.menu.createValueOptionValue({ menuOptionValueOptionId: targetId, productId: subForm.productId, price: +subForm.price||0, orderIndex: 0 });
       toast('Eklendi', 'success'); setSubModal(null); mutate();
     } catch (err) { toast(err.response?.data?.messages?.[0]?.description || 'Hata oluştu', 'error'); }
     finally { setSubSaving(false); }
@@ -446,10 +446,10 @@ function MenuDetailModal({ menu, onClose, restaurantId, mutate, products, subPro
     setEditSaving(true);
     try {
       const { type } = editModal;
-      if (type === 'menu')         await api.put('/v1/seller/menu', { ...editForm, restaurantId });
-      if (type === 'option')       await api.put('/v1/seller/menu-option', editForm);
-      if (type === 'vOption')      await api.put('/v1/seller/menu-option-value-option', editForm);
-      if (type === 'vOptionValue') await api.put('/v1/seller/menu-option-value-option-value', { id: editForm.id, productId: editForm.productId, price: +editForm.price || 0, orderIndex: editForm.orderIndex || 0 });
+      if (type === 'menu')         await sellerApi.seller.menu.update({ ...editForm, restaurantId });
+      if (type === 'option')       await sellerApi.seller.menu.updateOption(editForm);
+      if (type === 'vOption')      await sellerApi.seller.menu.updateValueOption(editForm);
+      if (type === 'vOptionValue') await sellerApi.seller.menu.updateValueOptionValue({ id: editForm.id, productId: editForm.productId, price: +editForm.price || 0, orderIndex: editForm.orderIndex || 0 });
       toast('Güncellendi', 'success'); setEditModal(null); mutate();
     } catch (err) { toast(err.response?.data?.messages?.[0]?.description || 'Hata oluştu', 'error'); }
     finally { setEditSaving(false); }
@@ -502,7 +502,7 @@ function MenuDetailModal({ menu, onClose, restaurantId, mutate, products, subPro
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={e => { e.stopPropagation(); openEdit('option', opt); }} className="text-xs text-gray-400 hover:text-gray-700 px-2 py-0.5 rounded border border-gray-200">Düzenle</button>
-                    <button onClick={e => { e.stopPropagation(); call(() => api.delete('/v1/seller/menu-option', { data: { id: opt.id } })); }} className="text-xs text-red-400 hover:text-red-600 px-2 py-0.5 rounded border border-red-100">Sil</button>
+                    <button onClick={e => { e.stopPropagation(); call(() => sellerApi.seller.menu.removeOption({ id: opt.id })); }} className="text-xs text-red-400 hover:text-red-600 px-2 py-0.5 rounded border border-red-100">Sil</button>
                     <svg className={`w-4 h-4 text-gray-400 transition-transform ${expandedOpt === opt.id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                   </div>
                 </div>
@@ -519,7 +519,7 @@ function MenuDetailModal({ menu, onClose, restaurantId, mutate, products, subPro
                           </div>
                           <div className="flex gap-1">
                             <button onClick={() => openAdd('vOption', val.id, { name: '', minCount: 0, maxCount: 99 })} className="text-xs text-emerald-500 hover:text-emerald-700 px-2 py-0.5 rounded border border-emerald-200">+ Malzeme Grubu</button>
-                            <button onClick={() => call(() => api.delete('/v1/seller/menu-option-value', { data: { id: val.id } }))} className="text-xs text-red-400 hover:text-red-600 px-2 py-0.5 rounded border border-red-100">Sil</button>
+                            <button onClick={() => call(() => sellerApi.seller.menu.removeOptionValue({ id: val.id }))} className="text-xs text-red-400 hover:text-red-600 px-2 py-0.5 rounded border border-red-100">Sil</button>
                           </div>
                         </div>
 
@@ -534,7 +534,7 @@ function MenuDetailModal({ menu, onClose, restaurantId, mutate, products, subPro
                               <div className="flex gap-1">
                                 <button onClick={() => openEdit('vOption', vOpt)} className="text-xs text-gray-400 hover:text-gray-700 px-2 py-0.5 rounded border border-gray-200">Düzenle</button>
                                 <button onClick={() => openAdd('vOptionValue', vOpt.id, { productId: '', price: 0 })} className="text-xs text-emerald-500 hover:text-emerald-700 px-2 py-0.5 rounded border border-emerald-200">+ Ekle</button>
-                                <button onClick={() => call(() => api.delete('/v1/seller/menu-option-value-option', { data: { id: vOpt.id } }))} className="text-xs text-red-400 hover:text-red-600 px-2 py-0.5 rounded border border-red-100">Sil</button>
+                                <button onClick={() => call(() => sellerApi.seller.menu.removeValueOption({ id: vOpt.id }))} className="text-xs text-red-400 hover:text-red-600 px-2 py-0.5 rounded border border-red-100">Sil</button>
                               </div>
                             </div>
                             {/* Sub ürün chips */}
@@ -544,7 +544,7 @@ function MenuDetailModal({ menu, onClose, restaurantId, mutate, products, subPro
                                   {vov.product?.name || '—'}
                                   {vov.price > 0 && <span className="text-emerald-600">+₺{Number(vov.price).toFixed(2)}</span>}
                                   <button onClick={() => openEdit('vOptionValue', { ...vov, productId: vov.product?.id || vov.productId })} className="text-blue-300 hover:text-blue-500 ml-0.5 hidden group-hover/chip:inline" title="Düzenle">✎</button>
-                                  <button onClick={() => call(() => api.delete('/v1/seller/menu-option-value-option-value', { data: { id: vov.id } }))} className="text-red-300 hover:text-red-500 hidden group-hover/chip:inline">✕</button>
+                                  <button onClick={() => call(() => sellerApi.seller.menu.removeValueOptionValue({ id: vov.id }))} className="text-red-300 hover:text-red-500 hidden group-hover/chip:inline">✕</button>
                                 </span>
                               ))}
                             </div>
@@ -726,7 +726,7 @@ function MenusTab({ restaurantId }) {
   const handleSave = async (e) => {
     e.preventDefault(); setSaving(true);
     try {
-      await api.post('/v1/seller/menu', { ...form, restaurantId, price: parseFloat(form.price), orderIndex: parseInt(form.orderIndex) || 0 });
+      await sellerApi.seller.menu.create({ ...form, restaurantId, price: parseFloat(form.price), orderIndex: parseInt(form.orderIndex) || 0 });
       toast('Menü eklendi', 'success'); setAddModal(false); mutate();
     } catch (err) { toast(err.response?.data?.messages?.[0]?.description || 'Hata oluştu', 'error'); }
     finally { setSaving(false); }
@@ -736,7 +736,7 @@ function MenusTab({ restaurantId }) {
     e.stopPropagation();
     if (!confirm('Bu menüyü silmek istiyor musunuz?')) return;
     try {
-      await api.delete('/v1/seller/menu', { data: { id, restaurantId } });
+      await sellerApi.seller.menu.remove({ id, restaurantId });
       toast('Menü silindi', 'success'); mutate();
     } catch (err) { toast(err.response?.data?.messages?.[0]?.description || 'Hata oluştu', 'error'); }
   };
@@ -840,7 +840,7 @@ function TemplatesTab({ restaurantId }) {
   const handleSave = async (e) => {
     e.preventDefault(); setSaving(true);
     try {
-      await api.post('/v1/seller/option-template', { ...form, restaurantId, minCount: +form.minCount || 1, maxCount: +form.maxCount || 1 });
+      await sellerApi.seller.optionTemplate.create({ ...form, restaurantId, minCount: +form.minCount || 1, maxCount: +form.maxCount || 1 });
       toast('Şablon eklendi', 'success'); setAddModal(false); mutate();
     } catch (err) { toast(err.response?.data?.messages?.[0]?.description || 'Hata oluştu', 'error'); }
     finally { setSaving(false); }
@@ -850,9 +850,9 @@ function TemplatesTab({ restaurantId }) {
     e.preventDefault(); setSubSaving(true);
     try {
       const { type, targetId } = subModal;
-      if (type === 'value')       await api.post('/v1/seller/option-template/value', { optionTemplateId: targetId, productId: subForm.productId, price: +subForm.price || 0 });
-      if (type === 'vOption')     await api.post('/v1/seller/option-template/value-option', { optionTemplateValueId: targetId, name: subForm.name, minCount: +subForm.minCount || 0, maxCount: +subForm.maxCount || 99 });
-      if (type === 'vOptionValue') await api.post('/v1/seller/option-template/value-option-value', { optionTemplateValueOptionId: targetId, productId: subForm.productId, price: +subForm.price || 0 });
+      if (type === 'value')       await sellerApi.seller.optionTemplate.createValue({ optionTemplateId: targetId, productId: subForm.productId, price: +subForm.price || 0 });
+      if (type === 'vOption')     await sellerApi.seller.optionTemplate.createValueOption({ optionTemplateValueId: targetId, name: subForm.name, minCount: +subForm.minCount || 0, maxCount: +subForm.maxCount || 99 });
+      if (type === 'vOptionValue') await sellerApi.seller.optionTemplate.createValueOptionValue({ optionTemplateValueOptionId: targetId, productId: subForm.productId, price: +subForm.price || 0 });
       toast('Eklendi', 'success'); setSubModal(null); mutate();
     } catch (err) { toast(err.response?.data?.messages?.[0]?.description || 'Hata oluştu', 'error'); }
     finally { setSubSaving(false); }
@@ -862,9 +862,9 @@ function TemplatesTab({ restaurantId }) {
     e.preventDefault(); setEditSaving(true);
     try {
       const { type } = editModal;
-      if (type === 'template')     await api.put('/v1/seller/option-template', { ...editForm, restaurantId });
-      if (type === 'vOption')      await api.put('/v1/seller/option-template/value-option', editForm);
-      if (type === 'vOptionValue') await api.put('/v1/seller/option-template/value-option-value', { id: editForm.id, productId: editForm.productId, price: +editForm.price || 0 });
+      if (type === 'template')     await sellerApi.seller.optionTemplate.update({ ...editForm, restaurantId });
+      if (type === 'vOption')      await sellerApi.seller.optionTemplate.updateValueOption(editForm);
+      if (type === 'vOptionValue') await sellerApi.seller.optionTemplate.updateValueOptionValue({ id: editForm.id, productId: editForm.productId, price: +editForm.price || 0 });
       toast('Güncellendi', 'success'); setEditModal(null); mutate();
     } catch (err) { toast(err.response?.data?.messages?.[0]?.description || 'Hata oluştu', 'error'); }
     finally { setEditSaving(false); }
@@ -892,7 +892,7 @@ function TemplatesTab({ restaurantId }) {
                   <p className="font-semibold text-gray-800 truncate">{t.name}</p>
                   {t.description && <p className="text-xs text-gray-400 truncate mt-0.5">{t.description}</p>}
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); if (!confirm('Bu şablonu silmek istiyor musunuz?')) return; call(() => api.delete('/v1/seller/option-template', { data: { id: t.id, restaurantId } })); }}
+                <button onClick={(e) => { e.stopPropagation(); if (!confirm('Bu şablonu silmek istiyor musunuz?')) return; call(() => sellerApi.seller.optionTemplate.remove({ id: t.id, restaurantId })); }}
                   className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 text-xs ml-2 shrink-0">Sil</button>
               </div>
               <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
@@ -931,7 +931,7 @@ function TemplatesTab({ restaurantId }) {
                       <div className="flex gap-1">
                         <button onClick={(e) => { e.stopPropagation(); openSubModal('vOption', val.id, { name: '', minCount: 0, maxCount: 99 }); }}
                           className="text-xs text-emerald-500 hover:text-emerald-700 px-2 py-0.5 rounded border border-emerald-200">+ Malzeme Grubu</button>
-                        <button onClick={(e) => { e.stopPropagation(); call(() => api.delete('/v1/seller/option-template/value', { data: { id: val.id } })); }}
+                        <button onClick={(e) => { e.stopPropagation(); call(() => sellerApi.seller.optionTemplate.removeValue({ id: val.id })); }}
                           className="text-xs text-red-400 hover:text-red-600 px-2 py-0.5 rounded border border-red-100">Sil</button>
                         <svg className={`w-4 h-4 text-gray-400 transition-transform ${expandedVal === val.id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                       </div>
@@ -950,7 +950,7 @@ function TemplatesTab({ restaurantId }) {
                                   className="text-xs text-gray-400 hover:text-gray-700 px-2 py-0.5 rounded border border-gray-200">Düzenle</button>
                                 <button onClick={() => openSubModal('vOptionValue', vOpt.id, { productId: '', price: 0 })}
                                   className="text-xs text-emerald-500 hover:text-emerald-700 px-2 py-0.5 rounded border border-emerald-200">+ Ekle</button>
-                                <button onClick={() => call(() => api.delete('/v1/seller/option-template/value-option', { data: { id: vOpt.id } }))}
+                                <button onClick={() => call(() => sellerApi.seller.optionTemplate.removeValueOption({ id: vOpt.id }))}
                                   className="text-xs text-red-400 hover:text-red-600 px-2 py-0.5 rounded border border-red-100">Sil</button>
                               </div>
                             </div>
@@ -960,7 +960,7 @@ function TemplatesTab({ restaurantId }) {
                                   {ov.product?.name}{ov.price > 0 ? ` +₺${ov.price}` : ''}
                                   <button onClick={() => { setEditForm({ ...ov, productId: ov.product?.id || ov.productId }); setEditModal({ type: 'vOptionValue' }); }}
                                     className="opacity-0 group-hover/chip:opacity-100 text-blue-400 hover:text-blue-600 ml-0.5 leading-none" title="Düzenle">✎</button>
-                                  <button onClick={() => call(() => api.delete('/v1/seller/option-template/value-option-value', { data: { id: ov.id } }))}
+                                  <button onClick={() => call(() => sellerApi.seller.optionTemplate.removeValueOptionValue({ id: ov.id }))}
                                     className="opacity-0 group-hover/chip:opacity-100 text-red-400 hover:text-red-600 leading-none">✕</button>
                                 </span>
                               ))}

@@ -35,6 +35,11 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
 
         builder.HasMany(o => o.OrderItems).WithOne(oi => oi.Order).HasForeignKey(oi => oi.OrderId);
 
+        builder.HasIndex(o => o.UserId);
+        builder.HasIndex(o => o.RestaurantId);
+        builder.HasIndex(o => o.SellerId);
+        builder.HasIndex(o => o.StatusId);
+
         builder.HasQueryFilter(o => !o.DeletedDate.HasValue);
     }
 }

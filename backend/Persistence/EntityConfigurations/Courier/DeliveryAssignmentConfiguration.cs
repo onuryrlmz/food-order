@@ -39,11 +39,13 @@ public class DeliveryAssignmentConfiguration : IEntityTypeConfiguration<Delivery
         builder.Property(d => d.DeletedDate).HasColumnName("DeletedDate");
 
         builder.HasOne(d => d.Order).WithMany().HasForeignKey(d => d.OrderId);
+        builder.HasOne(d => d.Courier).WithMany(c => c.DeliveryAssignments).HasForeignKey(d => d.CourierId);
         builder.HasOne(d => d.CourierCompany).WithMany().HasForeignKey(d => d.CourierCompanyId);
         builder.HasOne(d => d.Agreement).WithMany().HasForeignKey(d => d.AgreementId);
 
         builder.HasIndex(d => d.OrderId);
         builder.HasIndex(d => d.CourierId);
+        builder.HasIndex(d => d.RestaurantId);
         builder.HasIndex(d => d.StatusId);
 
         builder.HasQueryFilter(d => !d.DeletedDate.HasValue);

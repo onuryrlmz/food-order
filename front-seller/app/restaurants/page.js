@@ -10,7 +10,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
 import fetcher from '@/lib/fetcher';
-import api from '@/lib/api';
+import sellerApi from '@/lib/service';
 
 const defaultForm = {
   name: '', phone: '', email: '', description: '',
@@ -34,7 +34,7 @@ export default function RestaurantsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.post('/v1/seller/restaurant/add', {
+      await sellerApi.seller.restaurant.add({
         ...form,
         minimumOrderPrice: parseFloat(form.minimumOrderPrice),
         minDeliveryTime: parseInt(form.minDeliveryTime),
@@ -54,7 +54,7 @@ export default function RestaurantsPage() {
   const handleToggleOpen = async (restaurant) => {
     setToggling(restaurant.id);
     try {
-      await api.patch(`/v1/seller/restaurant/${restaurant.id}/toggle-open`);
+      await sellerApi.seller.restaurant.toggleOpen({ restaurantId: restaurant.id });
       toast(`Restoran ${restaurant.isOpen ? 'kapatıldı' : 'açıldı'}`, 'success');
       mutate();
     } catch (err) {

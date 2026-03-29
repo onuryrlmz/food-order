@@ -292,6 +292,9 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             _unitOfWork.DeliveryAssignmentRepository.Update(assignment);
             await _unitOfWork.CompleteAsync();
 
+            // Reddedildi — sıradaki uygun kuryeye otomatik ata
+            BackgroundJob.Enqueue<IDeliveryAssignmentService>(s => s.CreateAssignment(assignment.OrderId));
+
             result.SetData(true);
         }
         catch (Exception e)
@@ -436,6 +439,17 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             courier.TotalDeliveries += 1;
             _unitOfWork.CourierRepository.Update(courier);
 
+            // Mevcut bahşişlerin kurye ID'sini güncelle
+            var tips = await _unitOfWork.TipRepository.GetListAsync(
+                x => x.OrderId == assignment.OrderId && x.CourierId == null,
+                enableTracking: true, size: 999);
+            decimal totalTipAmount = 0;
+            foreach (var tip in tips.Items)
+            {
+                tip.CourierId = assignment.CourierId;
+                totalTipAmount += tip.Amount;
+            }
+
             // Kurye kazancını oluştur
             var earning = new Domain.Entities.Courier.CourierEarning
             {
@@ -444,9 +458,9 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 DeliveryAssignmentId = assignment.Id,
                 OrderId = assignment.OrderId,
                 DeliveryFee = assignment.DeliveryFee ?? 0,
-                TipAmount = 0,
+                TipAmount = totalTipAmount,
                 BonusAmount = 0,
-                TotalEarning = assignment.DeliveryFee ?? 0,
+                TotalEarning = (assignment.DeliveryFee ?? 0) + totalTipAmount,
                 IsSettled = false,
                 CreatedDate = DateTime.UtcNow,
             };

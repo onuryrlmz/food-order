@@ -8,7 +8,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import fetcher from '@/lib/fetcher';
-import api from '@/lib/api';
+import sellerApi from '@/lib/service';
 import { createRestaurantConnection } from '@/lib/signalr';
 
 const STATUS_MAP = {
@@ -88,8 +88,7 @@ export default function OrdersPage() {
   const handleStatusUpdate = async (orderId, statusId) => {
     setUpdating(orderId);
     try {
-      let url = `/v1/seller/order/${orderId}/status?statusId=${statusId}`;
-      await api.put(url);
+      await sellerApi.seller.order.updateStatus({ orderId, statusId });
       const statusLabel = STATUS_MAP[statusId]?.label || 'Güncellendi';
       toast(`Sipariş durumu: ${statusLabel}`, 'success');
       mutate();

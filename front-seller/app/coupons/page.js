@@ -9,7 +9,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
 import fetcher from '@/lib/fetcher';
-import api from '@/lib/api';
+import sellerApi from '@/lib/service';
 
 const TYPE_MAP = {
   1: { label: 'Yüzde İndirim', color: 'blue' },
@@ -62,8 +62,8 @@ export default function CouponsPage() {
   const ensureRestaurants = async () => {
     if (restaurants.length > 0) return;
     try {
-      const res = await api.get('/v1/seller/restaurant/list');
-      if (res.data && !res.data.hasFailed) setRestaurants(res.data.data || []);
+      const result = await sellerApi.seller.restaurant.getList();
+      if (result && !result.hasFailed) setRestaurants(result.data || []);
     } catch {}
   };
 
@@ -71,11 +71,11 @@ export default function CouponsPage() {
     if (!restaurantId) { mSetter([]); cSetter([]); return; }
     try {
       const [mRes, cRes] = await Promise.all([
-        api.get(`/v1/seller/menu/by-restaurant/${restaurantId}`).catch(() => null),
-        api.get(`/v1/seller/category?restaurantId=${restaurantId}`).catch(() => null),
+        sellerApi.seller.menu.getByRestaurant({ restaurantId }).catch(() => null),
+        sellerApi.seller.category.getList({ restaurantId }).catch(() => null),
       ]);
-      mSetter(mRes?.data?.data || []);
-      cSetter(cRes?.data?.data || []);
+      mSetter(mRes?.data || []);
+      cSetter(cRes?.data || []);
     } catch { mSetter([]); cSetter([]); }
   };
 
@@ -174,14 +174,10 @@ export default function CouponsPage() {
         applicableMenuIds: appType === 2 ? form.applicableMenuIds : null,
         applicableCategoryIds: appType === 3 ? form.applicableCategoryIds : null,
       };
-      const res = await api.post('/v1/seller/coupon/create', payload);
-      if (res.data && !res.data.hasFailed) {
-        toast('Kupon oluşturuldu', 'success');
-        setModal(false);
-        mutate();
-      } else {
-        toast(res.data?.messages?.[0]?.description || 'Kupon oluşturulamadı', 'error');
-      }
+      await sellerApi.seller.coupon.create(payload);
+      toast('Kupon oluşturuldu', 'success');
+      setModal(false);
+      mutate();
     } catch (err) {
       toast(err.response?.data?.messages?.[0]?.description || 'Kupon oluşturulamadı', 'error');
     } finally { setSaving(false); }
@@ -212,14 +208,10 @@ export default function CouponsPage() {
         applicableMenuIds: appType === 2 ? editForm.applicableMenuIds : null,
         applicableCategoryIds: appType === 3 ? editForm.applicableCategoryIds : null,
       };
-      const res = await api.put('/v1/seller/coupon/update', payload);
-      if (res.data && !res.data.hasFailed) {
-        toast('Kupon güncellendi', 'success');
-        setEditModal(null);
-        mutate();
-      } else {
-        toast(res.data?.messages?.[0]?.description || 'Kupon güncellenemedi', 'error');
-      }
+      await sellerApi.seller.coupon.update(payload);
+      toast('Kupon güncellendi', 'success');
+      setEditModal(null);
+      mutate();
     } catch (err) {
       toast(err.response?.data?.messages?.[0]?.description || 'Kupon güncellenemedi', 'error');
     } finally { setEditSaving(false); }
@@ -228,9 +220,8 @@ export default function CouponsPage() {
   const handleDelete = async (id) => {
     setDeleting(id);
     try {
-      const res = await api.delete(`/v1/seller/coupon/${id}`);
-      if (res.data && !res.data.hasFailed) { toast('Kupon silindi', 'success'); mutate(); }
-      else toast(res.data?.messages?.[0]?.description || 'Kupon silinemedi', 'error');
+      await sellerApi.seller.coupon.remove({ id });
+      toast('Kupon silindi', 'success'); mutate();
     } catch { toast('Kupon silinemedi', 'error'); }
     finally { setDeleting(null); }
   };

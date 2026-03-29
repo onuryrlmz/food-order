@@ -10,7 +10,7 @@ import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
 import { useToast } from '@/components/ui/Toast';
 import fetcher from '@/lib/fetcher';
-import api from '@/lib/api';
+import sellerApi from '@/lib/service';
 
 const DAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
 
@@ -49,7 +49,7 @@ export default function RestaurantDetailPage({ params }) {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.put('/v1/seller/restaurant/update', {
+      await sellerApi.seller.restaurant.update({
         ...editForm,
         minimumOrderPrice: parseFloat(editForm.minimumOrderPrice),
         minDeliveryTime: parseInt(editForm.minDeliveryTime),
@@ -67,7 +67,7 @@ export default function RestaurantDetailPage({ params }) {
   const handleUpsertHour = async (dayOfWeek, data) => {
     setSavingHour(dayOfWeek);
     try {
-      await api.put(`/v1/seller/restaurant/${id}/working-hours`, { dayOfWeek, ...data });
+      await sellerApi.seller.restaurant.updateWorkingHours({ restaurantId: id, dayOfWeek, ...data });
       toast('Çalışma saati güncellendi', 'success');
       mutateHours();
     } catch (err) {

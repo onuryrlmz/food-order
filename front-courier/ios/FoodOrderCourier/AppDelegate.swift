@@ -41,7 +41,7 @@ class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
   override func bundleURL() -> URL? {
 #if DEBUG
     let provider = RCTBundleURLProvider.sharedSettings()
-    return URL(string: "http://localhost:8082/index.bundle?platform=ios&dev=true&lazy=true&minify=false")
+    return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
 #else
     Bundle.main.url(forResource: "main", withExtension: "jsbundle")
 #endif

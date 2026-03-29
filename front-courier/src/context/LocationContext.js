@@ -30,8 +30,11 @@ export const LocationProvider = ({children}) => {
         console.log('Permission error:', err);
         return false;
       }
+    } else {
+      // iOS
+      const status = await Geolocation.requestAuthorization('whenInUse');
+      return status === 'granted';
     }
-    return true;
   };
 
   const getCurrentPosition = useCallback(() => {

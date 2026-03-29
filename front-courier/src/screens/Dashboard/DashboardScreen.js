@@ -59,30 +59,28 @@ const DashboardScreen = () => {
     }
   };
 
-  // Ekran her odaklandığında backend'den güncel durumu al
+  // Ekran her odaklandığında backend'den güncel durumu al ve senkronize et
   useFocusEffect(
     useCallback(() => {
       const syncStatus = async () => {
-        // Profili yenile — backend'den güncel availabilityStatus gelsin
-        await refreshProfile();
+        try {
+          const profileRes = await courierService.getProfile();
+          if (!profileRes.data.hasFailed && profileRes.data.data) {
+            const status = profileRes.data.data.availabilityStatus;
+            const online = status === 1 || status === 2;
+            setIsOnline(online);
+            if (online) {
+              startTracking().catch(() => {});
+            }
+          }
+        } catch (e) {
+          // Silent fail
+        }
         await fetchData();
       };
       syncStatus();
     }, []),
   );
-
-  // user değiştiğinde (ilk yükleme veya refreshProfile sonrası) durumu senkronize et
-  useEffect(() => {
-    if (!user) return;
-
-    const isBackendOnline = user.availabilityStatus === 1 || user.availabilityStatus === 2;
-    setIsOnline(isBackendOnline);
-
-    // Backend çevrimiçi diyor — konum takibini başlat
-    if (isBackendOnline) {
-      startTracking().catch(() => {});
-    }
-  }, [user?.availabilityStatus]);
 
   const handleToggleOnline = async () => {
     setToggling(true);

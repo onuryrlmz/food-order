@@ -66,7 +66,7 @@ const DashboardScreen = () => {
         try {
           const profileRes = await courierService.getProfile();
           if (!profileRes.data.hasFailed && profileRes.data.data) {
-            const status = profileRes.data.data.availabilityStatus;
+            const status = profileRes.data.data.availabilityStatusId;
             const online = status === 1 || status === 2;
             setIsOnline(online);
             if (online) {

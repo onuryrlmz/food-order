@@ -77,7 +77,7 @@ export const LocationProvider = ({children}) => {
       // Backend'den profil al — çevrimiçi mi kontrol et
       try {
         const profileRes = await courierService.getProfile();
-        const status = profileRes.data?.data?.availabilityStatus;
+        const status = profileRes.data?.data?.availabilityStatusId;
 
         if (status === 0) {
           // Backend çevrimdışı diyor — takibi durdur

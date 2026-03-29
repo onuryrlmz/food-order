@@ -1,25 +1,35 @@
-FROM node:22-alpine AS base
+FROM node:22-alpine AS deps
 WORKDIR /app
 
-FROM base AS deps
-COPY front-seller/package.json front-seller/package-lock.json* ./front-seller/
-RUN cd front-seller && npm ci --legacy-peer-deps
-
-FROM base AS builder
+# Proje dosyalarını kopyala
 COPY front-seller/ ./front-seller/
 COPY service/ ./service/
-COPY --from=deps /app/front-seller/node_modules ./front-seller/node_modules
+
+WORKDIR /app/front-seller
+
+# Install dependencies
+RUN npm ci --legacy-peer-deps
+
+# service/ dizininin front-seller/node_modules'a erişebilmesi için symlink
+RUN ln -s /app/front-seller/node_modules /app/node_modules
+
 ARG NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
-WORKDIR /app/front-seller
+ENV NEXT_TELEMETRY_DISABLED=1
+
 RUN npm run build
 
-FROM base AS runner
+# Production image
+FROM node:22-alpine AS runner
+WORKDIR /app/front-seller
+
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
-COPY --from=builder /app/front-seller/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/front-seller/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/front-seller/.next/static ./.next/static
+
+COPY --from=deps --chown=nextjs:nodejs /app/ /app/
+
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000

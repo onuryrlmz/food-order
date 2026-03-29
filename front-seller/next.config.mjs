@@ -19,11 +19,6 @@ const nextConfig = {
   output: 'standalone',
   reactCompiler: true,
   outputFileTracingRoot: path.join(__dirname, '../'),
-  transpilePackages: ['../../service'],
-  webpack: (config) => {
-    config.resolve.modules.push(path.resolve(__dirname, 'node_modules'));
-    return config;
-  },
 };
 
 export default nextConfig;

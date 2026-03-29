@@ -1,0 +1,16 @@
+{
+  "name": "food-order",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "front-admin",
+    "front-seller",
+    "front-app",
+    "front-courier",
+    "service"
+  ],
+  "dependencies": {
+    "axios": "^1.13.6",
+    "zod": "^4.3.6"
+  }
+}

@@ -217,50 +217,6 @@ export const LocationProvider = ({children}) => {
   );
 };
 
-// Android Headless Task — uygulama tamamen kapalıyken çalışır
-BackgroundFetch.registerHeadlessTask(async ({taskId}) => {
-  try {
-    const token = await AsyncStorage.getItem('auth_token');
-    if (!token) {
-      BackgroundFetch.finish(taskId);
-      return;
-    }
-
-    const profileRes = await fetch(`${API_BASE_URL}/courier/profile`, {
-      headers: {Authorization: `Bearer ${token}`},
-    });
-    const profileData = await profileRes.json();
-    const status = profileData?.data?.availabilityStatusId;
-
-    if (status === 1 || status === 2) {
-      Geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            await fetch(`${API_BASE_URL}/courier/location`, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-              }),
-            });
-          } catch (e) {}
-          BackgroundFetch.finish(taskId);
-        },
-        () => BackgroundFetch.finish(taskId),
-        {enableHighAccuracy: true, timeout: 10000, maximumAge: 5000},
-      );
-    } else {
-      BackgroundFetch.finish(taskId);
-    }
-  } catch (e) {
-    BackgroundFetch.finish(taskId);
-  }
-});
-
 export const useLocation = () => {
   const context = useContext(LocationContext);
   if (!context) {

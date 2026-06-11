@@ -35,6 +35,22 @@ public class SellerManager : ISellerService
         var result = new ServiceObjectResult<bool>();
         try
         {
+            var validationErrors = SellerRegistrationRules.Validate(requestDto);
+            if (validationErrors.Count > 0)
+            {
+                foreach (var error in validationErrors)
+                    result.AddErrorMessage(error);
+                return result;
+            }
+
+            var ownerEmail = requestDto.OwnerEmail.Trim().ToLowerInvariant();
+            var existingUser = await _userRepository.GetAsync(x => x.Email == ownerEmail);
+            if (existingUser != null)
+            {
+                result.AddErrorMessage("Bu e-posta adresi ile kayıtlı bir kullanıcı bulunmaktadır.");
+                return result;
+            }
+
             var seller = await _sellerRepository.GetAsync(x => x.TaxCode == requestDto.TaxCode);
             if (seller != null)
             {
@@ -56,7 +72,8 @@ public class SellerManager : ISellerService
                     TaxCode = requestDto.TaxCode,
                     TaxArea = requestDto.TaxArea,
                     IBAN = requestDto.IBAN,
-                    IsEInvoiceAvaible = requestDto.IsEInvoiceAvaible
+                    IsEInvoiceAvaible = requestDto.IsEInvoiceAvaible,
+                    IdentityNumber = requestDto.IdentityNumber?.Trim()
                 });
 
                 var address = new Address
@@ -92,7 +109,7 @@ public class SellerManager : ISellerService
                     Id = Guid.NewGuid(),
                     UserRoleId = (short)UserRoleEnums.SellerAdmin,
                     UserStatusId = (short)UserStatusEnums.WaitingForActivation,
-                    Email = requestDto.OwnerEmail,
+                    Email = ownerEmail,
                     Password = BCrypt.Net.BCrypt.HashPassword(requestDto.Password, 12),
                     FirstName = requestDto.OwnerFirstName,
                     LastName = requestDto.OwnerLastName,

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { login } from '@/lib/auth';
 
@@ -76,6 +77,11 @@ export default function LoginPage() {
               {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
             </button>
           </form>
+
+          <p className="text-center text-sm text-gray-500 mt-6">
+            Restoranınızı eklemek mi istiyorsunuz?{' '}
+            <Link href="/register" className="text-emerald-600 font-medium hover:underline">Başvuru yapın</Link>
+          </p>
         </div>
       </div>
     </div>

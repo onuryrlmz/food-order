@@ -7,6 +7,15 @@ export async function login(email, password) {
   return res.data;
 }
 
+export async function registerSeller(form) {
+  const res = await sellerApi.auth.registerSeller(form);
+  if (res.data?.hasFailed) {
+    const msg = res.data?.messages?.map((m) => m.description).join('\n') || 'Başvuru başarısız';
+    throw new Error(msg);
+  }
+  return res.data;
+}
+
 export async function logout() {
   localStorage.removeItem('seller_logged_in');
   try { await sellerApi.auth.logout({}); } catch { }

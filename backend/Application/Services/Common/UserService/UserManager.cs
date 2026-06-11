@@ -66,10 +66,21 @@ public class UserManager : IUserService
         try
         {
             var user = await _userRepository.GetAsync(x =>
-                x.Email == requestDto.Email.ToLowerInvariant() &&
-                x.UserStatusId == (short)UserStatusEnums.Active);
+                x.Email == requestDto.Email.ToLowerInvariant());
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(requestDto.Password, user.Password))
+            {
+                response.AddErrorMessage("E-posta veya şifre hatalı.");
+                return response;
+            }
+
+            if (user.UserStatusId == (short)UserStatusEnums.WaitingForActivation)
+            {
+                response.AddErrorMessage("Başvurunuz onay bekliyor. Onaylandığında giriş yapabilirsiniz.");
+                return response;
+            }
+
+            if (user.UserStatusId != (short)UserStatusEnums.Active)
             {
                 response.AddErrorMessage("E-posta veya şifre hatalı.");
                 return response;

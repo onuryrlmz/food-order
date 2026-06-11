@@ -10,6 +10,7 @@ public class AddSellerDto
     public string TaxArea { get; set; }
     public string IBAN { get; set; }
     public bool IsEInvoiceAvaible { get; set; }
+    public string? IdentityNumber { get; set; }
 
     //Satıcı firma sahibi bilgileri
     public string OwnerFirstName { get; set; }

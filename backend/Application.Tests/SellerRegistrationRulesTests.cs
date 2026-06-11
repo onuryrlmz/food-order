@@ -24,16 +24,41 @@ public class SellerRegistrationRulesTests
         AddressLine1 = "Test Mah. Deneme Sk. No:1"
     };
 
+    private static AddSellerDto ValidIndividualDto()
+    {
+        var dto = ValidDto();
+        dto.CompanyType = (short)CompanyTypeEnums.Individual;
+        dto.TaxCode = "12345678901";
+        dto.IdentityNumber = "12345678901";
+        return dto;
+    }
+
+    [Fact]
+    public void Validate_NullDto_Throws()
+        => Assert.Throws<ArgumentNullException>(() => SellerRegistrationRules.Validate(null!));
+
     [Fact]
     public void Validate_ValidCompanyDto_ReturnsNoErrors()
         => Assert.Empty(SellerRegistrationRules.Validate(ValidDto()));
+
+    [Fact]
+    public void Validate_ValidIndividualDto_ReturnsNoErrors()
+        => Assert.Empty(SellerRegistrationRules.Validate(ValidIndividualDto()));
 
     [Fact]
     public void Validate_InvalidEmail_ReturnsError()
     {
         var dto = ValidDto();
         dto.OwnerEmail = "gecersiz-eposta";
-        Assert.Contains(SellerRegistrationRules.Validate(dto), e => e.Contains("e-posta"));
+        Assert.Contains(SellerRegistrationRules.ErrInvalidEmail, SellerRegistrationRules.Validate(dto));
+    }
+
+    [Fact]
+    public void Validate_NullEmail_ReturnsError()
+    {
+        var dto = ValidDto();
+        dto.OwnerEmail = null!;
+        Assert.Contains(SellerRegistrationRules.ErrInvalidEmail, SellerRegistrationRules.Validate(dto));
     }
 
     [Fact]
@@ -41,7 +66,7 @@ public class SellerRegistrationRulesTests
     {
         var dto = ValidDto();
         dto.Password = "kisa";
-        Assert.Contains(SellerRegistrationRules.Validate(dto), e => e.Contains("Şifre"));
+        Assert.Contains(SellerRegistrationRules.ErrShortPassword, SellerRegistrationRules.Validate(dto));
     }
 
     [Fact]
@@ -49,7 +74,15 @@ public class SellerRegistrationRulesTests
     {
         var dto = ValidDto();
         dto.IBAN = "TR123";
-        Assert.Contains(SellerRegistrationRules.Validate(dto), e => e.Contains("IBAN"));
+        Assert.Contains(SellerRegistrationRules.ErrInvalidIban, SellerRegistrationRules.Validate(dto));
+    }
+
+    [Fact]
+    public void Validate_NullIban_ReturnsError()
+    {
+        var dto = ValidDto();
+        dto.IBAN = null!;
+        Assert.Contains(SellerRegistrationRules.ErrInvalidIban, SellerRegistrationRules.Validate(dto));
     }
 
     [Fact]
@@ -65,27 +98,39 @@ public class SellerRegistrationRulesTests
     {
         var dto = ValidDto();
         dto.TaxCode = "12345abcde";
-        Assert.Contains(SellerRegistrationRules.Validate(dto), e => e.Contains("Vergi"));
+        Assert.Contains(SellerRegistrationRules.ErrInvalidTaxCodeCompany, SellerRegistrationRules.Validate(dto));
+    }
+
+    [Fact]
+    public void Validate_CompanyWithElevenDigitTaxCode_ReturnsError()
+    {
+        var dto = ValidDto();
+        dto.TaxCode = "12345678901";
+        Assert.Contains(SellerRegistrationRules.ErrInvalidTaxCodeCompany, SellerRegistrationRules.Validate(dto));
+    }
+
+    [Fact]
+    public void Validate_IndividualWithTenDigitTaxCode_ReturnsError()
+    {
+        var dto = ValidIndividualDto();
+        dto.TaxCode = "1234567890";
+        Assert.Contains(SellerRegistrationRules.ErrInvalidTaxCodeIndividual, SellerRegistrationRules.Validate(dto));
     }
 
     [Fact]
     public void Validate_IndividualWithoutIdentityNumber_ReturnsError()
     {
-        var dto = ValidDto();
-        dto.CompanyType = (short)CompanyTypeEnums.Individual;
-        dto.TaxCode = "12345678901";
+        var dto = ValidIndividualDto();
         dto.IdentityNumber = null;
-        Assert.Contains(SellerRegistrationRules.Validate(dto), e => e.Contains("TC"));
+        Assert.Contains(SellerRegistrationRules.ErrInvalidIdentityNumber, SellerRegistrationRules.Validate(dto));
     }
 
     [Fact]
-    public void Validate_IndividualWithValidIdentityNumber_ReturnsNoErrors()
+    public void Validate_IdentityNumberStartingWithZero_ReturnsError()
     {
-        var dto = ValidDto();
-        dto.CompanyType = (short)CompanyTypeEnums.Individual;
-        dto.TaxCode = "12345678901";
-        dto.IdentityNumber = "12345678901";
-        Assert.Empty(SellerRegistrationRules.Validate(dto));
+        var dto = ValidIndividualDto();
+        dto.IdentityNumber = "01234567890";
+        Assert.Contains(SellerRegistrationRules.ErrInvalidIdentityNumber, SellerRegistrationRules.Validate(dto));
     }
 
     [Fact]
@@ -93,7 +138,7 @@ public class SellerRegistrationRulesTests
     {
         var dto = ValidDto();
         dto.Name = "";
-        Assert.Contains(SellerRegistrationRules.Validate(dto), e => e.Contains("İşletme adı"));
+        Assert.Contains(SellerRegistrationRules.ErrBusinessNameRequired, SellerRegistrationRules.Validate(dto));
     }
 
     [Fact]
@@ -101,6 +146,6 @@ public class SellerRegistrationRulesTests
     {
         var dto = ValidDto();
         dto.OwnerPhone = "123";
-        Assert.Contains(SellerRegistrationRules.Validate(dto), e => e.Contains("telefon"));
+        Assert.Contains(SellerRegistrationRules.ErrInvalidPhone, SellerRegistrationRules.Validate(dto));
     }
 }

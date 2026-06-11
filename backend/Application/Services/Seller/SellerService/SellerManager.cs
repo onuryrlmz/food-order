@@ -44,7 +44,7 @@ public class SellerManager : ISellerService
             }
 
             var ownerEmail = requestDto.OwnerEmail.Trim().ToLowerInvariant();
-            var existingUser = await _userRepository.GetAsync(x => x.Email == ownerEmail);
+            var existingUser = await _userRepository.GetAsync(x => x.Email == ownerEmail, withDeleted: true);
             if (existingUser != null)
             {
                 result.AddErrorMessage("Bu e-posta adresi ile kayıtlı bir kullanıcı bulunmaktadır.");

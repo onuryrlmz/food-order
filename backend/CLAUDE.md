@@ -1,6 +1,6 @@
 # FoodOrder.Backend
 
-Çok satıcılı yemek sipariş platformu. Müşteriler çevrelerindeki restoranları keşfedip sipariş verebilir. Her siparişte yalnızca 1 restoran bulunabilir. Platformun gelir modeli abonelik tabanlıdır — restoran başına aylık ücret alınır, sipariş başına komisyon alınmaz.
+Çok satıcılı yemek sipariş platformu. Müşteriler çevrelerindeki restoranları keşfedip sipariş verebilir. Her siparişte yalnızca 1 restoran bulunabilir. Platformun gelir modeli komisyon tabanlıdır — sipariş başına komisyon (oran + sabit ücret) alınır. Platform varsayılanı PlatformCommissionSchedule, restoran bazlı özel oran RestaurantCommission ile yönetilir. Aylık abonelik yoktur.
 
 ## Mimari
 
@@ -32,8 +32,8 @@ Clean Architecture — 6 katman:
 
 ### Seller
 - `Seller` → `Restaurant` → `Category` → `Menu` → `MenuOption` → `MenuOptionValue` → `MenuOptionValueOption` → `MenuOptionValueOptionValue`
-- `SubscriptionPlan` — abonelik planları (Basic/Pro/Premium)
-- `Subscription` — restaurant-plan ilişkisi, abonelik durumu ve tarihleri
+- `RestaurantCommission` — restoran bazlı komisyon oranı geçmişi (EffectiveFrom/To)
+- `SettlementPeriod` → `SettlementItem` — günlük hakediş dönemleri ve kalemleri
 
 ### Buyer
 - `Basket` → `BasketItem` → `BasketItemValue` → `BasketItemValueItemValue`
@@ -51,6 +51,7 @@ Clean Architecture — 6 katman:
 - `User` (Admin/SellerAdmin/SellerUser/User rolleri)
 - `Address`
 - `Cuisine`
+- `PlatformCommissionSchedule` — platform geneli varsayılan komisyon tarifesi
 
 ## Güvenlik Standartları
 
@@ -61,18 +62,17 @@ Clean Architecture — 6 katman:
 - **Rate Limiting**: 60 req/dk (genel), 10 req/dk (auth endpoints)
 - **CORS**: Sadece `WebAPIConfiguration:AllowedOrigins`'daki domainlere izin verilir
 
-## Abonelik İş Mantığı
+## Komisyon İş Mantığı
 
-1. Admin `SubscriptionPlan` oluşturur
-2. SellerAdmin `POST /v1/subscription/subscribe` ile restoran için plan satın alır
-3. Abonelik aktif olunca `Restaurant.IsActive = true` set edilir
-4. Abonelik süresi dolunca (cron/endpoint: `POST /v1/subscription/expire-check`) `Restaurant.IsActive = false`
-5. Aktif aboneliği olmayan restoranlar müşteri listesinde görünmez ve sipariş kabul etmez
+1. Admin `PlatformCommissionSchedule` ile platform varsayılan oranını yönetir (tarih bazlı planlama)
+2. Restoran bazlı özel oran `RestaurantCommission` ile tanımlanır; yoksa platform varsayılanı uygulanır
+3. Sipariş tutarı üzerinden komisyon hesaplanır; günlük hakediş `SettlementPeriod`/`SettlementItem` ile satıcıya dağıtılır
+4. Satıcı onayında (`ConfirmSeller`) İyzico alt üye işyeri (SubMerchant) kaydı yapılır — BLOCKING
 
 ## Sipariş İş Mantığı
 
 1. Müşteri `POST /v1/order/place` ile sipariş verir
-2. Kontroller: restoran aktif mi, açık mı, aktif aboneliği var mı, minimum tutar karşılandı mı
+2. Kontroller: restoran aktif mi, açık mı, minimum tutar karşılandı mı
 3. Sipariş `Pending` statüsünde oluşur
 4. Satıcı `PUT /v1/order/{id}/status` ile statü günceller
 5. Müşteri `POST /v1/order/{id}/cancel` ile `Pending`/`Confirmed` siparişi iptal edebilir
@@ -99,10 +99,10 @@ Persistence/IRepositories/IUnitOfWork.cs                    — UoW interface
 Application/Services/Common/UserService/UserManager.cs      — login/register (BCrypt)
 Application/Services/Seller/2_RestaurantService/            — restoran CRUD + lokasyon
 Application/Services/Buyer/OrderService/OrderManager.cs     — sipariş iş mantığı
-Application/Services/Seller/SubscriptionService/            — abonelik iş mantığı
+Application/Services/Seller/CommissionService/              — komisyon çözümleme iş mantığı
 Domain/Entities/Seller/Restaurant.cs                        — IsActive, IsOpen, konum alanları
-Domain/Entities/Seller/SubscriptionPlan.cs                  — abonelik planı entity
-Domain/Entities/Seller/Subscription.cs                      — abonelik entity
+Domain/Entities/Seller/RestaurantCommission.cs              — restoran bazlı oran geçmişi
+Domain/Entities/Common/PlatformCommissionSchedule.cs        — platform varsayılan tarifesi
 Domain/Entities/Buyer/Order.cs                              — sipariş entity
 Domain/Entities/Buyer/OrderItem.cs                          — sipariş kalemi entity
 Application/Services/Courier/CourierService/                — kurye kayıt, profil, online/offline
@@ -130,12 +130,8 @@ WebAPI/Hubs/CourierHub.cs                                   — kurye SignalR hu
 | POST | /v1/order/{id}/cancel | User | Sipariş iptal |
 | PUT | /v1/order/{id}/status | SellerAdmin/Admin | Statü güncelle |
 | GET | /v1/order/restaurant/{id} | SellerAdmin/Admin | Restoran siparişleri |
-| GET | /v1/subscription/plans | - | Planları listele |
-| POST | /v1/subscription/plans | Admin | Plan oluştur |
-| POST | /v1/subscription/subscribe | SellerAdmin | Abone ol |
-| POST | /v1/subscription/{id}/cancel | SellerAdmin | Abonelik iptal |
-| GET | /v1/subscription/my | SellerAdmin/SellerUser | Kendi abonelikleri |
-| POST | /v1/subscription/expire-check | Admin | Süresi dolmuş abonelikleri kapat |
+| POST | /v1/seller/register | - | Restoran self-servis başvuru (anonim) |
+| POST | /v1/admin/seller/confirm | Admin | Başvuru onayı → İyzico alt üye kaydı |
 | POST | /v1/courier/register | User | Kurye kayıt (admin onayı gerekir) |
 | POST | /v1/courier/go-online | Courier | Online ol |
 | POST | /v1/courier/go-offline | Courier | Offline ol |
@@ -157,4 +153,3 @@ WebAPI/Hubs/CourierHub.cs                                   — kurye SignalR hu
 - Şifre asla plain text veya simetrik şifreleme ile saklanmaz — BCrypt zorunlu
 - Exception detayları production'da client'a yansımamalı (`KeepRawException` = false)
 - `appsettings.json` dosyasına credential girme — environment variable veya user-secrets kullan
-- Abonelik kontrolünü atlamak için `HasActiveSubscription` kontrolü mutlaka `PlaceOrder`'da kalmalı

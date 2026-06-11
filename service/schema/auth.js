@@ -46,3 +46,24 @@ export const LogoutRequestSchema = z.object({
 export const RefreshTokenRequestSchema = z.object({
   refreshToken: z.string().min(1),
 });
+
+export const SellerRegisterRequestSchema = z.object({
+  companyType: z.number().int(),
+  name: z.string().min(1),
+  legalName: z.string().min(1),
+  taxCode: z.string().min(10).max(11),
+  taxArea: z.string().min(1),
+  iban: z.string().min(26),
+  isEInvoiceAvaible: z.boolean().default(false),
+  identityNumber: z.string().length(11).optional(),
+  ownerFirstName: z.string().min(1),
+  ownerLastName: z.string().min(1),
+  ownerEmail: z.string().email(),
+  ownerPhone: z.string().min(10),
+  password: z.string().min(8),
+  cityId: z.string().uuid(),
+  townId: z.string().uuid(),
+  neighbourhoodId: z.string().uuid(),
+  addressLine1: z.string().min(1),
+  addressLine2: z.string().optional(),
+});

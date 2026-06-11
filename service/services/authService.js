@@ -2,6 +2,7 @@ import BaseService from './base.js';
 import {
   LoginRequestSchema,
   RegisterRequestSchema,
+  SellerRegisterRequestSchema,
   UpdateProfileRequestSchema,
   ChangePasswordRequestSchema,
   ForgotPasswordRequestSchema,
@@ -20,6 +21,11 @@ export default class AuthService extends BaseService {
   register(data) {
     const parsed = RegisterRequestSchema.parse(data);
     return this.post('/auth/register', parsed);
+  }
+
+  registerSeller(data) {
+    const parsed = SellerRegisterRequestSchema.parse(data);
+    return this.post('/seller/register', parsed);
   }
 
   getProfile() {

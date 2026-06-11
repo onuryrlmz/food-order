@@ -41,6 +41,13 @@ export default function RegisterPage() {
   const validateStep1 = () => {
     if (!form.name || !form.legalName || !form.taxCode || !form.taxArea || !form.iban || !form.addressLine1)
       return 'Lütfen tüm zorunlu alanları doldurun.';
+    const taxCode = form.taxCode.trim();
+    if (isIndividual ? taxCode.length !== 11 : taxCode.length !== 10)
+      return isIndividual
+        ? 'Şahıs işletmesi için vergi kimlik numarası 11 haneli olmalıdır.'
+        : 'Şirket için vergi numarası 10 haneli olmalıdır.';
+    if (form.iban.replace(/\s/g, '').length !== 26)
+      return 'IBAN, TR ile birlikte 26 karakter olmalıdır.';
     if (isIndividual && form.identityNumber.length !== 11)
       return 'Şahıs işletmesi için 11 haneli TC kimlik numarası gereklidir.';
     return '';
@@ -49,6 +56,8 @@ export default function RegisterPage() {
   const validateStep2 = () => {
     if (!form.ownerFirstName || !form.ownerLastName || !form.ownerEmail || !form.ownerPhone)
       return 'Lütfen tüm zorunlu alanları doldurun.';
+    if (form.ownerPhone.replace(/\D/g, '').length < 10)
+      return 'Geçerli bir telefon numarası giriniz (en az 10 hane).';
     if (form.password.length < 8) return 'Şifre en az 8 karakter olmalıdır.';
     if (form.password !== form.passwordConfirm) return 'Şifreler eşleşmiyor.';
     return '';

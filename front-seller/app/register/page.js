@@ -42,10 +42,10 @@ export default function RegisterPage() {
     if (!form.name || !form.legalName || !form.taxCode || !form.taxArea || !form.iban || !form.addressLine1)
       return 'Lütfen tüm zorunlu alanları doldurun.';
     const taxCode = form.taxCode.trim();
-    if (isIndividual ? taxCode.length !== 11 : taxCode.length !== 10)
+    if (!/^\d+$/.test(taxCode) || (isIndividual ? taxCode.length !== 11 : taxCode.length !== 10))
       return isIndividual
-        ? 'Şahıs işletmesi için vergi kimlik numarası 11 haneli olmalıdır.'
-        : 'Şirket için vergi numarası 10 haneli olmalıdır.';
+        ? 'Şahıs işletmesi için vergi kimlik numarası 11 haneli ve rakamlardan oluşmalıdır.'
+        : 'Şirket için vergi numarası 10 haneli ve rakamlardan oluşmalıdır.';
     if (form.iban.replace(/\s/g, '').length !== 26)
       return 'IBAN, TR ile birlikte 26 karakter olmalıdır.';
     if (isIndividual && form.identityNumber.length !== 11)
@@ -84,6 +84,7 @@ export default function RegisterPage() {
         taxCode: form.taxCode.trim(),
         taxArea: form.taxArea,
         iban: form.iban.replace(/\s/g, '').toUpperCase(),
+        // e-Fatura mükellefiyeti başvuruda sorulmuyor; admin onay sürecinde güncellenir
         isEInvoiceAvaible: false,
         ...(isIndividual ? { identityNumber: form.identityNumber.trim() } : {}),
         ownerFirstName: form.ownerFirstName,

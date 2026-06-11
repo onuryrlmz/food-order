@@ -51,7 +51,7 @@ public class SellerManager : ISellerService
                 return result;
             }
 
-            var seller = await _sellerRepository.GetAsync(x => x.TaxCode == requestDto.TaxCode);
+            var seller = await _sellerRepository.GetAsync(x => x.TaxCode == requestDto.TaxCode, withDeleted: true);
             if (seller != null)
             {
                 result.AddErrorMessage("Bu vergi numarası ile kayıtlı bir satıcı bulunmaktadır.");

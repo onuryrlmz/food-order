@@ -74,7 +74,10 @@ public class UserManager : IUserService
                 return response;
             }
 
-            if (user.UserStatusId == (short)UserStatusEnums.WaitingForActivation)
+            // "Onay bekliyor" mesajı yalnızca satıcı başvuruları için; normal alıcılar
+            // (UserRoleEnums.User) eski davranışı korur — generic hata alır.
+            if (user.UserStatusId == (short)UserStatusEnums.WaitingForActivation &&
+                user.UserRoleId == (short)UserRoleEnums.SellerAdmin)
             {
                 response.AddErrorMessage("Başvurunuz onay bekliyor. Onaylandığında giriş yapabilirsiniz.");
                 return response;

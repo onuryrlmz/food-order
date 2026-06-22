@@ -2,6 +2,7 @@ using Application.Services.Buyer.BasketService;
 using Application.Services.Buyer.PaymentService;
 using Application.Services.Common.TokenService;
 using Application.Services.Courier.DeliveryAssignmentService;
+using Application.Services.Seller.CommissionService;
 using Application.Utils;
 using Base.Enums;
 using Domain.Dto.Admin.Order;
@@ -43,6 +44,7 @@ public class OrderManager : IOrderService
     private readonly IBasketService _basketService;
     private readonly IDeliveryAssignmentService _deliveryAssignmentService;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ICommissionService _commissionService;
 
     public OrderManager(
         IUnitOfWork unitOfWork,
@@ -58,7 +60,8 @@ public class OrderManager : IOrderService
         IRealtimeNotifier realtimeNotifier,
         IBasketService basketService,
         IDeliveryAssignmentService deliveryAssignmentService,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        ICommissionService commissionService)
     {
         _unitOfWork = unitOfWork;
         _tokenAccessor = tokenAccessor;
@@ -74,6 +77,7 @@ public class OrderManager : IOrderService
         _basketService = basketService;
         _deliveryAssignmentService = deliveryAssignmentService;
         _httpContextAccessor = httpContextAccessor;
+        _commissionService = commissionService;
     }
 
     public async Task<ServiceObjectResult<PlaceOrderResponseDto>> PlaceOrder(PlaceOrderRequestDto requestDto)
@@ -733,6 +737,11 @@ public class OrderManager : IOrderService
                 order.CancellationReason = "Restoran tarafından reddedildi.";
             _unitOfWork.OrderRepository.Update(order);
             await AddStatusHistory(order.Id, (OrderStatusEnums)statusId);
+
+            // Sipariş teslim edildiyse (kuryesiz restoran / admin yolu) hakediş kalemi oluştur — aynı transaction'da commit edilir.
+            if (statusId == (short)OrderStatusEnums.Delivered)
+                await _commissionService.CreateSettlementForDeliveredOrder(order.Id);
+
             await _unitOfWork.CompleteAsync();
 
             // Auto-trigger courier assignment when order moves to Preparing (Hangfire creates its own DI scope)

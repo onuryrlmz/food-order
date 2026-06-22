@@ -13,6 +13,7 @@ public interface IRestaurantService
     Task<ServiceObjectResult<bool>> UpdateRestaurant(UpdateRestaurantDto requestDto);
     Task<ServiceObjectResult<bool>> ToggleOpen(Guid restaurantId);
     Task<ServiceObjectResult<bool>> ToggleActive(Guid restaurantId);
+    Task<ServiceObjectResult<bool>> ApproveRestaurant(Guid restaurantId);
     Task<ServiceCollectionResult<GetAdminRestaurantListResponseDto>> GetAllRestaurantsForAdmin(int page = 1, int pageSize = 50);
     Task<ServiceObjectResult<GetAdminRestaurantListResponseDto>> GetRestaurantByIdForAdmin(Guid id);
     Task<ServiceObjectResult<bool>> UpdateRestaurantForAdmin(UpdateAdminRestaurantDto requestDto);

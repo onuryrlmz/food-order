@@ -1,5 +1,6 @@
 using Application.Services.Common.NotificationService;
 using Application.Services.Common.TokenService;
+using Application.Services.Seller.CommissionService;
 using Base.Enums;
 using Domain.Dto.Courier;
 using Domain.Dto.Seller.Courier;
@@ -20,19 +21,22 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
     private readonly BaseDbContext _context;
     private readonly IRealtimeNotifier _realtimeNotifier;
     private readonly IConfiguration _configuration;
+    private readonly ICommissionService _commissionService;
 
     public DeliveryAssignmentManager(
         IUnitOfWork unitOfWork,
         ITokenAccessor tokenAccessor,
         BaseDbContext context,
         IRealtimeNotifier realtimeNotifier,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ICommissionService commissionService)
     {
         _unitOfWork = unitOfWork;
         _tokenAccessor = tokenAccessor;
         _context = context;
         _realtimeNotifier = realtimeNotifier;
         _configuration = configuration;
+        _commissionService = commissionService;
     }
 
     public async Task<ServiceObjectResult<DeliveryAssignmentResponseDto>> GetActiveAssignment()
@@ -465,6 +469,9 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 CreatedDate = DateTime.UtcNow,
             };
             await _unitOfWork.CourierEarningRepository.AddAsync(earning);
+
+            // Sipariş teslim edildi → hakediş kalemi oluştur (komisyon hesapla). Aynı transaction'da commit edilir.
+            await _commissionService.CreateSettlementForDeliveredOrder(assignment.OrderId);
 
             await _unitOfWork.CompleteAsync();
 

@@ -29,6 +29,10 @@ public interface ICommissionService
     // Commission resolution (used by OrderManager/PaymentManager)
     Task<(decimal commissionRate, decimal fixedFee, short sourceType, Guid sourceId)> ResolveCommission(Guid restaurantId);
 
+    // Settlement item creation — called when an order is delivered.
+    // Idempotent and does NOT commit; the caller commits within its own transaction.
+    Task CreateSettlementForDeliveredOrder(Guid orderId);
+
     // Daily settlement job
     Task GenerateDailySettlements(DateTime periodDate);
 }

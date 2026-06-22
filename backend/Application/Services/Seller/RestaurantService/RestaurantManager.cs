@@ -462,6 +462,45 @@ public class RestaurantManager : IRestaurantService
         return result;
     }
 
+    public async Task<ServiceObjectResult<bool>> ApproveRestaurant(Guid restaurantId)
+    {
+        var result = new ServiceObjectResult<bool>();
+        try
+        {
+            var restaurant = await _restaurantRepository.GetAsync(x => x.Id == restaurantId, enableTracking: true);
+            if (restaurant == null)
+            {
+                result.Fail("Restoran bulunamadı.");
+                return result;
+            }
+
+            if (restaurant.ApprovedAt != null)
+            {
+                result.Fail("Restoran zaten onaylanmış.");
+                return result;
+            }
+
+            var token = _tokenAccessor.GetToken();
+
+            restaurant.IsActive = true;
+            restaurant.ApprovedAt = DateTime.UtcNow;
+            restaurant.ApprovedByUserId = token?.UserId;
+            await _restaurantRepository.UpdateAsync(restaurant);
+
+            // Komisyon: restorana özel bir kayıt oluşturulmaz. ResolveCommission, özel kayıt yokken
+            // platform varsayılanını (PlatformCommissionSchedule) uygular; böylece platform oranı
+            // değiştiğinde tüm onaylı restoranlara otomatik yansır. Özel oran gerektiğinde admin
+            // SetRestaurantCommission ile açıkça tanımlar.
+            result.SetData(true);
+        }
+        catch (Exception e)
+        {
+            result.Fail(e);
+        }
+
+        return result;
+    }
+
     public async Task<ServiceObjectResult<string>> GetRestaurantInfoForSeller(GetRestaurantInformationRequestDto requestDto)
     {
         var result = new ServiceObjectResult<string>();

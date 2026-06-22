@@ -4,6 +4,7 @@ using Base.Enums;
 using Dapper;
 using Domain.Dto.Seller.Commission;
 using Domain.Dto.Seller.Settlement;
+using Domain.Entities.Buyer;
 using Domain.Entities.Common;
 using Domain.Entities.Seller;
 using Domain.Service;
@@ -518,6 +519,55 @@ public class CommissionManager : ICommissionService
 
         // 3. Absolute fallback
         return (0.10m, 5.00m, (short)CommissionSourceTypeEnums.Platform, Guid.Empty);
+    }
+
+    // ===== Settlement Item Creation (on order delivered) =====
+
+    public async Task CreateSettlementForDeliveredOrder(Guid orderId)
+    {
+        // Idempotency: a delivered order is settled exactly once.
+        var existing = await _unitOfWork.SettlementItemRepository.GetAsync(
+            x => x.OrderId == orderId && x.DeletedDate == null);
+        if (existing != null) return;
+
+        var order = await _unitOfWork.OrderRepository.GetAsync(x => x.Id == orderId, enableTracking: true);
+        if (order == null) return;
+
+        // Only delivered orders generate settlement items.
+        if (order.StatusId != (short)OrderStatusEnums.Delivered) return;
+
+        var payment = await _unitOfWork.PaymentRepository.GetAsync(
+            x => x.OrderId == orderId && x.StatusId == (short)PaymentStatusEnums.Completed,
+            enableTracking: true);
+
+        // No completed payment → nothing to settle (e.g. unpaid or refunded order).
+        if (payment == null) return;
+
+        var (rate, fixedFee, sourceType, sourceId) = await ResolveCommission(order.RestaurantId);
+        var commissionAmount = Math.Round(payment.Amount * rate, 2);
+        var netAmount = payment.Amount - commissionAmount - fixedFee;
+
+        // Snapshot the applied commission onto the payment record as well.
+        payment.CommissionAmount = commissionAmount;
+        payment.SellerPayoutAmount = netAmount;
+        _unitOfWork.PaymentRepository.Update(payment);
+
+        var settlementItem = new SettlementItem
+        {
+            Id = Guid.NewGuid(),
+            OrderId = order.Id,
+            SellerId = order.SellerId,
+            RestaurantId = order.RestaurantId,
+            OrderAmount = payment.Amount,
+            CommissionRate = rate,
+            CommissionAmount = commissionAmount,
+            FixedFee = fixedFee,
+            NetAmount = netAmount,
+            CommissionSourceType = sourceType,
+            CommissionSourceId = sourceId,
+            PeriodDate = (order.DeliveredAt ?? DateTime.UtcNow).Date
+        };
+        await _unitOfWork.SettlementItemRepository.AddAsync(settlementItem);
     }
 
     // ===== Daily Settlement Generation =====

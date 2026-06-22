@@ -99,33 +99,9 @@ public class PaymentManager : IPaymentService
                         payment.ProviderPaymentId = paymentId;
                         payment.CompletedAt = DateTime.UtcNow;
 
-                        // Resolve commission for this restaurant
-                        var (rate, fixedFee, sourceType, sourceId) = await _commissionService.ResolveCommission(order.RestaurantId);
-                        var commissionAmount = Math.Round(payment.Amount * rate, 2);
-                        var netAmount = payment.Amount - commissionAmount - fixedFee;
-
-                        payment.CommissionAmount = commissionAmount;
-                        payment.SellerPayoutAmount = netAmount;
-
+                        // Komisyon hesaplama ve hakediş kalemi oluşturma artık ödeme anında değil,
+                        // sipariş teslim edildiğinde (Delivered) yapılır — bkz. CreateSettlementForDeliveredOrder.
                         _unitOfWork.PaymentRepository.Update(payment);
-
-                        // Create settlement item
-                        var settlementItem = new SettlementItem
-                        {
-                            Id = Guid.NewGuid(),
-                            OrderId = order.Id,
-                            SellerId = order.SellerId,
-                            RestaurantId = order.RestaurantId,
-                            OrderAmount = payment.Amount,
-                            CommissionRate = rate,
-                            CommissionAmount = commissionAmount,
-                            FixedFee = fixedFee,
-                            NetAmount = netAmount,
-                            CommissionSourceType = sourceType,
-                            CommissionSourceId = sourceId,
-                            PeriodDate = DateTime.UtcNow.Date
-                        };
-                        await _unitOfWork.SettlementItemRepository.AddAsync(settlementItem);
                     }
 
                     order.PaymentStatusId = (short)PaymentStatusEnums.Completed;

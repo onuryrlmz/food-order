@@ -46,4 +46,11 @@ public class AdminRestaurantController : BaseController
     {
         return await _restaurantService.ToggleActive(id);
     }
+
+    [HttpPost("{id}/approve")]
+    [AuthorizeAPIRequest(true, false, UserRoleEnums.Admin)]
+    public async Task<ServiceObjectResult<bool>> Approve(Guid id)
+    {
+        return await _restaurantService.ApproveRestaurant(id);
+    }
 }

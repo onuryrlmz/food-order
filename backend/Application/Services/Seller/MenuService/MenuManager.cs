@@ -1,9 +1,11 @@
+using Application.Services.Common.TokenService;
 using Application.Services.Seller.ProductService;
 using Application.Services.Seller.MenuOptionValueService;
 using Application.Services.Seller.MenuOptionService;
 using Application.Services.Seller.MenuOptionValueOptionService;
 using Application.Services.Seller.MenuOptionValueOptionValueService;
 using AutoMapper;
+using Base.Enums;
 using Microsoft.EntityFrameworkCore;
 using Domain.Dto.Seller.Menu;
 using Domain.Dto.Seller.MenuOption;
@@ -30,8 +32,9 @@ public class MenuManager : IMenuService
     private readonly IMenuRepository _menuRepository;
     private readonly IProductService _productService;
     private readonly IAwsS3ServiceAdapter _awsS3ServiceAdapter;
+    private readonly ITokenAccessor _tokenAccessor;
 
-    public MenuManager(IMapper mapper, IMenuRepository menuRepository, IMenuOptionService menuOptionService, IMenuOptionValueService menuOptionValueService, IMenuOptionValueOptionService menuOptionValueOptionService, IMenuOptionValueOptionValueService menuOptionValueOptionValueService, IProductService productService, IAwsS3ServiceAdapter awsS3ServiceAdapter)
+    public MenuManager(IMapper mapper, IMenuRepository menuRepository, IMenuOptionService menuOptionService, IMenuOptionValueService menuOptionValueService, IMenuOptionValueOptionService menuOptionValueOptionService, IMenuOptionValueOptionValueService menuOptionValueOptionValueService, IProductService productService, IAwsS3ServiceAdapter awsS3ServiceAdapter, ITokenAccessor tokenAccessor)
     {
         _mapper = mapper;
         _menuRepository = menuRepository;
@@ -41,6 +44,22 @@ public class MenuManager : IMenuService
         _menuOptionValueOptionValueService = menuOptionValueOptionValueService;
         _productService = productService;
         _awsS3ServiceAdapter = awsS3ServiceAdapter;
+        _tokenAccessor = tokenAccessor;
+    }
+
+    // Restoran sahiplik kontrolü (IDOR koruması). Admin muaftır.
+    private bool TryAuthorizeRestaurant(Guid restaurantId, out string? error)
+    {
+        error = null;
+        var token = _tokenAccessor.GetToken();
+        if (token == null) { error = "Kimlik doğrulama hatası."; return false; }
+        if (token.Role == UserRoleEnums.Admin) return true;
+        if (token.RestaurantIds == null || !token.RestaurantIds.Contains(restaurantId))
+        {
+            error = "Bu işlem için yetkiniz yok.";
+            return false;
+        }
+        return true;
     }
 
     public async Task<ServiceObjectResult<MenuResponseDto>> GetMenuById(GetMenuRequestDto request)
@@ -194,6 +213,12 @@ public class MenuManager : IMenuService
         var response = new ServiceObjectResult<Guid>();
         try
         {
+            if (!TryAuthorizeRestaurant(request.RestaurantId, out var authError))
+            {
+                response.Fail(authError!);
+                return response;
+            }
+
             var menu = _mapper.Map<Menu>(request);
             menu.Id = Guid.NewGuid();
             menu.OrderIndex = (await _menuRepository.GetListAsync(x => x.RestaurantId == request.RestaurantId)).Count + 1;
@@ -223,6 +248,12 @@ public class MenuManager : IMenuService
             if (menu == null)
             {
                 response.Fail("Menu not found");
+                return response;
+            }
+
+            if (!TryAuthorizeRestaurant(menu.RestaurantId, out var authError))
+            {
+                response.Fail(authError!);
                 return response;
             }
 
@@ -257,6 +288,12 @@ public class MenuManager : IMenuService
             if (menu == null)
             {
                 response.Fail("Menu not found");
+                return response;
+            }
+
+            if (!TryAuthorizeRestaurant(menu.RestaurantId, out var authError))
+            {
+                response.Fail(authError!);
                 return response;
             }
 

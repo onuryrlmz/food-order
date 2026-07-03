@@ -451,6 +451,13 @@ public class CourierManager : ICourierService
                 return result;
             }
 
+            if (token.Role != Base.Enums.UserRoleEnums.Admin &&
+                (token.RestaurantIds == null || !token.RestaurantIds.Contains(restaurantId)))
+            {
+                result.Fail("Bu restoran için yetkiniz yok.");
+                return result;
+            }
+
             // Get couriers that have an active agreement with this restaurant
             var agreements = await _context.Set<Domain.Entities.Courier.RestaurantCourierAgreement>()
                 .Where(a => a.RestaurantId == restaurantId

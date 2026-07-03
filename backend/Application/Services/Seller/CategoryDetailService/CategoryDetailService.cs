@@ -1,4 +1,6 @@
+using Application.Services.Common.TokenService;
 using AutoMapper;
+using Base.Enums;
 using Domain.Dto.Seller.CategoryDetail;
 using Domain.Entities.Seller;
 using Domain.Service;
@@ -11,12 +13,23 @@ public class CategoryDetailService : ICategoryDetailService
     private readonly ICategoryDetailRepository _categoryDetailRepository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly IMapper _mapper;
+    private readonly ITokenAccessor _tokenAccessor;
 
-    public CategoryDetailService(IMapper mapper, ICategoryRepository categoryRepository, ICategoryDetailRepository categoryDetailRepository)
+    public CategoryDetailService(IMapper mapper, ICategoryRepository categoryRepository, ICategoryDetailRepository categoryDetailRepository, ITokenAccessor tokenAccessor)
     {
         _mapper = mapper;
         _categoryRepository = categoryRepository;
         _categoryDetailRepository = categoryDetailRepository;
+        _tokenAccessor = tokenAccessor;
+    }
+
+    // Satıcı bir restoranı yönetme yetkisine sahip mi? Admin tüm restoranları yönetebilir.
+    private bool SellerOwnsRestaurant(Guid restaurantId)
+    {
+        var token = _tokenAccessor.GetToken();
+        if (token == null) return false;
+        if (token.Role == UserRoleEnums.Admin) return true;
+        return token.RestaurantIds != null && token.RestaurantIds.Contains(restaurantId);
     }
 
     public async Task<ServiceCollectionResult<CategoryDetailResponse>> GetCategoryDetailsByCategoryId(GetCategoryDetailsByCategoryIdRequestDto request)
@@ -47,6 +60,13 @@ public class CategoryDetailService : ICategoryDetailService
                 return response;
             }
 
+            // Sahiplik kontrolü: kategori-menü bağlaması yalnızca çağıranın restoranında yapılabilir.
+            if (!SellerOwnsRestaurant(category.RestaurantId))
+            {
+                response.Fail("Bu kategoriye menü ekleme yetkiniz yok.");
+                return response;
+            }
+
             var categoryDetail = _mapper.Map<CategoryDetail>(request);
             categoryDetail.Id = Guid.NewGuid();
             categoryDetail.OrderIndex = request.OrderIndex;
@@ -70,6 +90,14 @@ public class CategoryDetailService : ICategoryDetailService
             if (categoryDetail == null)
             {
                 response.Fail("Category Detail not found");
+                return response;
+            }
+
+            // Sahiplik kontrolü: bağlı kategorinin restoranı çağıranınki olmalı.
+            var category = await _categoryRepository.GetAsync(x => x.Id == categoryDetail.CategoryId);
+            if (category == null || !SellerOwnsRestaurant(category.RestaurantId))
+            {
+                response.Fail("Bu kategori-menü bağlantısını silme yetkiniz yok.");
                 return response;
             }
 

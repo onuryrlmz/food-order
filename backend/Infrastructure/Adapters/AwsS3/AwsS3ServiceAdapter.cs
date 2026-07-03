@@ -57,6 +57,33 @@ public class AwsS3ServiceAdapter : IAwsS3ServiceAdapter
         return null;
     }
 
+    public async Task<bool> DeleteFileAsync(string fileUrl)
+    {
+        if (string.IsNullOrWhiteSpace(fileUrl)) return false;
+
+        // Public URL ({domain}/{key}) içinden object key'i çıkar.
+        string key;
+        if (!string.IsNullOrEmpty(_domain) && fileUrl.StartsWith(_domain, StringComparison.OrdinalIgnoreCase))
+            key = fileUrl.Substring(_domain.Length).TrimStart('/');
+        else if (Uri.TryCreate(fileUrl, UriKind.Absolute, out var uri))
+            key = uri.AbsolutePath.TrimStart('/');
+        else
+            key = fileUrl.TrimStart('/');
+
+        if (string.IsNullOrEmpty(key)) return false;
+
+        var credentials = new BasicAWSCredentials(_accessKey, _secretKey);
+        using var s3Client = new AmazonS3Client(credentials, new AmazonS3Config { ServiceURL = _endpoint });
+
+        var response = await s3Client.DeleteObjectAsync(new DeleteObjectRequest
+        {
+            BucketName = _bucketName,
+            Key = key
+        });
+
+        return response.HttpStatusCode is HttpStatusCode.OK or HttpStatusCode.NoContent;
+    }
+
     private AwsS3Base CreateBase()
     {
         return new AwsS3Base(_domain, _endpoint, _bucketName, _accessKey, _secretKey);

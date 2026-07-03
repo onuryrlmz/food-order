@@ -93,30 +93,42 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddDistributedMemoryCache();
 
-// Rate limiting - API koruması
+// Rate limiting - API koruması.
+// Limiter'lar istemci IP'sine göre partition'lanır — böylece tek bir istemci global kovayı
+// doldurup diğer tüm kullanıcıları (özellikle login/şifre sıfırlama) DoS edemez.
+// (X-Forwarded-For spoof edilebildiği için güvenilir kaynak olarak RemoteIpAddress kullanılır.)
 builder.Services.AddRateLimiter(options =>
 {
-    options.AddFixedWindowLimiter("fixed", limiterOptions =>
-    {
-        limiterOptions.PermitLimit = 60;
-        limiterOptions.Window = TimeSpan.FromMinutes(1);
-        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        limiterOptions.QueueLimit = 5;
-    });
+    static string ClientKey(HttpContext ctx) =>
+        ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
-    options.AddFixedWindowLimiter("auth", limiterOptions =>
-    {
-        limiterOptions.PermitLimit = 10;
-        limiterOptions.Window = TimeSpan.FromMinutes(1);
-        limiterOptions.QueueLimit = 0;
-    });
+    options.AddPolicy("fixed", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(ClientKey(httpContext), _ =>
+            new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 5
+            }));
 
-    options.AddFixedWindowLimiter("password-reset", limiterOptions =>
-    {
-        limiterOptions.PermitLimit = 3;
-        limiterOptions.Window = TimeSpan.FromMinutes(10);
-        limiterOptions.QueueLimit = 0;
-    });
+    options.AddPolicy("auth", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(ClientKey(httpContext), _ =>
+            new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+
+    options.AddPolicy("password-reset", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(ClientKey(httpContext), _ =>
+            new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 3,
+                Window = TimeSpan.FromMinutes(10),
+                QueueLimit = 0
+            }));
 
     options.RejectionStatusCode = 429;
 });
@@ -154,23 +166,33 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
     {
         if (allowedOrigins.Length > 0)
-            policy.WithOrigins(allowedOrigins);
-        else
-            policy.SetIsOriginAllowed(_ => true); // dev fallback
-
-        policy.AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
+        {
+            policy.WithOrigins(allowedOrigins)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        }
+        else if (builder.Environment.IsDevelopment())
+        {
+            // Yalnızca geliştirmede: herhangi bir origin'e izin ver. Credentials ile birlikte
+            // "*" kullanılamayacağı için origin'i yansıtıyoruz.
+            policy.SetIsOriginAllowed(_ => true)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        }
+        // Production'da AllowedOrigins boşsa fail-closed: hiçbir cross-origin credential'lı isteğe izin verilmez.
     })
 );
 
 var app = builder.Build();
 
-//if (app.Environment.IsDevelopment())
-//{
+// Swagger yalnızca production dışında açık — API yüzeyini prod'da ifşa etmemek için.
+if (!app.Environment.IsProduction())
+{
     app.UseSwagger();
     app.UseSwaggerUI(opt => { opt.DocExpansion(DocExpansion.None); });
-//}
+}
 
 if (app.Environment.IsProduction())
     app.ConfigureCustomExceptionMiddleware();
@@ -180,13 +202,19 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+// Genel rate limit (60/dk, IP bazlı) tüm controller'lara uygulanır; auth/password-reset gibi
+// daha sıkı limitler ilgili controller'larda [EnableRateLimiting] ile override edilir.
+app.MapControllers().RequireRateLimiting("fixed");
 app.MapHub<OrderHub>("/hubs/order");
 app.MapHub<RestaurantHub>("/hubs/restaurant");
 app.MapHub<CourierHub>("/hubs/courier");
 
-// Hangfire dashboard (admin only in production)
-app.UseHangfireDashboard("/hangfire");
+// Hangfire dashboard: yetkilendirme filtresi olmadan açık bırakılmamalı. Yalnızca geliştirme
+// ortamında ya da yerel isteklerde erişilebilir; production'da uzak erişim reddedilir.
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[] { new HangfireDashboardAuthorizationFilter(app.Environment.IsDevelopment()) }
+});
 
 // Register recurring jobs
 RecurringJob.AddOrUpdate<ICleanupJobService>("cleanup-reset-tokens", s => s.CleanupExpiredResetTokens(), Cron.Daily);

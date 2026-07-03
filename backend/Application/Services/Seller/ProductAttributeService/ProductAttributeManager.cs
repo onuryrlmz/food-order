@@ -76,6 +76,20 @@ public class ProductAttributeManager : IProductAttributeService
                 return response;
             }
 
+            // Sahiplik kontrolü: özellik yalnızca çağıranın restoranına ait bir ürüne eklenebilir.
+            var product = await _productRepository.GetAsync(x => x.Id == request.ProductId);
+            if (product == null)
+            {
+                response.Fail("Product not found");
+                return response;
+            }
+
+            if (_tokenAccessor.GetToken()?.RestaurantIds?.Contains(product.RestaurantId) != true)
+            {
+                response.Fail("Unauthorized access to this product");
+                return response;
+            }
+
             var productAttribute = new ProductAttribute
             {
                 Id = Guid.NewGuid(),

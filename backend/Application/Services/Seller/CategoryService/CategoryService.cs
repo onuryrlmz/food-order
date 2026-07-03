@@ -1,6 +1,8 @@
+using Application.Services.Common.TokenService;
 using Application.Services.Seller.CategoryDetailService;
 using Application.Services.Seller.MenuService;
 using AutoMapper;
+using Base.Enums;
 using Domain.Dto.Seller.Category;
 using Domain.Dto.Seller.CategoryDetail;
 using Domain.Dto.Seller.Menu;
@@ -16,13 +18,24 @@ public class CategoryService : ICategoryService
     private readonly ICategoryRepository _categoryRepository;
     private readonly IMapper _mapper;
     private readonly IMenuService _menuService;
+    private readonly ITokenAccessor _tokenAccessor;
 
-    public CategoryService(IMapper mapper, ICategoryRepository categoryRepository, ICategoryDetailService categoryDetailService, IMenuService menuService)
+    public CategoryService(IMapper mapper, ICategoryRepository categoryRepository, ICategoryDetailService categoryDetailService, IMenuService menuService, ITokenAccessor tokenAccessor)
     {
         _mapper = mapper;
         _categoryRepository = categoryRepository;
         _categoryDetailService = categoryDetailService;
         _menuService = menuService;
+        _tokenAccessor = tokenAccessor;
+    }
+
+    // Satıcı bir restoranı yönetme yetkisine sahip mi? Admin tüm restoranları yönetebilir.
+    private bool SellerOwnsRestaurant(Guid restaurantId)
+    {
+        var token = _tokenAccessor.GetToken();
+        if (token == null) return false;
+        if (token.Role == UserRoleEnums.Admin) return true;
+        return token.RestaurantIds != null && token.RestaurantIds.Contains(restaurantId);
     }
 
     public async Task<ServiceCollectionResult<CategoryResponse>> GetCategoriesByRestaurantId(GetCategoriesByRestaurantIdRequestDto request)
@@ -82,6 +95,13 @@ public class CategoryService : ICategoryService
         var response = new ServiceObjectResult<Guid>();
         try
         {
+            // Sahiplik kontrolü: satıcı yalnızca kendi restoranına kategori ekleyebilir.
+            if (!SellerOwnsRestaurant(request.RestaurantId))
+            {
+                response.Fail("Bu restorana kategori ekleme yetkiniz yok.");
+                return response;
+            }
+
             var category = _mapper.Map<Category>(request);
             category.Id = Guid.NewGuid();
             category.OrderIndex = request.OrderIndex;
@@ -102,6 +122,13 @@ public class CategoryService : ICategoryService
         var response = new ServiceObjectResult<bool>();
         try
         {
+            // Sahiplik kontrolü: satıcı yalnızca kendi restoranının kategorisini güncelleyebilir.
+            if (!SellerOwnsRestaurant(request.RestaurantId))
+            {
+                response.Fail("Bu kategoriyi güncelleme yetkiniz yok.");
+                return response;
+            }
+
             var category = await _categoryRepository.GetAsync(x => x.Id == request.Id && x.RestaurantId == request.RestaurantId);
             if (category == null)
             {
@@ -131,6 +158,13 @@ public class CategoryService : ICategoryService
             if (category == null)
             {
                 response.Fail("Category not found");
+                return response;
+            }
+
+            // Sahiplik kontrolü: satıcı yalnızca kendi restoranının kategorisini silebilir.
+            if (!SellerOwnsRestaurant(category.RestaurantId))
+            {
+                response.Fail("Bu kategoriyi silme yetkiniz yok.");
                 return response;
             }
 

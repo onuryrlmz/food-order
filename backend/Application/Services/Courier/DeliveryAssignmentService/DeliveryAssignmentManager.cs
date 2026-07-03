@@ -196,6 +196,13 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 return result;
             }
 
+            // Askıya alınmış / pasif kurye teslimat kabul edemez.
+            if (courier.StatusId != (short)CourierStatusEnums.Active)
+            {
+                result.Fail("Kurye hesabınız aktif değil.");
+                return result;
+            }
+
             var assignment = await _unitOfWork.DeliveryAssignmentRepository.GetAsync(
                 x => x.Id == assignmentId, enableTracking: true);
             if (assignment == null)
@@ -208,6 +215,24 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 && assignment.StatusId != (short)DeliveryAssignmentStatusEnums.Pending)
             {
                 result.Fail("Bu teslimat kabul edilebilir durumda değil.");
+                return result;
+            }
+
+            // Sahiplik kontrolü (IDOR koruması): Offered bir teklif yalnızca teklifin yapıldığı
+            // kurye tarafından kabul edilebilir; Pending (açık havuz) bir atama ise henüz başka bir
+            // kuryeye bağlanmamış olmalıdır. Aksi halde bir kurye, başkasına önerilmiş teslimatı
+            // (ve kazancını) gasp edebilir.
+            if (assignment.StatusId == (short)DeliveryAssignmentStatusEnums.Offered
+                && assignment.CourierId != courier.Id)
+            {
+                result.Fail("Bu teslimat başka bir kuryeye önerilmiş.");
+                return result;
+            }
+
+            if (assignment.StatusId == (short)DeliveryAssignmentStatusEnums.Pending
+                && assignment.CourierId.HasValue && assignment.CourierId.Value != courier.Id)
+            {
+                result.Fail("Bu teslimat başka bir kuryeye atanmış.");
                 return result;
             }
 
@@ -623,6 +648,13 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
                 return result;
             }
 
+            if (token.Role != Base.Enums.UserRoleEnums.Admin &&
+                (token.RestaurantIds == null || !token.RestaurantIds.Contains(restaurantId)))
+            {
+                result.Fail("Bu restoran için yetkiniz yok.");
+                return result;
+            }
+
             var order = await _unitOfWork.OrderRepository.GetAsync(x => x.Id == orderId, enableTracking: true);
             if (order == null || order.RestaurantId != restaurantId)
             {
@@ -721,6 +753,20 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         var result = new ServiceCollectionResult();
         try
         {
+            var token = _tokenAccessor.GetToken();
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
+            if (token.Role != Base.Enums.UserRoleEnums.Admin &&
+                (token.RestaurantIds == null || !token.RestaurantIds.Contains(restaurantId)))
+            {
+                result.Fail("Bu restoran için yetkiniz yok.");
+                return result;
+            }
+
             var activeStatuses = new[]
             {
                 (short)DeliveryAssignmentStatusEnums.Pending,
@@ -979,6 +1025,20 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         var result = new ServiceCollectionResult();
         try
         {
+            var token = _tokenAccessor.GetToken();
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
+            if (token.Role != Base.Enums.UserRoleEnums.Admin &&
+                (token.RestaurantIds == null || !token.RestaurantIds.Contains(restaurantId)))
+            {
+                result.Fail("Bu restoran için yetkiniz yok.");
+                return result;
+            }
+
             var agreements = await _context.Set<Domain.Entities.Courier.RestaurantCourierAgreement>()
                 .Include(a => a.CourierCompany)
                 .Include(a => a.Courier).ThenInclude(c => c!.User)
@@ -1024,6 +1084,13 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             if (token == null)
             {
                 result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
+            if (token.Role != Base.Enums.UserRoleEnums.Admin &&
+                (token.RestaurantIds == null || !token.RestaurantIds.Contains(restaurantId)))
+            {
+                result.Fail("Bu restoran için yetkiniz yok.");
                 return result;
             }
 
@@ -1080,6 +1147,13 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             if (token == null)
             {
                 result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
+            if (token.Role != Base.Enums.UserRoleEnums.Admin &&
+                (token.RestaurantIds == null || !token.RestaurantIds.Contains(restaurantId)))
+            {
+                result.Fail("Bu restoran için yetkiniz yok.");
                 return result;
             }
 
@@ -1162,11 +1236,25 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         var result = new ServiceObjectResult<bool>();
         try
         {
+            var token = _tokenAccessor.GetToken();
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
             var agreement = await _unitOfWork.RestaurantCourierAgreementRepository.GetAsync(
                 x => x.Id == agreementId, enableTracking: true);
             if (agreement == null)
             {
                 result.Fail("Anlaşma bulunamadı.");
+                return result;
+            }
+
+            if (token.Role != Base.Enums.UserRoleEnums.Admin &&
+                (token.RestaurantIds == null || !token.RestaurantIds.Contains(agreement.RestaurantId)))
+            {
+                result.Fail("Bu anlaşma için yetkiniz yok.");
                 return result;
             }
 
@@ -1195,11 +1283,25 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         var result = new ServiceObjectResult<bool>();
         try
         {
+            var token = _tokenAccessor.GetToken();
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
             var agreement = await _unitOfWork.RestaurantCourierAgreementRepository.GetAsync(
                 x => x.Id == agreementId, enableTracking: true);
             if (agreement == null)
             {
                 result.Fail("Anlaşma bulunamadı.");
+                return result;
+            }
+
+            if (token.Role != Base.Enums.UserRoleEnums.Admin &&
+                (token.RestaurantIds == null || !token.RestaurantIds.Contains(agreement.RestaurantId)))
+            {
+                result.Fail("Bu anlaşma için yetkiniz yok.");
                 return result;
             }
 
@@ -1221,6 +1323,20 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
         var result = new ServiceObjectResult<bool>();
         try
         {
+            var token = _tokenAccessor.GetToken();
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
+            if (token.Role != Base.Enums.UserRoleEnums.Admin &&
+                (token.RestaurantIds == null || !token.RestaurantIds.Contains(restaurantId)))
+            {
+                result.Fail("Bu restoran için yetkiniz yok.");
+                return result;
+            }
+
             var restaurant = await _context.Set<Domain.Entities.Seller.Restaurant>()
                 .FirstOrDefaultAsync(r => r.Id == restaurantId);
             if (restaurant == null)
@@ -1260,6 +1376,14 @@ public class DeliveryAssignmentManager : IDeliveryAssignmentService
             if (order == null)
             {
                 result.Fail("Sipariş bulunamadı.");
+                return result;
+            }
+
+            // IDOR koruması: müşteri yalnızca kendi siparişini takip edebilir (kuryenin canlı konumu
+            // ve iletişim bilgileri sızmamalı). Admin tümünü görebilir.
+            if (token.Role != UserRoleEnums.Admin && order.UserId != token.UserId)
+            {
+                result.Fail("Bu siparişe erişim yetkiniz yok.");
                 return result;
             }
 

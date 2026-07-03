@@ -570,77 +570,187 @@ public class CommissionManager : ICommissionService
         await _unitOfWork.SettlementItemRepository.AddAsync(settlementItem);
     }
 
+    // ===== Settlement Reversal (on refund / cancellation of a delivered order) =====
+
+    public async Task ReverseSettlementForOrder(Guid orderId, string? reason = null)
+    {
+        // Find the original (positive) settlement item for this order.
+        var item = await _unitOfWork.SettlementItemRepository.GetAsync(
+            x => x.OrderId == orderId && x.NetAmount >= 0 && x.DeletedDate == null,
+            enableTracking: true);
+
+        // No settlement was ever created (order not delivered / unpaid) → nothing to reverse.
+        if (item == null) return;
+
+        if (item.SettlementPeriodId == null)
+        {
+            // Not yet rolled into a period: simply void the item so the daily job never picks it up.
+            item.DeletedDate = DateTime.UtcNow;
+            item.Notes = reason ?? "İade nedeniyle iptal edildi";
+            _unitOfWork.SettlementItemRepository.Update(item);
+            await _unitOfWork.CompleteAsync();
+            return;
+        }
+
+        var period = await _unitOfWork.SettlementPeriodRepository.GetAsync(
+            x => x.Id == item.SettlementPeriodId.Value, enableTracking: true);
+
+        if (period != null && period.StatusId != (short)SettlementStatusEnums.Paid)
+        {
+            // Period not yet paid: pull the item out and decrement the period totals.
+            period.TotalOrderCount = Math.Max(0, period.TotalOrderCount - 1);
+            period.TotalOrderAmount -= item.OrderAmount;
+            period.TotalCommission -= item.CommissionAmount;
+            period.TotalFixedFee -= item.FixedFee;
+            period.TotalNetAmount -= item.NetAmount;
+            _unitOfWork.SettlementPeriodRepository.Update(period);
+
+            item.DeletedDate = DateTime.UtcNow;
+            item.Notes = reason ?? "İade nedeniyle iptal edildi";
+            _unitOfWork.SettlementItemRepository.Update(item);
+            await _unitOfWork.CompleteAsync();
+            return;
+        }
+
+        // Period already paid: create a reversing (clawback) item that offsets the seller's
+        // payout in the next daily settlement run. Dated today so it lands in a future period.
+        var clawback = new SettlementItem
+        {
+            Id = Guid.NewGuid(),
+            OrderId = orderId,
+            SellerId = item.SellerId,
+            RestaurantId = item.RestaurantId,
+            OrderAmount = -item.OrderAmount,
+            CommissionRate = item.CommissionRate,
+            CommissionAmount = -item.CommissionAmount,
+            FixedFee = -item.FixedFee,
+            NetAmount = -item.NetAmount,
+            CommissionSourceType = item.CommissionSourceType,
+            CommissionSourceId = item.CommissionSourceId,
+            PeriodDate = DateTime.UtcNow.Date,
+            Notes = reason ?? $"İade mahsubu (sipariş {orderId})"
+        };
+        await _unitOfWork.SettlementItemRepository.AddAsync(clawback);
+        await _unitOfWork.CompleteAsync();
+    }
+
     // ===== Daily Settlement Generation =====
 
     public async Task GenerateDailySettlements(DateTime periodDate)
     {
-        try
+        var conn = _context.Database.GetDbConnection();
+        if (conn.State != ConnectionState.Open) await conn.OpenAsync();
+
+        // Verilen tarihe (dahil) kadar ATANMAMIŞ tüm kalemleri işle. Yalnızca tek günü işlemek,
+        // job'un çalışmadığı bir günü kalıcı olarak yetim bırakırdı; geç teslim edilip PeriodDate'i
+        // geçmişe düşen kalemler de böylece toparlanır. Her grup kendi PeriodDate'ine yazılır.
+        var cutoff = periodDate.Date;
+
+        const string query = @"
+            SELECT `SellerId`, `RestaurantId`, `PeriodDate`,
+                   COUNT(*) AS TotalOrderCount,
+                   SUM(`OrderAmount`) AS TotalOrderAmount,
+                   SUM(`CommissionAmount`) AS TotalCommission,
+                   SUM(`FixedFee`) AS TotalFixedFee,
+                   SUM(`NetAmount`) AS TotalNetAmount
+            FROM `SettlementItem`
+            WHERE `PeriodDate` <= @cutoff
+              AND `SettlementPeriodId` IS NULL
+              AND `DeletedDate` IS NULL
+            GROUP BY `SellerId`, `RestaurantId`, `PeriodDate`";
+
+        var groups = (await conn.QueryAsync<dynamic>(query, new { cutoff })).ToList();
+        var failures = 0;
+
+        foreach (var group in groups)
         {
-            var conn = _context.Database.GetDbConnection();
-            if (conn.State != ConnectionState.Open) await conn.OpenAsync();
+            var sellerId = (Guid)group.SellerId;
+            var restaurantId = (Guid)group.RestaurantId;
+            var groupDate = ((DateTime)group.PeriodDate).Date;
 
-            var dateOnly = periodDate.Date;
-
-            // Group unassigned settlement items by seller+restaurant+date
-            const string query = @"
-                SELECT `SellerId`, `RestaurantId`, `PeriodDate`,
-                       COUNT(*) AS TotalOrderCount,
-                       SUM(`OrderAmount`) AS TotalOrderAmount,
-                       SUM(`CommissionAmount`) AS TotalCommission,
-                       SUM(`FixedFee`) AS TotalFixedFee,
-                       SUM(`NetAmount`) AS TotalNetAmount
-                FROM `SettlementItem`
-                WHERE `PeriodDate` = @dateOnly
-                  AND `SettlementPeriodId` IS NULL
-                  AND `DeletedDate` IS NULL
-                GROUP BY `SellerId`, `RestaurantId`, `PeriodDate`";
-
-            var groups = await conn.QueryAsync<dynamic>(query, new { dateOnly });
-
-            foreach (var group in groups)
+            // Bir grubun hatası diğerlerini durdurmasın (kısmi ilerleme korunur).
+            try
             {
-                // Get seller IBAN
-                const string ibanQuery = "SELECT `IBAN` FROM `Seller` WHERE `Id` = @sellerId";
-                var iban = await conn.ExecuteScalarAsync<string>(ibanQuery, new { sellerId = (Guid)group.SellerId });
-
-                var period = new SettlementPeriod
+                // Idempotency: aynı seller+restaurant+gün için iptal edilmemiş bir dönem zaten
+                // varsa (ör. önceki yarım kalan çalışma), yeni dönem oluşturmak yerine atanmamış
+                // kalemleri o döneme ekleyip toplamlarını güncelle.
+                const string existingQuery = @"
+                    SELECT `Id` FROM `SettlementPeriod`
+                    WHERE `SellerId` = @sellerId AND `RestaurantId` = @restaurantId
+                      AND `PeriodDate` = @groupDate AND `DeletedDate` IS NULL
+                      AND `StatusId` <> @cancelled
+                    LIMIT 1";
+                var existingPeriodId = await conn.ExecuteScalarAsync<Guid?>(existingQuery, new
                 {
-                    Id = Guid.NewGuid(),
-                    SellerId = (Guid)group.SellerId,
-                    RestaurantId = (Guid)group.RestaurantId,
-                    PeriodDate = dateOnly,
-                    TotalOrderCount = (int)group.TotalOrderCount,
-                    TotalOrderAmount = (decimal)group.TotalOrderAmount,
-                    TotalCommission = (decimal)group.TotalCommission,
-                    TotalFixedFee = (decimal)group.TotalFixedFee,
-                    TotalNetAmount = (decimal)group.TotalNetAmount,
-                    StatusId = (short)SettlementStatusEnums.Pending,
-                    IBAN = iban
-                };
+                    sellerId, restaurantId, groupDate,
+                    cancelled = (short)SettlementStatusEnums.Cancelled
+                });
 
-                await _unitOfWork.SettlementPeriodRepository.AddAsync(period);
-                await _unitOfWork.CompleteAsync();
+                Guid periodId;
+                if (existingPeriodId.HasValue)
+                {
+                    periodId = existingPeriodId.Value;
+                    const string bumpQuery = @"
+                        UPDATE `SettlementPeriod`
+                        SET `TotalOrderCount` = `TotalOrderCount` + @cnt,
+                            `TotalOrderAmount` = `TotalOrderAmount` + @amt,
+                            `TotalCommission` = `TotalCommission` + @comm,
+                            `TotalFixedFee` = `TotalFixedFee` + @fixed,
+                            `TotalNetAmount` = `TotalNetAmount` + @net,
+                            `UpdatedDate` = UTC_TIMESTAMP()
+                        WHERE `Id` = @periodId";
+                    await conn.ExecuteAsync(bumpQuery, new
+                    {
+                        periodId,
+                        cnt = (int)group.TotalOrderCount,
+                        amt = (decimal)group.TotalOrderAmount,
+                        comm = (decimal)group.TotalCommission,
+                        @fixed = (decimal)group.TotalFixedFee,
+                        net = (decimal)group.TotalNetAmount
+                    });
+                }
+                else
+                {
+                    const string ibanQuery = "SELECT `IBAN` FROM `Seller` WHERE `Id` = @sellerId";
+                    var iban = await conn.ExecuteScalarAsync<string>(ibanQuery, new { sellerId });
 
-                // Assign items to this period
+                    var period = new SettlementPeriod
+                    {
+                        Id = Guid.NewGuid(),
+                        SellerId = sellerId,
+                        RestaurantId = restaurantId,
+                        PeriodDate = groupDate,
+                        TotalOrderCount = (int)group.TotalOrderCount,
+                        TotalOrderAmount = (decimal)group.TotalOrderAmount,
+                        TotalCommission = (decimal)group.TotalCommission,
+                        TotalFixedFee = (decimal)group.TotalFixedFee,
+                        TotalNetAmount = (decimal)group.TotalNetAmount,
+                        StatusId = (short)SettlementStatusEnums.Pending,
+                        IBAN = iban
+                    };
+                    await _unitOfWork.SettlementPeriodRepository.AddAsync(period);
+                    await _unitOfWork.CompleteAsync();
+                    periodId = period.Id;
+                }
+
+                // Kalemleri döneme ata (yalnızca hâlâ atanmamış olanlar).
                 const string updateQuery = @"
                     UPDATE `SettlementItem`
                     SET `SettlementPeriodId` = @periodId, `UpdatedDate` = UTC_TIMESTAMP()
                     WHERE `SellerId` = @sellerId AND `RestaurantId` = @restaurantId
-                      AND `PeriodDate` = @dateOnly AND `SettlementPeriodId` IS NULL
+                      AND `PeriodDate` = @groupDate AND `SettlementPeriodId` IS NULL
                       AND `DeletedDate` IS NULL";
-
-                await conn.ExecuteAsync(updateQuery, new
-                {
-                    periodId = period.Id,
-                    sellerId = (Guid)group.SellerId,
-                    restaurantId = (Guid)group.RestaurantId,
-                    dateOnly
-                });
+                await conn.ExecuteAsync(updateQuery, new { periodId, sellerId, restaurantId, groupDate });
+            }
+            catch (Exception ex)
+            {
+                failures++;
+                Console.WriteLine($"GenerateDailySettlements group error (seller={sellerId}, restaurant={restaurantId}, date={groupDate:yyyy-MM-dd}): {ex.Message}");
             }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"GenerateDailySettlements error: {ex.Message}");
-        }
+
+        // En az bir grup başarısızsa Hangfire'ın yeniden denemesi için hatayı yükselt.
+        if (failures > 0)
+            throw new Exception($"GenerateDailySettlements: {failures} grup işlenemedi.");
     }
 }

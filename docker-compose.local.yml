@@ -1,0 +1,108 @@
+# Local geliştirme ortamı — tüm servisleri tek makinede ayağa kaldırır.
+# Prod dcc-*.yml dosyalarından farkı: GHCR yerine yerel build, Traefik yok, prod URL yok,
+# localhost portları ve CORS. Mobil uygulamalar (front-app/front-courier) React Native
+# olduğu için buraya dahil değildir; onlar host'ta Metro + simülatör ile çalışır (bkz. dev.sh).
+#
+# Kullanım:
+#   docker compose -f docker-compose.local.yml up -d --build
+# Değerler .env dosyasından okunur.
+
+services:
+  yrlmz-food-order-mysql:
+    container_name: yrlmz-food-order-mysql
+    image: mysql:8.0
+    environment:
+      - TZ=Europe/Istanbul
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=FoodOrderApp
+    ports:
+      - "1501:3306"
+    volumes:
+      - food-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  yrlmz-food-order-redis:
+    container_name: yrlmz-food-order-redis
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "1502:6379"
+    volumes:
+      - food-redis-data:/data
+    restart: unless-stopped
+
+  yrlmz-food-order-api:
+    container_name: yrlmz-food-order-api
+    build:
+      context: ./backend
+      dockerfile: WebAPI/Dockerfile
+    environment:
+      - TZ=Europe/Istanbul
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__FoodOrderApp=${DB_CONNECTION_STRING}
+      - Redis__Host=${REDIS_HOST:-yrlmz-food-order-redis}
+      - Redis__Port=6379
+      - Redis__Password=${REDIS_PASSWORD:-}
+      - Redis__Ssl=false
+      - TokenOptions__SecurityKey=${TOKEN_SECURITY_KEY}
+      - AwsS3__Domain=${R2_DOMAIN:-}
+      - AwsS3__Endpoint=${R2_ENDPOINT:-}
+      - AwsS3__BucketName=${R2_BUCKET:-}
+      - AwsS3__AccessKey=${R2_ACCESS_KEY:-}
+      - AwsS3__SecretKey=${R2_SECRET_KEY:-}
+      - AwsS3__Token=${R2_TOKEN:-}
+      - MailSettings__Server=${SMTP_SERVER:-smtp.mandrillapp.com}
+      - MailSettings__Port=${SMTP_PORT:-587}
+      - MailSettings__UserName=${SMTP_USER:-}
+      - MailSettings__Password=${SMTP_PASSWORD:-}
+      - MailSettings__SenderEmail=${SMTP_FROM:-}
+      - AiSupport__ApiKey=${AI_SUPPORT_API_KEY:-}
+      - AiSupport__Model=${AI_SUPPORT_MODEL:-claude-sonnet-4-20250514}
+      - SiteSettings__ServiceUrl=http://localhost:3762
+      - WebAPIConfiguration__AllowedOrigins__0=http://localhost:3000
+      - WebAPIConfiguration__AllowedOrigins__1=http://localhost:3001
+    ports:
+      - "3762:8080"
+    depends_on:
+      yrlmz-food-order-mysql:
+        condition: service_healthy
+      yrlmz-food-order-redis:
+        condition: service_started
+    restart: unless-stopped
+
+  yrlmz-food-order-seller:
+    container_name: yrlmz-food-order-seller
+    build:
+      context: .
+      dockerfile: front-seller/Dockerfile
+      args:
+        # NEXT_PUBLIC_* değişkenleri Next.js'te BUILD-TIME'da bundle'a gömülür — tarayıcı buradan okur.
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:3762/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - yrlmz-food-order-api
+    restart: unless-stopped
+
+  yrlmz-food-order-admin:
+    container_name: yrlmz-food-order-admin
+    build:
+      context: .
+      dockerfile: front-admin/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:3762/v1
+    ports:
+      - "3001:3000"
+    depends_on:
+      - yrlmz-food-order-api
+    restart: unless-stopped
+
+volumes:
+  food-mysql-data:
+  food-redis-data:

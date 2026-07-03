@@ -187,6 +187,15 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Geliştirme ortamında bekleyen EF migration'larını otomatik uygula (local Docker/dev için
+// şemayı hazır hale getirir). Production'da migration bilinçli olarak elle uygulanır.
+if (app.Environment.IsDevelopment())
+{
+    using var migrationScope = app.Services.CreateScope();
+    var db = migrationScope.ServiceProvider.GetRequiredService<Persistence.Contexts.BaseDbContext>();
+    Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.Migrate(db.Database);
+}
+
 // Swagger yalnızca production dışında açık — API yüzeyini prod'da ifşa etmemek için.
 if (!app.Environment.IsProduction())
 {

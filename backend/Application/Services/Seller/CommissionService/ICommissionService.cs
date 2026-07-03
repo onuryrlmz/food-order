@@ -33,6 +33,10 @@ public interface ICommissionService
     // Idempotent and does NOT commit; the caller commits within its own transaction.
     Task CreateSettlementForDeliveredOrder(Guid orderId);
 
+    // Settlement reversal — called when a delivered order is refunded/cancelled.
+    // Idempotent; commits within its own scope (invoked from a Hangfire job).
+    Task ReverseSettlementForOrder(Guid orderId, string? reason = null);
+
     // Daily settlement job
     Task GenerateDailySettlements(DateTime periodDate);
 }

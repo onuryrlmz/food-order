@@ -19,14 +19,15 @@ export const GetCategoriesQuerySchema = z.object({
   restaurantId: z.string().uuid(),
 });
 
+// CreateCategoryDetailRequestDto = { CategoryId, MenuId, OrderIndex }
 export const CreateCategoryDetailRequestSchema = z.object({
-  name: z.string().min(1),
   categoryId: z.string().uuid(),
-  restaurantId: z.string().uuid().optional(),
+  menuId: z.string().uuid(),
+  orderIndex: z.number().int().optional(),
 });
 
 export const DeleteCategoryDetailRequestSchema = z.object({
   id: z.string().uuid(),
-  categoryId: z.string().uuid(),
+  categoryId: z.string().uuid().optional(),
   restaurantId: z.string().uuid().optional(),
 });

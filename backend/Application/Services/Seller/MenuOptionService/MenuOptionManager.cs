@@ -1,4 +1,6 @@
+using Application.Services.Common.TokenService;
 using AutoMapper;
+using Base.Enums;
 using Domain.Dto.Seller.MenuOption;
 using Domain.Entities.Seller;
 using Domain.Service;
@@ -18,6 +20,7 @@ public class MenuOptionManager : IMenuOptionService
     private readonly IMenuOptionValueRepository _menuOptionValueRepository;
     private readonly IMenuOptionValueOptionRepository _menuOptionValueOptionRepository;
     private readonly IMenuOptionValueOptionValueRepository _menuOptionValueOptionValueRepository;
+    private readonly ITokenAccessor _tokenAccessor;
 
     public MenuOptionManager(IMapper mapper, IMenuRepository menuRepository, IMenuOptionRepository menuOptionRepository,
         IOptionTemplateRepository optionTemplateRepository,
@@ -26,7 +29,8 @@ public class MenuOptionManager : IMenuOptionService
         IOptionTemplateValueOptionValueRepository optionTemplateValueOptionValueRepository,
         IMenuOptionValueRepository menuOptionValueRepository,
         IMenuOptionValueOptionRepository menuOptionValueOptionRepository,
-        IMenuOptionValueOptionValueRepository menuOptionValueOptionValueRepository)
+        IMenuOptionValueOptionValueRepository menuOptionValueOptionValueRepository,
+        ITokenAccessor tokenAccessor)
     {
         _mapper = mapper;
         _menuRepository = menuRepository;
@@ -38,6 +42,29 @@ public class MenuOptionManager : IMenuOptionService
         _menuOptionValueRepository = menuOptionValueRepository;
         _menuOptionValueOptionRepository = menuOptionValueOptionRepository;
         _menuOptionValueOptionValueRepository = menuOptionValueOptionValueRepository;
+        _tokenAccessor = tokenAccessor;
+    }
+
+    // Restoran sahiplik kontrolü (IDOR koruması). Admin muaftır.
+    private bool TryAuthorizeRestaurant(Guid restaurantId, out string? error)
+    {
+        error = null;
+        var token = _tokenAccessor.GetToken();
+        if (token == null) { error = "Kimlik doğrulama hatası."; return false; }
+        if (token.Role == UserRoleEnums.Admin) return true;
+        if (token.RestaurantIds == null || !token.RestaurantIds.Contains(restaurantId))
+        {
+            error = "Bu işlem için yetkiniz yok.";
+            return false;
+        }
+        return true;
+    }
+
+    // MenuOption → Menu üzerinden restoranı çözer.
+    private async Task<Guid?> ResolveRestaurantIdByMenuId(Guid menuId)
+    {
+        var menu = await _menuRepository.GetAsync(x => x.Id == menuId);
+        return menu?.RestaurantId;
     }
 
     public async Task<ServiceCollectionResult<MenuOptionResponseDto>> GetMenuOptionsByMenuId(GetMenuOptionsRequestDto request)
@@ -65,6 +92,12 @@ public class MenuOptionManager : IMenuOptionService
             if (menu == null)
             {
                 response.Fail("Menu not found");
+                return response;
+            }
+
+            if (!TryAuthorizeRestaurant(menu.RestaurantId, out var authError))
+            {
+                response.Fail(authError!);
                 return response;
             }
 
@@ -171,6 +204,18 @@ public class MenuOptionManager : IMenuOptionService
                 return response;
             }
 
+            var updRestaurantId = await ResolveRestaurantIdByMenuId(menuOption.MenuId);
+            if (updRestaurantId == null)
+            {
+                response.Fail("Menu not found");
+                return response;
+            }
+            if (!TryAuthorizeRestaurant(updRestaurantId.Value, out var updAuthError))
+            {
+                response.Fail(updAuthError!);
+                return response;
+            }
+
             if (menuOption.OrderIndex != request.OrderIndex)
             {
                 var oldOrderIndex = menuOption.OrderIndex;
@@ -221,6 +266,18 @@ public class MenuOptionManager : IMenuOptionService
             if (menuOption == null)
             {
                 response.Fail("Menu option not found");
+                return response;
+            }
+
+            var delRestaurantId = await ResolveRestaurantIdByMenuId(menuOption.MenuId);
+            if (delRestaurantId == null)
+            {
+                response.Fail("Menu not found");
+                return response;
+            }
+            if (!TryAuthorizeRestaurant(delRestaurantId.Value, out var delAuthError))
+            {
+                response.Fail(delAuthError!);
                 return response;
             }
 

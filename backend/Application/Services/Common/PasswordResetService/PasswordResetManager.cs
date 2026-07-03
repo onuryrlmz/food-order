@@ -168,9 +168,10 @@ public class PasswordResetManager : IPasswordResetService
 
     private async Task<PasswordResetToken?> GetValidTokenAsync(Guid userId, string code)
     {
+        // Token'ı KODDAN BAĞIMSIZ bul; aksi halde yanlış kod denemeleri hiç kaydedilmez ve
+        // brute-force kilidi (FailedAttempts) asla tetiklenmez (6 haneli kod tahmin edilebilir).
         var token = await _passwordResetTokenRepository.GetAsync(
             x => x.UserId == userId &&
-                 x.Code == code &&
                  !x.UsedAt.HasValue &&
                  x.ExpiresAt > DateTime.UtcNow,
             enableTracking: true);
@@ -178,8 +179,16 @@ public class PasswordResetManager : IPasswordResetService
         if (token == null)
             return null;
 
-        // Check brute force lockout
+        // Çok fazla başarısız deneme → kilit.
         if (token.FailedAttempts >= MaxFailedAttempts) return null;
+
+        // Kod eşleşmiyorsa başarısız denemeyi say ve reddet.
+        if (token.Code != code)
+        {
+            token.FailedAttempts += 1;
+            await _passwordResetTokenRepository.UpdateAsync(token);
+            return null;
+        }
 
         return token;
     }

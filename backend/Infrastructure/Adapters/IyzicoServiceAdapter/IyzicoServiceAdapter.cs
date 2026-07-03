@@ -251,7 +251,9 @@ public class IyzicoServiceAdapter : IIyzicoServiceAdapter
                 var dto = new ThreeDsCompleteResultDto
                 {
                     Success = true,
-                    CardUserKey = payment.CardUserKey
+                    CardUserKey = payment.CardUserKey,
+                    // Sipariş tek basket item ile oluşturuluyor; iadede kullanılacak transaction id.
+                    PaymentTransactionId = payment.PaymentItems?.FirstOrDefault()?.PaymentTransactionId
                 };
 
                 // Kart kaydetme yapıldıysa kart detaylarını da doldur

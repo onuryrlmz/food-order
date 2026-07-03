@@ -97,6 +97,8 @@ public class PaymentManager : IPaymentService
                     {
                         payment.StatusId = (short)PaymentStatusEnums.Completed;
                         payment.ProviderPaymentId = paymentId;
+                        // Iyzico iadeleri PaymentTransactionId ister; callback anında yakalayıp saklıyoruz.
+                        payment.ProviderTransactionId = completeResult.Data.PaymentTransactionId;
                         payment.CompletedAt = DateTime.UtcNow;
 
                         // Komisyon hesaplama ve hakediş kalemi oluşturma artık ödeme anında değil,
@@ -202,9 +204,16 @@ public class PaymentManager : IPaymentService
                 return result;
             }
 
+            // Iyzico iadesi paymentId değil, ödeme kalemine ait PaymentTransactionId ister.
+            if (string.IsNullOrEmpty(payment.ProviderTransactionId))
+            {
+                result.Fail("Iade edilemedi: ödeme işlem numarası (PaymentTransactionId) bulunamadı.");
+                return result;
+            }
+
             // Call iyzico refund
             var refundResult = _iyzicoAdapter.RefundPayment(
-                payment.ProviderPaymentId ?? payment.ProviderConversationId ?? "",
+                payment.ProviderTransactionId,
                 payment.Amount);
 
             if (refundResult.HasFailed || refundResult.Data?.Success != true)
@@ -220,6 +229,10 @@ public class PaymentManager : IPaymentService
             payment.RefundReason = reason;
             _unitOfWork.PaymentRepository.Update(payment);
             await _context.SaveChangesAsync();
+
+            // İade edilen sipariş için oluşmuş hakediş kalemini geri al (satıcıya iade edilen
+            // sipariş için ödeme yapılmamalı). Hakediş yoksa bu çağrı no-op'tur.
+            await _commissionService.ReverseSettlementForOrder(orderId, reason);
 
             // Notify customer (Hangfire creates its own DI scope)
             BackgroundJob.Enqueue<INotificationService>(s =>
@@ -265,6 +278,12 @@ public class PaymentManager : IPaymentService
 
     private async Task FailPaymentAndOrder(Payment? payment, Order order, string? paymentId, string errorMessage)
     {
+        // Spoofing koruması: callback anonimdir ve 'status' alanı istemciden gelir. Yalnızca hâlâ
+        // ödeme bekleyen bir sipariş başarısız olarak işaretlenebilir; ödenmiş/ilerlemiş bir sipariş
+        // sahte bir "fail" callback'i ile iptal edilememelidir. (Başarı yolu İyzico ile doğrulanır.)
+        if (order.StatusId != (short)OrderStatusEnums.PaymentPending)
+            return;
+
         if (payment != null)
         {
             payment.StatusId = (short)PaymentStatusEnums.Failed;

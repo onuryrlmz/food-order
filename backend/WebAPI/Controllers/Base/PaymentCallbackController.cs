@@ -50,18 +50,27 @@ public class PaymentCallbackController : BaseController
     private static string GenerateCallbackHtml(bool success, string orderId, string message)
     {
         var statusText = success ? "success" : "failure";
+
+        // XSS koruması: dinamik değerler script/HTML bağlamına escape edilmeden gömülmemeli.
+        // JS nesnesini System.Text.Json ile üretiyoruz (HTML-duyarlı karakterleri de kaçırır),
+        // <p> içindeki mesajı ise HTML-encode ediyoruz. conversationId Guid'e parse edilir.
+        var safeOrderId = Guid.TryParse(orderId, out var parsed) ? parsed.ToString() : string.Empty;
+        var payloadJson = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            status = statusText,
+            orderId = safeOrderId,
+            message
+        });
+        var htmlMessage = System.Net.WebUtility.HtmlEncode(message);
+
         return $@"<!DOCTYPE html>
 <html>
 <head><meta name=""viewport"" content=""width=device-width, initial-scale=1""></head>
 <body>
 <script>
-  window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify({{
-    status: ""{statusText}"",
-    orderId: ""{orderId}"",
-    message: ""{message.Replace("\"", "\\\"")}""
-  }}));
+  window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify({payloadJson}));
 </script>
-<p style=""text-align:center;margin-top:40px;font-family:sans-serif;"">{message}</p>
+<p style=""text-align:center;margin-top:40px;font-family:sans-serif;"">{htmlMessage}</p>
 </body>
 </html>";
     }

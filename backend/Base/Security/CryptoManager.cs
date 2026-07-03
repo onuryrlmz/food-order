@@ -107,47 +107,107 @@ public static class CryptoManagerV1
 
 public static class CryptoManagerV3
 {
-    // Token encryption için sabit IV/Salt — token veri güvenliği değil transport güvenliği sağlar.
-    // Şifre hashing'i için BCrypt kullanılır (UserManager).
-    private static readonly byte[] IvV2 = Convert.FromBase64String("uGLfDZHiv1NeHnQt+M68UQ==");
-    private static readonly byte[] SaltV2 = Encoding.UTF8.GetBytes("Pu+FLO7Uuk+L8Mn");
-    private const string PasswordV2 = "6ISemXimN+K!zAs";
+    // Token'lar authenticated encryption ile korunur: her şifrelemede rastgele IV + AES-256-CBC,
+    // ardından (IV || ciphertext) üzerinde HMAC-SHA256. Gizli anahtar KOD'da tutulmaz; ortam
+    // değişkeninden (TOKEN_SECURITY_KEY / TokenOptions:SecurityKey) türetilir. İmza doğrulaması
+    // olmadan token forge edilemez; sabit IV/anahtar zafiyeti giderilir.
+    private static readonly byte[] AesKeySalt = Encoding.UTF8.GetBytes("foodorder-token-aes-v3");
+    private static readonly byte[] HmacKeySalt = Encoding.UTF8.GetBytes("foodorder-token-hmac-v3");
+    private const int Pbkdf2Iterations = 10000;
+    private const int IvLength = 16;
+    private const int MacLength = 32;
+
+    // Yapılandırma yoksa (ör. bazı test ortamları) süreç ömrü boyunca sabit rastgele anahtar
+    // kullanılır — güvenli, ancak yeniden başlatmada token'lar geçersiz olur.
+    private static readonly string EphemeralSecret = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
+
+    // Anahtar türetme (PBKDF2) pahalıdır; süreç başına bir kez hesaplanıp önbelleğe alınır.
+    private static readonly Lazy<(byte[] aesKey, byte[] hmacKey)> Keys = new(DeriveKeys);
+
+    private static string ResolveSecret()
+    {
+        var secret = Base.Constant.Global.Configuration?["TokenOptions:SecurityKey"]
+                     ?? Environment.GetEnvironmentVariable("TOKEN_SECURITY_KEY");
+        return string.IsNullOrWhiteSpace(secret) ? EphemeralSecret : secret;
+    }
+
+    private static (byte[] aesKey, byte[] hmacKey) DeriveKeys()
+    {
+        var secretBytes = Encoding.UTF8.GetBytes(ResolveSecret());
+        using var aesKdf = new Rfc2898DeriveBytes(secretBytes, AesKeySalt, Pbkdf2Iterations, HashAlgorithmName.SHA256);
+        using var hmacKdf = new Rfc2898DeriveBytes(secretBytes, HmacKeySalt, Pbkdf2Iterations, HashAlgorithmName.SHA256);
+        return (aesKdf.GetBytes(32), hmacKdf.GetBytes(32));
+    }
 
     public static string Encrypt(this string strPlainText, string key = "")
     {
+        var (aesKey, hmacKey) = Keys.Value;
+
         using var aes = Aes.Create();
-        aes.BlockSize = 128;
-        aes.KeySize = 128;
-        aes.IV = IvV2;
+        aes.KeySize = 256;
         aes.Padding = PaddingMode.PKCS7;
         aes.Mode = CipherMode.CBC;
-        aes.Key = GenerateKey(PasswordV2, SaltV2, 1000);
+        aes.Key = aesKey;
+        aes.GenerateIV();
+        var iv = aes.IV;
 
-        var strText = Encoding.UTF8.GetBytes(strPlainText);
+        var plainBytes = Encoding.UTF8.GetBytes(strPlainText);
         using var transform = aes.CreateEncryptor();
-        var cipherText = transform.TransformFinalBlock(strText, 0, strText.Length);
-        return Convert.ToBase64String(cipherText);
+        var cipher = transform.TransformFinalBlock(plainBytes, 0, plainBytes.Length);
+
+        var ivAndCipher = new byte[iv.Length + cipher.Length];
+        Buffer.BlockCopy(iv, 0, ivAndCipher, 0, iv.Length);
+        Buffer.BlockCopy(cipher, 0, ivAndCipher, iv.Length, cipher.Length);
+
+        using var hmac = new HMACSHA256(hmacKey);
+        var mac = hmac.ComputeHash(ivAndCipher);
+
+        var output = new byte[ivAndCipher.Length + mac.Length];
+        Buffer.BlockCopy(ivAndCipher, 0, output, 0, ivAndCipher.Length);
+        Buffer.BlockCopy(mac, 0, output, ivAndCipher.Length, mac.Length);
+        return Convert.ToBase64String(output);
     }
 
     public static string Decrypt(this string strChipperText, string key = "")
     {
-        using var aes = Aes.Create();
-        aes.BlockSize = 128;
-        aes.KeySize = 128;
-        aes.IV = IvV2;
-        aes.Padding = PaddingMode.PKCS7;
-        aes.Mode = CipherMode.CBC;
-        aes.Key = GenerateKey(PasswordV2, SaltV2, 1000);
+        try
+        {
+            var (aesKey, hmacKey) = Keys.Value;
+            var data = Convert.FromBase64String(strChipperText);
+            if (data.Length < IvLength + MacLength + 1)
+                return string.Empty;
 
-        var cipherBytes = Convert.FromBase64String(strChipperText);
-        using var transform = aes.CreateDecryptor();
-        var result = transform.TransformFinalBlock(cipherBytes, 0, cipherBytes.Length);
-        return Encoding.UTF8.GetString(result);
-    }
+            var macOffset = data.Length - MacLength;
+            var ivAndCipher = new byte[macOffset];
+            Buffer.BlockCopy(data, 0, ivAndCipher, 0, macOffset);
+            var providedMac = new byte[MacLength];
+            Buffer.BlockCopy(data, macOffset, providedMac, 0, MacLength);
 
-    private static byte[] GenerateKey(string strPassword, byte[] salt, int iterations)
-    {
-        using var rfc2898 = new Rfc2898DeriveBytes(Encoding.UTF8.GetBytes(strPassword), salt, iterations, HashAlgorithmName.SHA256);
-        return rfc2898.GetBytes(128 / 8);
+            using var hmac = new HMACSHA256(hmacKey);
+            var expectedMac = hmac.ComputeHash(ivAndCipher);
+
+            // İmza geçersizse (forge/tamper) sabit zamanlı karşılaştırma ile reddet.
+            if (!CryptographicOperations.FixedTimeEquals(providedMac, expectedMac))
+                return string.Empty;
+
+            var iv = new byte[IvLength];
+            Buffer.BlockCopy(ivAndCipher, 0, iv, 0, IvLength);
+            var cipher = new byte[ivAndCipher.Length - IvLength];
+            Buffer.BlockCopy(ivAndCipher, IvLength, cipher, 0, cipher.Length);
+
+            using var aes = Aes.Create();
+            aes.KeySize = 256;
+            aes.Padding = PaddingMode.PKCS7;
+            aes.Mode = CipherMode.CBC;
+            aes.Key = aesKey;
+            aes.IV = iv;
+            using var transform = aes.CreateDecryptor();
+            var result = transform.TransformFinalBlock(cipher, 0, cipher.Length);
+            return Encoding.UTF8.GetString(result);
+        }
+        catch
+        {
+            return string.Empty;
+        }
     }
 }

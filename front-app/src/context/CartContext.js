@@ -169,6 +169,10 @@ export const CartProvider = ({children}) => {
   }, [cart]);
 
   const addItem = useCallback((item, restaurant) => {
+    // Sepet değişince uygulanmış kupon geçersizleşir (yüzde/asgari-tutar kuralları kayar);
+    // bayat indirimin checkout'a taşınmaması için sıfırla. Kullanıcı kuponu yeniden uygular.
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
     setCart(prev => {
       let cartData;
       if (!prev || prev.restaurantId !== restaurant.id) {

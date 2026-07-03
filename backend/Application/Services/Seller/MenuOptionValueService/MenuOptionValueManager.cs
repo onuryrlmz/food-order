@@ -1,4 +1,6 @@
+using Application.Services.Common.TokenService;
 using AutoMapper;
+using Base.Enums;
 using Domain.Dto.Seller.MenuOptionValue;
 using Domain.Entities.Seller;
 using Domain.Service;
@@ -9,14 +11,42 @@ namespace Application.Services.Seller.MenuOptionValueService;
 public class MenuOptionValueManager : IMenuOptionValueService
 {
     private readonly IMapper _mapper;
+    private readonly IMenuRepository _menuRepository;
     private readonly IMenuOptionRepository _menuOptionRepository;
     private readonly IMenuOptionValueRepository _menuOptionValueRepository;
+    private readonly ITokenAccessor _tokenAccessor;
 
-    public MenuOptionValueManager(IMapper mapper, IMenuOptionRepository menuOptionRepository, IMenuOptionValueRepository menuOptionValueRepository)
+    public MenuOptionValueManager(IMapper mapper, IMenuRepository menuRepository, IMenuOptionRepository menuOptionRepository, IMenuOptionValueRepository menuOptionValueRepository, ITokenAccessor tokenAccessor)
     {
         _mapper = mapper;
+        _menuRepository = menuRepository;
         _menuOptionRepository = menuOptionRepository;
         _menuOptionValueRepository = menuOptionValueRepository;
+        _tokenAccessor = tokenAccessor;
+    }
+
+    // Restoran sahiplik kontrolü (IDOR koruması). Admin muaftır.
+    private bool TryAuthorizeRestaurant(Guid restaurantId, out string? error)
+    {
+        error = null;
+        var token = _tokenAccessor.GetToken();
+        if (token == null) { error = "Kimlik doğrulama hatası."; return false; }
+        if (token.Role == UserRoleEnums.Admin) return true;
+        if (token.RestaurantIds == null || !token.RestaurantIds.Contains(restaurantId))
+        {
+            error = "Bu işlem için yetkiniz yok.";
+            return false;
+        }
+        return true;
+    }
+
+    // MenuOptionValue → MenuOption → Menu üzerinden restoranı çözer.
+    private async Task<Guid?> ResolveRestaurantIdByMenuOptionId(Guid menuOptionId)
+    {
+        var menuOption = await _menuOptionRepository.GetAsync(x => x.Id == menuOptionId);
+        if (menuOption == null) return null;
+        var menu = await _menuRepository.GetAsync(x => x.Id == menuOption.MenuId);
+        return menu?.RestaurantId;
     }
 
     public async Task<ServiceCollectionResult<MenuOptionValueResponseDto>> GetMenuOptionValuesByMenuOptionId(GetMenuOptionValueRequestDto request)
@@ -47,6 +77,18 @@ public class MenuOptionValueManager : IMenuOptionValueService
                 return response;
             }
 
+            var addRestaurantId = await ResolveRestaurantIdByMenuOptionId(menuOption.Id);
+            if (addRestaurantId == null)
+            {
+                response.Fail("Menu not found");
+                return response;
+            }
+            if (!TryAuthorizeRestaurant(addRestaurantId.Value, out var addAuthError))
+            {
+                response.Fail(addAuthError!);
+                return response;
+            }
+
             var menuOptionValue = _mapper.Map<MenuOptionValue>(request);
             menuOptionValue.Id = Guid.NewGuid();
             menuOptionValue.OrderIndex = (await _menuOptionRepository.GetListAsync(x => x.Id == request.MenuOptionId)).Count + 1;
@@ -71,6 +113,18 @@ public class MenuOptionValueManager : IMenuOptionValueService
             if (menuOptionValue == null)
             {
                 response.Fail("Menu Option Value not found");
+                return response;
+            }
+
+            var updRestaurantId = await ResolveRestaurantIdByMenuOptionId(menuOptionValue.MenuOptionId);
+            if (updRestaurantId == null)
+            {
+                response.Fail("Menu not found");
+                return response;
+            }
+            if (!TryAuthorizeRestaurant(updRestaurantId.Value, out var updAuthError))
+            {
+                response.Fail(updAuthError!);
                 return response;
             }
 
@@ -120,6 +174,18 @@ public class MenuOptionValueManager : IMenuOptionValueService
             if (menuOptionValue == null)
             {
                 response.Fail("Menu Option Value not found");
+                return response;
+            }
+
+            var delRestaurantId = await ResolveRestaurantIdByMenuOptionId(menuOptionValue.MenuOptionId);
+            if (delRestaurantId == null)
+            {
+                response.Fail("Menu not found");
+                return response;
+            }
+            if (!TryAuthorizeRestaurant(delRestaurantId.Value, out var delAuthError))
+            {
+                response.Fail(delAuthError!);
                 return response;
             }
 

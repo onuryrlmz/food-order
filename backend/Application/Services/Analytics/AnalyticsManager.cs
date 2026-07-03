@@ -24,6 +24,20 @@ public class AnalyticsManager : IAnalyticsService
         var result = new ServiceObjectResult<AnalyticsSummaryDto>();
         try
         {
+            var token = _tokenAccessor.GetToken();
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
+            if (token.Role != Base.Enums.UserRoleEnums.Admin &&
+                (token.RestaurantIds == null || !token.RestaurantIds.Contains(restaurantId)))
+            {
+                result.Fail("Bu restoran için yetkiniz yok.");
+                return result;
+            }
+
             const string query = @"
                 SELECT
                     COUNT(*) AS TotalOrders,
@@ -61,6 +75,20 @@ public class AnalyticsManager : IAnalyticsService
         var result = new ServiceCollectionResult<OrderTrendDto>();
         try
         {
+            var token = _tokenAccessor.GetToken();
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
+            if (token.Role != Base.Enums.UserRoleEnums.Admin &&
+                (token.RestaurantIds == null || !token.RestaurantIds.Contains(restaurantId)))
+            {
+                result.Fail("Bu restoran için yetkiniz yok.");
+                return result;
+            }
+
             const string query = @"
                 SELECT
                     DATE_FORMAT(o.CreatedDate, '%Y-%m-%d') AS `Date`,
@@ -99,6 +127,20 @@ public class AnalyticsManager : IAnalyticsService
         var result = new ServiceCollectionResult<TopProductDto>();
         try
         {
+            var token = _tokenAccessor.GetToken();
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
+            if (token.Role != Base.Enums.UserRoleEnums.Admin &&
+                (token.RestaurantIds == null || !token.RestaurantIds.Contains(restaurantId)))
+            {
+                result.Fail("Bu restoran için yetkiniz yok.");
+                return result;
+            }
+
             const string query = @"
                 SELECT
                     oi.MenuId,

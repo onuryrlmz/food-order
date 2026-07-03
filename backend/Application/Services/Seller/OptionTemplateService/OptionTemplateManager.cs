@@ -1,4 +1,6 @@
+using Application.Services.Common.TokenService;
 using AutoMapper;
+using Base.Enums;
 using Domain.Dto.Seller.OptionTemplate;
 using Domain.Entities.Seller;
 using Domain.Service;
@@ -18,6 +20,7 @@ public class OptionTemplateManager : IOptionTemplateService
     private readonly IMenuOptionValueRepository _menuOptionValueRepository;
     private readonly IMenuOptionValueOptionRepository _menuOptionValueOptionRepository;
     private readonly IMenuOptionValueOptionValueRepository _menuOptionValueOptionValueRepository;
+    private readonly ITokenAccessor _tokenAccessor;
 
     public OptionTemplateManager(
         IMapper mapper,
@@ -28,7 +31,8 @@ public class OptionTemplateManager : IOptionTemplateService
         IMenuOptionRepository menuOptionRepository,
         IMenuOptionValueRepository menuOptionValueRepository,
         IMenuOptionValueOptionRepository menuOptionValueOptionRepository,
-        IMenuOptionValueOptionValueRepository menuOptionValueOptionValueRepository)
+        IMenuOptionValueOptionValueRepository menuOptionValueOptionValueRepository,
+        ITokenAccessor tokenAccessor)
     {
         _mapper = mapper;
         _templateRepository = templateRepository;
@@ -39,6 +43,43 @@ public class OptionTemplateManager : IOptionTemplateService
         _menuOptionValueRepository = menuOptionValueRepository;
         _menuOptionValueOptionRepository = menuOptionValueOptionRepository;
         _menuOptionValueOptionValueRepository = menuOptionValueOptionValueRepository;
+        _tokenAccessor = tokenAccessor;
+    }
+
+    // ===== Ownership guard (IDOR koruması) =====
+    // Bir satıcı yalnızca kendi restoranına ait şablonları/değerleri değiştirebilir.
+    // Admin tüm kayıtlara erişebilir. Zincir:
+    //   OptionTemplateValue → OptionTemplate.RestaurantId
+    //   OptionTemplateValueOption → OptionTemplateValue → OptionTemplate.RestaurantId
+    //   OptionTemplateValueOptionValue → OptionTemplateValueOption → ... → OptionTemplate.RestaurantId
+
+    private (bool ok, string? error) VerifyOwnership(Guid? restaurantId)
+    {
+        var token = _tokenAccessor.GetToken();
+        if (token == null) return (false, "Kimlik doğrulama hatası.");
+        if (token.Role == UserRoleEnums.Admin) return (true, null);
+        if (restaurantId == null) return (false, "Kayıt bulunamadı.");
+        if (token.RestaurantIds == null || !token.RestaurantIds.Contains(restaurantId.Value))
+            return (false, "Bu işlem için yetkiniz yok.");
+        return (true, null);
+    }
+
+    private async Task<Guid?> ResolveRestaurantIdFromTemplate(Guid templateId)
+    {
+        var template = await _templateRepository.GetAsync(x => x.Id == templateId);
+        return template?.RestaurantId;
+    }
+
+    private async Task<Guid?> ResolveRestaurantIdFromValue(Guid valueId)
+    {
+        var value = await _templateValueRepository.GetAsync(x => x.Id == valueId);
+        return value == null ? null : await ResolveRestaurantIdFromTemplate(value.OptionTemplateId);
+    }
+
+    private async Task<Guid?> ResolveRestaurantIdFromValueOption(Guid valueOptionId)
+    {
+        var vo = await _templateValueOptionRepository.GetAsync(x => x.Id == valueOptionId);
+        return vo == null ? null : await ResolveRestaurantIdFromValue(vo.OptionTemplateValueId);
     }
 
     public async Task<ServiceCollectionResult<OptionTemplateResponseDto>> GetTemplatesByRestaurantId(Guid restaurantId)
@@ -108,6 +149,13 @@ public class OptionTemplateManager : IOptionTemplateService
         var result = new ServiceObjectResult<Guid>();
         try
         {
+            var (ok, error) = VerifyOwnership(request.RestaurantId);
+            if (!ok)
+            {
+                result.Fail(error!);
+                return result;
+            }
+
             var count = (await _templateRepository.GetListAsync(x => x.RestaurantId == request.RestaurantId)).Count;
             var template = new OptionTemplate
             {
@@ -135,10 +183,17 @@ public class OptionTemplateManager : IOptionTemplateService
         var result = new ServiceObjectResult<bool>();
         try
         {
-            var template = await _templateRepository.GetAsync(x => x.Id == request.Id && x.RestaurantId == request.RestaurantId);
+            var template = await _templateRepository.GetAsync(x => x.Id == request.Id);
             if (template == null)
             {
                 result.Fail("Template not found");
+                return result;
+            }
+
+            var (ok, error) = VerifyOwnership(template.RestaurantId);
+            if (!ok)
+            {
+                result.Fail(error!);
                 return result;
             }
 
@@ -174,10 +229,17 @@ public class OptionTemplateManager : IOptionTemplateService
         var result = new ServiceObjectResult<bool>();
         try
         {
-            var template = await _templateRepository.GetAsync(x => x.Id == request.Id && x.RestaurantId == request.RestaurantId);
+            var template = await _templateRepository.GetAsync(x => x.Id == request.Id);
             if (template == null)
             {
                 result.Fail("Template not found");
+                return result;
+            }
+
+            var (ok, error) = VerifyOwnership(template.RestaurantId);
+            if (!ok)
+            {
+                result.Fail(error!);
                 return result;
             }
 
@@ -209,6 +271,13 @@ public class OptionTemplateManager : IOptionTemplateService
             if (template == null)
             {
                 result.Fail("Template not found");
+                return result;
+            }
+
+            var (ok, error) = VerifyOwnership(template.RestaurantId);
+            if (!ok)
+            {
+                result.Fail(error!);
                 return result;
             }
 
@@ -262,6 +331,13 @@ public class OptionTemplateManager : IOptionTemplateService
                 return result;
             }
 
+            var (ok, error) = VerifyOwnership(await ResolveRestaurantIdFromTemplate(value.OptionTemplateId));
+            if (!ok)
+            {
+                result.Fail(error!);
+                return result;
+            }
+
             value.ProductId = request.ProductId;
             value.Price = request.Price;
             await _templateValueRepository.UpdateAsync(value);
@@ -297,6 +373,13 @@ public class OptionTemplateManager : IOptionTemplateService
                 return result;
             }
 
+            var (ok, error) = VerifyOwnership(await ResolveRestaurantIdFromTemplate(value.OptionTemplateId));
+            if (!ok)
+            {
+                result.Fail(error!);
+                return result;
+            }
+
             // Delete derived MenuOptionValues (cascade handles sub-items)
             var derived = await _menuOptionValueRepository.GetListAsync(x => x.OptionTemplateValueId == value.Id, size: 999);
             foreach (var mov in derived.Items)
@@ -322,6 +405,13 @@ public class OptionTemplateManager : IOptionTemplateService
             if (templateValue == null)
             {
                 result.Fail("Template value not found");
+                return result;
+            }
+
+            var (ok, error) = VerifyOwnership(await ResolveRestaurantIdFromTemplate(templateValue.OptionTemplateId));
+            if (!ok)
+            {
+                result.Fail(error!);
                 return result;
             }
 
@@ -379,6 +469,13 @@ public class OptionTemplateManager : IOptionTemplateService
                 return result;
             }
 
+            var (ok, error) = VerifyOwnership(await ResolveRestaurantIdFromValue(option.OptionTemplateValueId));
+            if (!ok)
+            {
+                result.Fail(error!);
+                return result;
+            }
+
             option.Name = request.Name;
             option.Description = request.Description;
             option.MinCount = request.MinCount;
@@ -418,6 +515,13 @@ public class OptionTemplateManager : IOptionTemplateService
                 return result;
             }
 
+            var (ok, error) = VerifyOwnership(await ResolveRestaurantIdFromValue(option.OptionTemplateValueId));
+            if (!ok)
+            {
+                result.Fail(error!);
+                return result;
+            }
+
             var derived = await _menuOptionValueOptionRepository.GetListAsync(x => x.OptionTemplateValueOptionId == option.Id, size: 999);
             foreach (var movo in derived.Items)
                 await _menuOptionValueOptionRepository.DeleteAsync(movo);
@@ -442,6 +546,13 @@ public class OptionTemplateManager : IOptionTemplateService
             if (templateValueOption == null)
             {
                 result.Fail("Template value option not found");
+                return result;
+            }
+
+            var (ok, error) = VerifyOwnership(await ResolveRestaurantIdFromValue(templateValueOption.OptionTemplateValueId));
+            if (!ok)
+            {
+                result.Fail(error!);
                 return result;
             }
 
@@ -495,6 +606,13 @@ public class OptionTemplateManager : IOptionTemplateService
                 return result;
             }
 
+            var (ok, error) = VerifyOwnership(await ResolveRestaurantIdFromValueOption(optionValue.OptionTemplateValueOptionId));
+            if (!ok)
+            {
+                result.Fail(error!);
+                return result;
+            }
+
             optionValue.ProductId = request.ProductId;
             optionValue.Price = request.Price;
             await _templateValueOptionValueRepository.UpdateAsync(optionValue);
@@ -526,6 +644,13 @@ public class OptionTemplateManager : IOptionTemplateService
             if (optionValue == null)
             {
                 result.Fail("Template value option value not found");
+                return result;
+            }
+
+            var (ok, error) = VerifyOwnership(await ResolveRestaurantIdFromValueOption(optionValue.OptionTemplateValueOptionId));
+            if (!ok)
+            {
+                result.Fail(error!);
                 return result;
             }
 

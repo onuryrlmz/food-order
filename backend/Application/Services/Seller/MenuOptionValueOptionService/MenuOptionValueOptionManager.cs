@@ -1,4 +1,6 @@
+using Application.Services.Common.TokenService;
 using AutoMapper;
+using Base.Enums;
 using Domain.Dto.Seller.MenuOptionValueOption;
 using Domain.Entities.Seller;
 using Domain.Service;
@@ -9,14 +11,46 @@ namespace Application.Services.Seller.MenuOptionValueOptionService;
 public class MenuOptionValueOptionManager : IMenuOptionValueOptionService
 {
     private readonly IMapper _mapper;
+    private readonly IMenuRepository _menuRepository;
+    private readonly IMenuOptionRepository _menuOptionRepository;
     private readonly IMenuOptionValueOptionRepository _menuOptionValueOptionRepository;
     private readonly IMenuOptionValueRepository _menuOptionValueRepository;
+    private readonly ITokenAccessor _tokenAccessor;
 
-    public MenuOptionValueOptionManager(IMapper mapper, IMenuOptionValueOptionRepository menuOptionValueOptionRepository, IMenuOptionValueRepository menuOptionValueRepository)
+    public MenuOptionValueOptionManager(IMapper mapper, IMenuRepository menuRepository, IMenuOptionRepository menuOptionRepository, IMenuOptionValueOptionRepository menuOptionValueOptionRepository, IMenuOptionValueRepository menuOptionValueRepository, ITokenAccessor tokenAccessor)
     {
         _mapper = mapper;
+        _menuRepository = menuRepository;
+        _menuOptionRepository = menuOptionRepository;
         _menuOptionValueOptionRepository = menuOptionValueOptionRepository;
         _menuOptionValueRepository = menuOptionValueRepository;
+        _tokenAccessor = tokenAccessor;
+    }
+
+    // Restoran sahiplik kontrolü (IDOR koruması). Admin muaftır.
+    private bool TryAuthorizeRestaurant(Guid restaurantId, out string? error)
+    {
+        error = null;
+        var token = _tokenAccessor.GetToken();
+        if (token == null) { error = "Kimlik doğrulama hatası."; return false; }
+        if (token.Role == UserRoleEnums.Admin) return true;
+        if (token.RestaurantIds == null || !token.RestaurantIds.Contains(restaurantId))
+        {
+            error = "Bu işlem için yetkiniz yok.";
+            return false;
+        }
+        return true;
+    }
+
+    // MenuOptionValueOption → MenuOptionValue → MenuOption → Menu üzerinden restoranı çözer.
+    private async Task<Guid?> ResolveRestaurantIdByMenuOptionValueId(Guid menuOptionValueId)
+    {
+        var mov = await _menuOptionValueRepository.GetAsync(x => x.Id == menuOptionValueId);
+        if (mov == null) return null;
+        var mo = await _menuOptionRepository.GetAsync(x => x.Id == mov.MenuOptionId);
+        if (mo == null) return null;
+        var menu = await _menuRepository.GetAsync(x => x.Id == mo.MenuId);
+        return menu?.RestaurantId;
     }
 
     public async Task<ServiceCollectionResult<MenuOptionValueOptionResponseDto>> GetMenuOptionValueOptionsByMenuOptionValueId(GetMenuOptionValueOptionRequestDto request)
@@ -48,6 +82,18 @@ public class MenuOptionValueOptionManager : IMenuOptionValueOptionService
                 return response;
             }
 
+            var addRestaurantId = await ResolveRestaurantIdByMenuOptionValueId(menuOptionValue.Id);
+            if (addRestaurantId == null)
+            {
+                response.Fail("Menu not found");
+                return response;
+            }
+            if (!TryAuthorizeRestaurant(addRestaurantId.Value, out var addAuthError))
+            {
+                response.Fail(addAuthError!);
+                return response;
+            }
+
             var menuOptionValueOption = _mapper.Map<MenuOptionValueOption>(request);
             menuOptionValueOption.Id = Guid.NewGuid();
             menuOptionValueOption.OrderIndex = (await _menuOptionValueOptionRepository.GetListAsync(x => x.MenuOptionValueId == request.MenuOptionValueId)).Count + 1;
@@ -71,6 +117,18 @@ public class MenuOptionValueOptionManager : IMenuOptionValueOptionService
             if (menuOptionValueOption == null)
             {
                 response.Fail("MenuOptionValueOption not found");
+                return response;
+            }
+
+            var updRestaurantId = await ResolveRestaurantIdByMenuOptionValueId(menuOptionValueOption.MenuOptionValueId);
+            if (updRestaurantId == null)
+            {
+                response.Fail("Menu not found");
+                return response;
+            }
+            if (!TryAuthorizeRestaurant(updRestaurantId.Value, out var updAuthError))
+            {
+                response.Fail(updAuthError!);
                 return response;
             }
 
@@ -124,6 +182,18 @@ public class MenuOptionValueOptionManager : IMenuOptionValueOptionService
             if (menuOptionValueOption == null)
             {
                 response.Fail("MenuOptionValueOption not found");
+                return response;
+            }
+
+            var delRestaurantId = await ResolveRestaurantIdByMenuOptionValueId(menuOptionValueOption.MenuOptionValueId);
+            if (delRestaurantId == null)
+            {
+                response.Fail("Menu not found");
+                return response;
+            }
+            if (!TryAuthorizeRestaurant(delRestaurantId.Value, out var delAuthError))
+            {
+                response.Fail(delAuthError!);
                 return response;
             }
 

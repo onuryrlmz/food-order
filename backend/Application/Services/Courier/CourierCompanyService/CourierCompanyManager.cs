@@ -262,6 +262,15 @@ public class CourierCompanyManager : ICourierCompanyService
                 return result;
             }
 
+            // IDOR koruması: yalnızca hiçbir firmaya bağlı olmayan kurye eklenebilir; aksi halde
+            // bir firma admini başka firmanın kuryesini kendi firmasına çekebilir.
+            if (memberCourier.CourierCompanyId != null &&
+                memberCourier.CourierCompanyId != adminCourier.CourierCompanyId)
+            {
+                result.Fail("Bu kurye başka bir firmaya bağlı.");
+                return result;
+            }
+
             memberCourier.CourierCompanyId = adminCourier.CourierCompanyId;
             memberCourier.CourierTypeId = (short)CourierTypeEnums.CompanyMember;
             _unitOfWork.CourierRepository.Update(memberCourier);

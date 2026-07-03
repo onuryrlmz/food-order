@@ -117,6 +117,15 @@ public class OrderManager : IOrderService
                 return result;
             }
 
+            // Online ödeme (kredi kartı) sipariş sonrası 3DS akışı ile onaylanır ve callback'te
+            // WaitingRestaurantApproval'a geçer. Nakit / kapıda ödeme seçeneklerinde ise online
+            // ödeme adımı yoktur; sipariş doğrudan restoran onayına düşmelidir — aksi halde
+            // PaymentPending'de kilitlenir ve restorana hiç ulaşmaz.
+            var isOnlinePayment = requestDto.PaymentOptionId == (short)PaymentOptionEnums.CreditCard;
+            var initialStatus = isOnlinePayment
+                ? OrderStatusEnums.PaymentPending
+                : OrderStatusEnums.WaitingRestaurantApproval;
+
             await _unitOfWork.BeginTransactionAsync();
 
             var order = new Order
@@ -127,7 +136,7 @@ public class OrderManager : IOrderService
                 RestaurantId = requestDto.RestaurantId,
                 DeliveryAddressId = requestDto.DeliveryAddressId,
                 InvoiceAddressId = requestDto.InvoiceAddressId,
-                StatusId = (short)OrderStatusEnums.PaymentPending,
+                StatusId = (short)initialStatus,
                 PaymentStatusId = (short)PaymentStatusEnums.Pending,
                 PaymentOptionId = requestDto.PaymentOptionId,
                 Notes = requestDto.Notes,
@@ -393,7 +402,7 @@ public class OrderManager : IOrderService
             order.TotalPrice = totalProductPrice + order.ShipmentPrice - discountAmount;
 
             await _unitOfWork.OrderRepository.AddAsync(order);
-            await AddStatusHistory(order.Id, OrderStatusEnums.PaymentPending);
+            await AddStatusHistory(order.Id, initialStatus);
             await _unitOfWork.CompleteAsync();
             await _unitOfWork.CommitTransactionAsync();
 
@@ -403,6 +412,18 @@ public class OrderManager : IOrderService
                 RequiresPayment = false,
                 RequiresThreeDs = false
             };
+
+            // Nakit / kapıda ödeme: online ödeme adımı yok, sipariş zaten restoran onayına düştü.
+            // Restorana yeni sipariş bildirimini hemen tetikle (online ödemede bu bildirim
+            // ödeme callback'inde gönderilir).
+            if (!isOnlinePayment)
+            {
+                BackgroundJob.Enqueue<IPaymentService>(s =>
+                    s.NotifyRestaurantNewOrderBackground(order.Id, order.RestaurantId, order.TotalPrice));
+
+                result.SetData(response);
+                return result;
+            }
 
             // Online ödeme ise otomatik ödeme başlat
             if (order.PaymentOptionId == (short)PaymentOptionEnums.CreditCard)
@@ -497,8 +518,10 @@ public class OrderManager : IOrderService
                 return result;
             }
 
-            // Admin veya kendi siparişi olmalı
-            if (token.Role != UserRoleEnums.Admin && order.UserId != token.UserId)
+            // Erişim: Admin tümünü, müşteri kendi siparişini, satıcı kendi restoranının siparişini görebilir.
+            var isSeller = token.Role is UserRoleEnums.SellerAdmin or UserRoleEnums.SellerUser;
+            var ownsRestaurant = isSeller && token.RestaurantIds != null && token.RestaurantIds.Contains(order.RestaurantId);
+            if (token.Role != UserRoleEnums.Admin && order.UserId != token.UserId && !ownsRestaurant)
             {
                 result.Fail("Bu siparişe erişim yetkiniz yok.");
                 return result;
@@ -533,6 +556,8 @@ public class OrderManager : IOrderService
             {
                 (short)OrderStatusEnums.WaitingRestaurantApproval,
                 (short)OrderStatusEnums.Preparing,
+                (short)OrderStatusEnums.CourierAssigned,
+                (short)OrderStatusEnums.CourierPickedUp,
                 (short)OrderStatusEnums.OnTheWay
             };
 
@@ -574,6 +599,8 @@ public class OrderManager : IOrderService
             {
                 (short)OrderStatusEnums.WaitingRestaurantApproval,
                 (short)OrderStatusEnums.Preparing,
+                (short)OrderStatusEnums.CourierAssigned,
+                (short)OrderStatusEnums.CourierPickedUp,
                 (short)OrderStatusEnums.OnTheWay,
                 (short)OrderStatusEnums.Delivered,
                 (short)OrderStatusEnums.CancelledByBuyer,
@@ -641,11 +668,14 @@ public class OrderManager : IOrderService
             try
             {
                 var activeAssignment = await _unitOfWork.DeliveryAssignmentRepository.GetAsync(
-                    x => x.OrderId == orderId && x.StatusId != 7 && x.StatusId != 6 && x.StatusId != 4,
+                    x => x.OrderId == orderId
+                         && x.StatusId != (short)DeliveryAssignmentStatusEnums.Cancelled
+                         && x.StatusId != (short)DeliveryAssignmentStatusEnums.Delivered
+                         && x.StatusId != (short)DeliveryAssignmentStatusEnums.Rejected,
                     enableTracking: true);
                 if (activeAssignment != null)
                 {
-                    activeAssignment.StatusId = 7; // Cancelled
+                    activeAssignment.StatusId = (short)DeliveryAssignmentStatusEnums.Cancelled;
                     _unitOfWork.DeliveryAssignmentRepository.Update(activeAssignment);
 
                     if (activeAssignment.CourierId.HasValue)
@@ -654,7 +684,7 @@ public class OrderManager : IOrderService
                             x => x.Id == activeAssignment.CourierId.Value, enableTracking: true);
                         if (courier != null)
                         {
-                            courier.AvailabilityStatusId = 1; // Online
+                            courier.AvailabilityStatusId = (short)CourierAvailabilityEnums.Online;
                             _unitOfWork.CourierRepository.Update(courier);
                         }
                     }
@@ -718,9 +748,16 @@ public class OrderManager : IOrderService
                         }
                     },
                     {
+                        // Kurye sistemi olmayan restoranlar eski akışla ilerler: Preparing → OnTheWay → Delivered
                         (short)OrderStatusEnums.Preparing, new List<short>
                         {
-                            (short)OrderStatusEnums.OnTheWay // Fallback for restaurants without courier system
+                            (short)OrderStatusEnums.OnTheWay
+                        }
+                    },
+                    {
+                        (short)OrderStatusEnums.OnTheWay, new List<short>
+                        {
+                            (short)OrderStatusEnums.Delivered
                         }
                     }
                 };
@@ -730,9 +767,50 @@ public class OrderManager : IOrderService
                     result.Fail("Bu durum geçişi için yetkiniz yok.");
                     return result;
                 }
+
+                // Kuryeli sipariş: yola çıkarma ve teslim adımlarını kurye yönetir. Restoranın bu sipariş
+                // için aktif bir teslimat ataması varsa satıcı bu geçişleri elle yapamaz (aksi halde kurye
+                // yaşam döngüsü — CourierAssigned/CourierPickedUp — atlanır ve kurye askıda kalır).
+                var courierManagedTargets = new[]
+                {
+                    (short)OrderStatusEnums.OnTheWay,
+                    (short)OrderStatusEnums.Delivered
+                };
+                if (courierManagedTargets.Contains(statusId))
+                {
+                    var activeAssignment = await _unitOfWork.DeliveryAssignmentRepository.GetAsync(
+                        x => x.OrderId == order.Id
+                             && x.StatusId != (short)DeliveryAssignmentStatusEnums.Rejected
+                             && x.StatusId != (short)DeliveryAssignmentStatusEnums.Cancelled
+                             && x.StatusId != (short)DeliveryAssignmentStatusEnums.Expired
+                             && x.StatusId != (short)DeliveryAssignmentStatusEnums.Delivered);
+                    if (activeAssignment != null)
+                    {
+                        result.Fail("Bu sipariş kurye sistemiyle yönetiliyor; durumu kurye güncelleyecektir.");
+                        return result;
+                    }
+                }
+            }
+            else
+            {
+                // Admin: sonlanmış (terminal) bir siparişin durumu geri alınamaz.
+                var terminalStatuses = new List<short>
+                {
+                    (short)OrderStatusEnums.Delivered,
+                    (short)OrderStatusEnums.CancelledByBuyer,
+                    (short)OrderStatusEnums.RejectedByRestaurant,
+                    (short)OrderStatusEnums.PaymentFailed
+                };
+                if (terminalStatuses.Contains(order.StatusId))
+                {
+                    result.Fail("Sonlanmış bir siparişin durumu değiştirilemez.");
+                    return result;
+                }
             }
 
             order.StatusId = statusId;
+            if (statusId == (short)OrderStatusEnums.Delivered && order.DeliveredAt == null)
+                order.DeliveredAt = DateTime.UtcNow;
             if (statusId == (short)OrderStatusEnums.RejectedByRestaurant)
                 order.CancellationReason = "Restoran tarafından reddedildi.";
             _unitOfWork.OrderRepository.Update(order);
@@ -772,12 +850,29 @@ public class OrderManager : IOrderService
         var result = new ServiceCollectionResult<GetOrderResponseDto>();
         try
         {
+            var token = _tokenAccessor.GetToken();
+            if (token == null)
+            {
+                result.Fail("Kimlik doğrulama hatası.");
+                return result;
+            }
+
+            // Satıcı yalnızca kendi restoranının siparişlerini görebilir (Admin tümünü görebilir).
+            if (token.Role != UserRoleEnums.Admin &&
+                (token.RestaurantIds == null || !token.RestaurantIds.Contains(restaurantId)))
+            {
+                result.Fail("Bu restoranın siparişlerini görüntüleme yetkiniz yok.");
+                return result;
+            }
+
             pageSize = Math.Min(pageSize, 50);
             var sellerVisibleStatuses = new List<short>
             {
                 (short)OrderStatusEnums.WaitingRestaurantApproval,
                 (short)OrderStatusEnums.RejectedByRestaurant,
                 (short)OrderStatusEnums.Preparing,
+                (short)OrderStatusEnums.CourierAssigned,
+                (short)OrderStatusEnums.CourierPickedUp,
                 (short)OrderStatusEnums.OnTheWay,
                 (short)OrderStatusEnums.Delivered
             };

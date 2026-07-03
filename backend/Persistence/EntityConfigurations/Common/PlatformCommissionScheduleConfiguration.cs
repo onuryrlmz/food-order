@@ -11,7 +11,8 @@ public class PlatformCommissionScheduleConfiguration : IEntityTypeConfiguration<
         builder.ToTable("PlatformCommissionSchedule").HasKey(e => e.Id);
 
         builder.Property(e => e.Id).HasColumnName("Id").IsRequired();
-        builder.Property(e => e.CommissionRate).HasColumnName("CommissionRate").HasPrecision(18, 2).IsRequired();
+        // Oran (0–1 arası kesir), para değil — kesirli oranların (ör. %12,5 = 0.125) yuvarlanmaması için 6 ondalık.
+        builder.Property(e => e.CommissionRate).HasColumnName("CommissionRate").HasPrecision(18, 6).IsRequired();
         builder.Property(e => e.FixedFee).HasColumnName("FixedFee").HasPrecision(18, 2).IsRequired();
         builder.Property(e => e.EffectiveFrom).HasColumnName("EffectiveFrom").IsRequired();
         builder.Property(e => e.EffectiveTo).HasColumnName("EffectiveTo");

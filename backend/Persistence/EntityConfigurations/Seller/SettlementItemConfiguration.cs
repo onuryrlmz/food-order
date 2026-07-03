@@ -15,7 +15,8 @@ public class SettlementItemConfiguration : IEntityTypeConfiguration<SettlementIt
         builder.Property(e => e.SellerId).HasColumnName("SellerId").IsRequired();
         builder.Property(e => e.RestaurantId).HasColumnName("RestaurantId").IsRequired();
         builder.Property(e => e.OrderAmount).HasColumnName("OrderAmount").HasPrecision(18, 2).IsRequired();
-        builder.Property(e => e.CommissionRate).HasColumnName("CommissionRate").HasPrecision(18, 2).IsRequired();
+        // Uygulanan oranın snapshot'ı (0–1 kesir), para değil — 6 ondalık ile saklanır.
+        builder.Property(e => e.CommissionRate).HasColumnName("CommissionRate").HasPrecision(18, 6).IsRequired();
         builder.Property(e => e.CommissionAmount).HasColumnName("CommissionAmount").HasPrecision(18, 2).IsRequired();
         builder.Property(e => e.FixedFee).HasColumnName("FixedFee").HasPrecision(18, 2).IsRequired();
         builder.Property(e => e.NetAmount).HasColumnName("NetAmount").HasPrecision(18, 2).IsRequired();

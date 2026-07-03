@@ -24,12 +24,23 @@ public class ImageUploadManager : IImageUploadService
     private readonly ITokenAccessor _tokenAccessor;
     private readonly IAwsS3ServiceAdapter _s3Adapter;
     private readonly IProductImageRepository _productImageRepository;
+    private readonly IProductRepository _productRepository;
 
-    public ImageUploadManager(ITokenAccessor tokenAccessor, IAwsS3ServiceAdapter s3Adapter, IProductImageRepository productImageRepository)
+    public ImageUploadManager(ITokenAccessor tokenAccessor, IAwsS3ServiceAdapter s3Adapter, IProductImageRepository productImageRepository, IProductRepository productRepository)
     {
         _tokenAccessor = tokenAccessor;
         _s3Adapter = s3Adapter;
         _productImageRepository = productImageRepository;
+        _productRepository = productRepository;
+    }
+
+    // Satıcı bir restoranı yönetme yetkisine sahip mi? Admin tüm restoranları yönetebilir.
+    private bool SellerOwnsRestaurant(Guid restaurantId)
+    {
+        var token = _tokenAccessor.GetToken();
+        if (token == null) return false;
+        if (token.Role == Base.Enums.UserRoleEnums.Admin) return true;
+        return token.RestaurantIds != null && token.RestaurantIds.Contains(restaurantId);
     }
 
     public async Task<ServiceObjectResult<ImageUploadResponseDto>> UploadImage(IFormFile file, Guid? productId)
@@ -41,6 +52,22 @@ public class ImageUploadManager : IImageUploadService
             {
                 result.Fail("No file provided");
                 return result;
+            }
+
+            // Sahiplik kontrolü (IDOR): görsel yalnızca çağıranın restoranına ait bir ürüne iliştirilebilir.
+            if (productId.HasValue)
+            {
+                var targetProduct = await _productRepository.GetAsync(x => x.Id == productId.Value);
+                if (targetProduct == null)
+                {
+                    result.Fail("Ürün bulunamadı.");
+                    return result;
+                }
+                if (!SellerOwnsRestaurant(targetProduct.RestaurantId))
+                {
+                    result.Fail("Bu ürüne görsel ekleme yetkiniz yok.");
+                    return result;
+                }
             }
 
             if (file.Length > MaxFileSize)
@@ -111,7 +138,27 @@ public class ImageUploadManager : IImageUploadService
                 return result;
             }
 
+            // Sahiplik kontrolü (IDOR): görsel bir ürüne bağlıysa, o ürünün restoranı çağıranınki olmalı.
+            if (image.ProductId.HasValue)
+            {
+                var product = await _productRepository.GetAsync(x => x.Id == image.ProductId.Value);
+                if (product == null || !SellerOwnsRestaurant(product.RestaurantId))
+                {
+                    result.Fail("Bu görseli silme yetkiniz yok.");
+                    return result;
+                }
+            }
+
             await _productImageRepository.DeleteAsync(image);
+
+            // DB kaydı silindikten sonra S3/R2 objesini de sil (orphan bırakma). Storage hatası
+            // silme işlemini bloklamasın — kayıt zaten kaldırıldı.
+            if (!string.IsNullOrEmpty(image.Url))
+            {
+                try { await _s3Adapter.DeleteFileAsync(image.Url); }
+                catch { /* best effort — storage temizliği DB silmesini engellemez */ }
+            }
+
             result.SetData(true);
         }
         catch (Exception e)

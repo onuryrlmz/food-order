@@ -12,7 +12,8 @@ public class RestaurantCommissionConfiguration : IEntityTypeConfiguration<Restau
 
         builder.Property(e => e.Id).HasColumnName("Id").IsRequired();
         builder.Property(e => e.RestaurantId).HasColumnName("RestaurantId").IsRequired();
-        builder.Property(e => e.CommissionRate).HasColumnName("CommissionRate").HasPrecision(18, 2).IsRequired();
+        // Oran (0–1 arası kesir), para değil — kesirli oranların yuvarlanmaması için 6 ondalık.
+        builder.Property(e => e.CommissionRate).HasColumnName("CommissionRate").HasPrecision(18, 6).IsRequired();
         builder.Property(e => e.FixedFee).HasColumnName("FixedFee").HasPrecision(18, 2).IsRequired();
         builder.Property(e => e.EffectiveFrom).HasColumnName("EffectiveFrom").IsRequired();
         builder.Property(e => e.EffectiveTo).HasColumnName("EffectiveTo");

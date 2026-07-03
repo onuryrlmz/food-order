@@ -161,8 +161,24 @@ const OrderDetailScreen = ({route, navigation}) => {
     }
   };
 
-  const canCancel = order && (order.statusId === 1 || order.statusId === 2);
+  // Backend yalnızca "Restoran Onayı Bekliyor" (4) durumundaki siparişin müşteri tarafından
+  // iptaline izin verir. (1=Ödeme Bekliyor, 2=Ödeme Başarısız zaten sipariş oluşmamış/ölü durumlar.)
+  const canCancel = order && order.statusId === 4;
   const isDelivered = order && order.statusId === 8;
+
+  // Sipariş yaşam döngüsü adım indeksi (kurye statüleri dahil): 4→0, 6→1, 9→2, 10→3, 7→4, 8→5.
+  const stepIndexOf = (sid) => {
+    switch (sid) {
+      case 4: return 0;
+      case 6: return 1;
+      case 9: return 2;
+      case 10: return 3;
+      case 7: return 4;
+      case 8: return 5;
+      default: return -1; // iptal/red/ödeme durumları ilerleme çubuğunda yer almaz
+    }
+  };
+  const currentStep = order ? stepIndexOf(order.statusId) : -1;
 
   if (loading) {
     return <LoadingSpinner message="Sipariş detayı yükleniyor..." />;
@@ -202,9 +218,9 @@ const OrderDetailScreen = ({route, navigation}) => {
           <Text style={styles.statusDate}>Sipariş: {formatDate(order.createdDate)}</Text>
 
           <View style={styles.trackingBar}>
-            {[1, 2, 3, 4, 5].map(step => {
-              const isActive = order.statusId >= step && order.statusId !== 6;
-              const isCurrent = order.statusId === step;
+            {[0, 1, 2, 3, 4, 5].map(step => {
+              const isActive = currentStep >= step;
+              const isCurrent = currentStep === step;
               return (
                 <View key={step} style={styles.trackingStep}>
                   <View
@@ -218,7 +234,7 @@ const OrderDetailScreen = ({route, navigation}) => {
                     <View
                       style={[
                         styles.trackingLine,
-                        isActive && order.statusId > step && {backgroundColor: statusInfo.color},
+                        isActive && currentStep > step && {backgroundColor: statusInfo.color},
                       ]}
                     />
                   )}

@@ -1,11 +1,15 @@
 import { z } from 'zod';
 
+// AddProductDto = { RestaurantId, CuisineId?, Name, ProductType, Description?, Price, OrderIndex }
 export const CreateProductRequestSchema = z.object({
   name: z.string().min(1),
-  description: z.string().optional(),
+  description: z.string().nullish(),
   price: z.number().min(0),
   restaurantId: z.string().uuid(),
-  categoryDetailId: z.string().uuid().optional(),
+  productType: z.number().int().optional(),
+  orderIndex: z.number().int().optional(),
+  cuisineId: z.string().uuid().nullish(),
+  categoryDetailId: z.string().uuid().nullish(),
   isActive: z.boolean().optional(),
 });
 
